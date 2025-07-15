@@ -14,16 +14,16 @@ function getApiUrl(): string {
         return 'http://localhost:8080/api';
       } else {
         // Even in local dev, use cloud backend
-        return 'https://jrtransportmanagementbackend.onrender.com/api';
+        return 'https://jrtransportmanagement-backend-spring.onrender.com/api';
       }
     }
     
     // Production or any other domain
-    return 'https://jrtransportmanagementbackend.onrender.com/api';
+    return 'https://jrtransportmanagement-backend-spring.onrender.com/api';
   }
   
   // Fallback (during SSR or build time)
-  return 'https://jrtransportmanagementbackend.onrender.com/api';
+  return 'https://jrtransportmanagement-backend-spring.onrender.com/api';
 }
 
 function isLocalEnvironment(): boolean {
