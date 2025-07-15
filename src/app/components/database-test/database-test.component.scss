@@ -1,0 +1,297 @@
+.database-test-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px 0;
+
+  .card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 8px;
+
+    .card-header {
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      
+      h5 {
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+}
+
+// Connection Status Cards
+.connection-status {
+  &.connected {
+    background: linear-gradient(135deg, #28a745, #20c997);
+  }
+  
+  &.disconnected {
+    background: linear-gradient(135deg, #dc3545, #fd7e14);
+  }
+  
+  &.testing {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+  }
+}
+
+// Status Indicators
+.status-indicator {
+  transition: all 0.3s ease;
+  
+  &.success {
+    color: #28a745;
+    transform: scale(1.1);
+  }
+  
+  &.error {
+    color: #dc3545;
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  &.loading {
+    color: #ffc107;
+    animation: pulse 1.5s infinite;
+  }
+}
+
+// Loading Animation
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+// Button Styles
+.btn {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+// Alert Styling
+.alert {
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border-left: 4px solid #dc3545;
+    
+    .fas {
+      color: #dc3545;
+    }
+  }
+  
+  &.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-left: 4px solid #28a745;
+    
+    .fas {
+      color: #28a745;
+    }
+  }
+}
+
+// Table Styling
+.table {
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  thead {
+    background: linear-gradient(135deg, #6c757d, #5a6268);
+    color: white;
+    
+    th {
+      border: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  tbody {
+    tr {
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: #f8f9fa;
+      }
+      
+      &.table-warning {
+        background-color: #fff3cd;
+      }
+    }
+    
+    td {
+      border-color: #dee2e6;
+      vertical-align: middle;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+// Query Section
+.query-section {
+  textarea {
+    border-radius: 6px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    
+    &:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+  }
+}
+
+// Info Card
+.info-card {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border-left: 4px solid #2196f3;
+  
+  .card-title {
+    color: #1976d2;
+    font-weight: 600;
+  }
+  
+  ol {
+    color: #424242;
+    
+    li {
+      margin-bottom: 0.5rem;
+      
+      strong {
+        color: #1976d2;
+      }
+    }
+  }
+  
+  code {
+    background-color: #f5f5f5;
+    color: #d63384;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+  }
+}
+
+// Database Table Cards
+.table-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-title {
+    color: #495057;
+    font-size: 1rem;
+    
+    .fas {
+      color: #007bff;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .database-test-container {
+    padding: 10px;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  .d-md-flex {
+    flex-direction: column !important;
+    
+    .btn {
+      margin-bottom: 0.5rem;
+      width: 100%;
+    }
+  }
+  
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+  
+  .row .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+// Dark Mode Support (if needed later)
+@media (prefers-color-scheme: dark) {
+  .database-test-container {
+    background-color: #212529;
+    color: #ffffff;
+    
+    .card {
+      background-color: #343a40;
+      color: #ffffff;
+    }
+    
+    .table {
+      background-color: #343a40;
+      color: #ffffff;
+      
+      tbody tr:hover {
+        background-color: #495057;
+      }
+    }
+    
+    .info-card {
+      background: linear-gradient(135deg, #1e3a8a, #1e40af);
+      color: #ffffff;
+    }
+  }
+}
+
+// Print Styles
+@media print {
+  .btn, .query-section {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #dee2e6 !important;
+  }
+}

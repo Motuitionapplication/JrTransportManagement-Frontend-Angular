@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Educare Favicon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 10px;
+            border-radius: 8px;
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+        .download-all {
+            background: #4a90e2;
+        }
+        .download-all:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Educare Favicon & Icon Generator</h1>
+        <p>Generate all required icons and favicons for the Educare PlaySchool Management app.</p>
+        
+        <div class="icon-grid" id="iconGrid"></div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button onclick="generateAllIcons()">Generate All Icons</button>
+            <button class="download-all" onclick="downloadAll()">Download All Icons</button>
+        </div>
+    </div>
+
+    <script>
+        const iconSizes = [
+            { name: 'favicon.ico', size: 32, type: 'ico' },
+            { name: 'icon-72x72.png', size: 72, type: 'png' },
+            { name: 'icon-96x96.png', size: 96, type: 'png' },
+            { name: 'icon-128x128.png', size: 128, type: 'png' },
+            { name: 'icon-144x144.png', size: 144, type: 'png' },
+            { name: 'icon-152x152.png', size: 152, type: 'png' },
+            { name: 'icon-180x180.png', size: 180, type: 'png' },
+            { name: 'icon-192x192.png', size: 192, type: 'png' },
+            { name: 'icon-384x384.png', size: 384, type: 'png' },
+            { name: 'icon-512x512.png', size: 512, type: 'png' }
+        ];
+
+        function createEducareIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#ff6b35');
+            gradient.addColorStop(1, '#f7931e');
+            
+            // Draw background circle
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 4, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Add white border
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(2, size / 64);
+            ctx.stroke();
+
+            // Calculate responsive sizes
+            const scale = size / 512;
+            const centerX = size / 2;
+            const centerY = size / 2;
+
+            // Draw school building
+            const buildingWidth = 200 * scale;
+            const buildingHeight = 120 * scale;
+            const buildingX = centerX - buildingWidth / 2;
+            const buildingY = centerY + 40 * scale;
+
+            // Building body
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(buildingX, buildingY, buildingWidth, buildingHeight);
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = Math.max(1, 2 * scale);
+            ctx.strokeRect(buildingX, buildingY, buildingWidth, buildingHeight);
+
+            // Roof
+            ctx.fillStyle = '#4a90e2';
+            ctx.beginPath();
+            ctx.moveTo(buildingX - 20 * scale, buildingY);
+            ctx.lineTo(centerX, buildingY - 60 * scale);
+            ctx.lineTo(buildingX + buildingWidth + 20 * scale, buildingY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Door
+            const doorWidth = 40 * scale;
+            const doorHeight = 60 * scale;
+            const doorX = centerX - doorWidth / 2;
+            const doorY = buildingY + 30 * scale;
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(doorX, doorY, doorWidth, doorHeight);
+            ctx.strokeRect(doorX, doorY, doorWidth, doorHeight);
+
+            // Door handle
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.arc(doorX + doorWidth - 8 * scale, doorY + doorHeight / 2, 3 * scale, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Windows
+            const windowSize = 25 * scale;
+            ctx.fillStyle = '#87ceeb';
+            // Left window
+            ctx.fillRect(buildingX + 20 * scale, buildingY + 20 * scale, windowSize, windowSize);
+            ctx.strokeRect(buildingX + 20 * scale, buildingY + 20 * scale, windowSize, windowSize);
+            // Right window
+            ctx.fillRect(buildingX + buildingWidth - 45 * scale, buildingY + 20 * scale, windowSize, windowSize);
+            ctx.strokeRect(buildingX + buildingWidth - 45 * scale, buildingY + 20 * scale, windowSize, windowSize);
+
+            // Add "E" for Educare if icon is large enough
+            if (size >= 128) {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = `bold ${Math.floor(40 * scale)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('E', centerX, centerY - 80 * scale);
+                
+                // Add shadow for better visibility
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillText('E', centerX + 1, centerY - 79 * scale);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('E', centerX, centerY - 80 * scale);
+            }
+
+            return canvas;
+        }
+
+        function generateAllIcons() {
+            const container = document.getElementById('iconGrid');
+            container.innerHTML = '';
+
+            iconSizes.forEach(iconConfig => {
+                const canvas = createEducareIcon(iconConfig.size);
+                canvas.id = iconConfig.name;
+                canvas.title = `${iconConfig.name} (${iconConfig.size}x${iconConfig.size})`;
+
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                
+                const title = document.createElement('h4');
+                title.textContent = iconConfig.name;
+                title.style.margin = '0 0 10px 0';
+                title.style.color = '#333';
+                
+                const sizeText = document.createElement('p');
+                sizeText.textContent = `${iconConfig.size}×${iconConfig.size}`;
+                sizeText.style.margin = '5px 0';
+                sizeText.style.color = '#666';
+                sizeText.style.fontSize = '14px';
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.onclick = () => downloadIcon(canvas, iconConfig.name);
+                
+                iconItem.appendChild(title);
+                iconItem.appendChild(canvas);
+                iconItem.appendChild(sizeText);
+                iconItem.appendChild(downloadBtn);
+                
+                container.appendChild(iconItem);
+            });
+        }
+
+        function downloadIcon(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            iconSizes.forEach((iconConfig, index) => {
+                const canvas = document.getElementById(iconConfig.name);
+                if (canvas) {
+                    setTimeout(() => downloadIcon(canvas, iconConfig.name), 200 * index);
+                }
+            });
+        }
+
+        // Generate icons on page load
+        window.onload = generateAllIcons;
+    </script>
+</body>
+</html>

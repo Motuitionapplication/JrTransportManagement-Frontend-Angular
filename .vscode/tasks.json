@@ -1,0 +1,74 @@
+{
+  // For more information, visit: https://go.microsoft.com/fwlink/?LinkId=733558
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "start",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "label": "Start Development Server",
+      "group": "build"
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "typescript",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "(.*?)"
+          },
+          "endsPattern": {
+            "regexp": "bundle generation complete"
+          }
+        }
+      },
+      "label": "Run Tests",
+      "group": "test"
+    },
+    {
+      "type": "shell",
+      "command": "ng",
+      "args": ["build", "--prod"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "Build PWA Production",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "type": "shell",
+      "command": "ng",
+      "args": ["build", "--prod", "--service-worker"],
+      "group": "build",
+      "label": "Build PWA with Service Worker",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "type": "shell",
+      "command": "npx",
+      "args": ["http-server", "dist/playschool-management", "-p", "8080", "-c-1"],
+      "group": "build",
+      "label": "Serve PWA Locally",
+      "dependsOn": "Build PWA with Service Worker",
+      "problemMatcher": []
+    }
+  ]
+}

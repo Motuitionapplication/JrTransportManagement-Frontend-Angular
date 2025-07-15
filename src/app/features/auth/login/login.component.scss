@@ -1,0 +1,316 @@
+/* JR Transport Management Login Modal */
+
+// Custom Variables for JR Transport
+:root {
+  --bs-primary: #1976d2;
+  --bs-primary-rgb: 25, 118, 210;
+  --bs-secondary: #f44336;
+  --bs-secondary-rgb: 244, 67, 54;
+}
+
+// Main Container - Optimized for better scrolling
+.container-fluid {
+  padding: 0;
+  margin: 0;
+  max-width: 400px;
+  max-height: 90vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  // Prevent any scrolling during initialization
+  scroll-behavior: auto !important;
+}
+
+// Card Styling - Better scroll accommodation
+.card {
+  border: none !important;
+  box-shadow: 0 10px 25px rgba(25, 118, 210, 0.15) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 90vh;
+  height: auto;
+  overflow: hidden;
+  
+  // Prevent any unwanted scrolling during loading
+  scroll-behavior: auto !important;
+  
+  .card-header {
+    background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;
+    border: none;
+    padding: 0.75rem 1rem 0.5rem !important;
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    
+    .btn-close-white {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='m.234 1.047 5.578 5.656 5.578-5.656a.5.5 0 0 1 .708.708L6.44 7.313l5.658 5.657a.5.5 0 0 1-.708.708L5.734 8.02.076 13.677a.5.5 0 1 1-.708-.708L4.826 7.313-.532 1.657a.5.5 0 0 1 .708-.708z'/%3e%3c/svg%3e") !important;
+      opacity: 0.8;
+      transition: all 0.3s ease;
+      width: 20px;
+      height: 20px;
+      
+      &:hover {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+    
+    h2, h3, h4, h5 {
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-size: 1.25rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+    
+    p {
+      font-size: 0.75rem !important;
+      opacity: 0.9;
+    }
+    
+    i.fa-graduation-cap,
+    i.fa-truck {
+      font-size: 1.25rem !important;
+    }
+  }
+  
+  .card-body {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: calc(90vh - 160px) !important;
+    padding: 1.5rem !important;
+    background: #ffffff;
+    
+    // Hide scrollbar but keep functionality - clean look
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera */
+    }
+    
+    // Initially disable smooth scrolling to prevent loading fluctuations
+    scroll-behavior: auto;
+  }
+  
+  .card-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 999 !important;
+    background: #f8f9fa !important;
+    border-top: 1px solid rgba(25, 118, 210, 0.1) !important;
+    padding: 1rem 1.5rem !important;
+    margin-top: auto; // Push footer to bottom
+  }
+}
+
+// Compact Form Styling
+.form-label {
+  color: #1565c0;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  
+  i {
+    color: var(--bs-primary);
+    font-size: 0.9rem;
+  }
+}
+
+// Compact Input Group Styling
+.input-group {
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  border-radius: 8px !important;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+  
+  &:focus-within {
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+    transform: translateY(-1px);
+  }
+  
+  .input-group-text {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border: none !important;
+    color: #6c757d;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-control {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    
+    &:focus {
+      border: none !important;
+      box-shadow: none !important;
+    }
+    
+    &.is-valid {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.4.4c.2.2.5.2.7 0l2.9-2.9a.5.5 0 0 0-.7-.7L4 5.3l-1.4-1.4a.5.5 0 0 0-.7.7l.6.6Z'/%3e%3c/svg%3e");
+    }
+    
+    &.is-invalid {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.8m0-2.8-2.4 2.8'/%3e%3c/svg%3e");
+    }
+  }
+  
+  .btn {
+    border: none !important;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    color: #6c757d !important;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    
+    &:hover {
+      background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary)) !important;
+      color: white !important;
+    }
+  }
+}
+
+// Compact Alert Styling
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
+  border: 1px solid #f1aeb5 !important;
+  border-radius: 8px !important;
+  border-left: 4px solid #dc3545 !important;
+  padding: 0.75rem !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 1rem !important;
+}
+
+// Compact Button Styling
+.btn-primary {
+  background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%) !important;
+  border: none !important;
+  box-shadow: 0 3px 10px rgba(25, 118, 210, 0.3) !important;
+  transition: all 0.3s ease !important;
+  padding: 0.6rem 1.5rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  
+  &:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 15px rgba(25, 118, 210, 0.4) !important;
+  }
+  
+  &:disabled {
+    background: #6c757d !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.btn-outline-primary {
+  border: 2px solid var(--bs-primary) !important;
+  color: var(--bs-primary) !important;
+  background: transparent !important;
+  transition: all 0.3s ease !important;
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.85rem !important;
+  
+  &:hover {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%) !important;
+    border-color: var(--bs-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(255, 107, 53, 0.3);
+  }
+}
+
+.btn-outline-warning, .btn-outline-info {
+  transition: all 0.3s ease !important;
+  padding: 0.4rem 1rem !important;
+  font-size: 0.8rem !important;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Compact Form Check Styling
+.form-check-input {
+  &:checked {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
+  }
+}
+
+.form-check-label {
+  font-size: 0.85rem !important;
+}
+
+// Compact Development Card
+.bg-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-radius: 8px !important;
+}
+
+// Remember me and forgot password section
+.d-flex.justify-content-between {
+  margin-bottom: 1rem !important;
+  
+  .form-check-label {
+    font-size: 0.8rem;
+  }
+  
+  .btn-link {
+    font-size: 0.8rem !important;
+    padding: 0 !important;
+  }
+}
+
+// Divider styling
+.d-flex.align-items-center {
+  margin: 1.5rem 0 !important;
+  
+  .text-muted {
+    font-size: 0.8rem !important;
+  }
+}
+
+// Animation
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeSlideIn 0.5s ease-out;
+}
+
+// Responsive Design
+@media (max-width: 576px) {
+  .container-fluid {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start !important;
+  }
+}

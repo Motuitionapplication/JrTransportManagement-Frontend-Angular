@@ -1,0 +1,145 @@
+<div class="student-management-container">
+  <!-- Navigation Header -->
+  <div class="management-header">
+    <div class="header-content">
+      <h1 class="main-title">
+        <i class="fas fa-graduation-cap"></i>
+        Student Management System
+      </h1>
+      <p class="subtitle">Manage student registrations and information</p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [class.active]="activeView === 'list'"
+        (click)="showStudentList()">
+        <i class="fas fa-list"></i>
+        View Students
+      </button>
+      
+      <button
+        type="button"
+        class="btn btn-success"
+        [class.active]="activeView === 'register'"
+        (click)="showRegisterForm()">
+        <i class="fas fa-user-plus"></i>
+        Register Student
+      </button>
+    </div>
+  </div>
+
+  <!-- Breadcrumb Navigation -->
+  <nav class="breadcrumb-nav">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="#" (click)="showStudentList(); $event.preventDefault()">
+          <i class="fas fa-home"></i>
+          Dashboard
+        </a>
+      </li>
+      <li class="breadcrumb-item active">Student Management</li>
+      <li class="breadcrumb-item active" *ngIf="activeView === 'register'">
+        {{ selectedStudent ? 'Edit Student' : 'Register Student' }}
+      </li>
+      <li class="breadcrumb-item active" *ngIf="activeView === 'list'">
+        Student List
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Content Area -->
+  <div class="content-area">
+    <!-- Student List View -->
+    <div *ngIf="activeView === 'list'" class="view-container list-view">
+      <div class="view-header">
+        <div class="view-title">
+          <h2>
+            <i class="fas fa-users"></i>
+            Registered Students
+          </h2>
+          <p>View and manage all registered students</p>
+        </div>
+        
+        <button
+          type="button"
+          class="btn btn-success add-student-btn"
+          (click)="showRegisterForm()">
+          <i class="fas fa-plus"></i>
+          Add New Student
+        </button>
+      </div>
+      
+      <app-student-list
+        [refreshList]="refreshList"
+        (editStudent)="onEditStudent($event)"
+        (viewStudent)="onViewStudent($event)">
+      </app-student-list>
+    </div>
+
+    <!-- Student Registration View -->
+    <div *ngIf="activeView === 'register'" class="view-container register-view">
+      <div class="view-header">
+        <div class="view-title">
+          <h2>
+            <i class="fas fa-user-plus"></i>
+            {{ selectedStudent ? 'Edit Student Information' : 'Register New Student' }}
+          </h2>
+          <p>{{ selectedStudent ? 'Update student details and information' : 'Add a new student to the system' }}</p>
+        </div>
+        
+        <button
+          type="button"
+          class="btn btn-outline-secondary back-btn"
+          (click)="showStudentList()">
+          <i class="fas fa-arrow-left"></i>
+          Back to List
+        </button>
+      </div>
+      
+      <app-student-registration
+        [editMode]="!!selectedStudent"
+        [studentData]="selectedStudent"
+        (studentRegistered)="onStudentRegistered($event)"
+        (cancelRegistration)="onCancelRegistration()">
+      </app-student-registration>
+    </div>
+  </div>
+
+  <!-- Quick Stats Widget (Optional) -->
+  <div class="quick-stats" *ngIf="activeView === 'list'">
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ totalStudents || 0 }}</div>
+          <div class="stat-label">Total Students</div>
+        </div>
+      </div>
+      
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ newStudentsThisMonth || 0 }}</div>
+          <div class="stat-label">New This Month</div>
+        </div>
+      </div>
+      
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ activeStudents || 0 }}</div>
+          <div class="stat-label">Active Students</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

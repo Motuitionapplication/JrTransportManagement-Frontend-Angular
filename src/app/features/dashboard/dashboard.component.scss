@@ -1,0 +1,256 @@
+/* Dashboard Container */
+.dashboard-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #e3f2fd 0%, #ffebee 100%);
+  min-height: calc(100vh - 120px);
+}
+
+/* Welcome Section */
+.welcome-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
+  border: 1px solid #e3f2fd;
+}
+
+.welcome-content {
+  .main-title {
+    font-size: 2.5rem;
+    color: #1565c0;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    
+    i {
+      color: #f44336;
+      margin-right: 1rem;
+      text-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+    }
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: #1976d2;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .description {
+    color: #757575;
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+}
+
+/* Management Grid */
+.management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.management-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e3f2fd;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(25, 118, 210, 0.2);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #1976d2, #f44336);
+  }
+
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: white;
+    background: linear-gradient(135deg, #1976d2, #2196f3);
+  }
+
+  .card-content {
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-description {
+    color: #7f8c8d;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .card-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #757575;
+    
+    i {
+      margin-right: 0.5rem;
+      color: #f44336;
+    }
+  }
+
+  .card-arrow {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    color: #bdc3c7;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+  }
+
+  &:hover .card-arrow {
+    color: #f44336;
+    transform: translateX(5px);
+  }
+}
+
+/* JR Transport Card Specific Colors */
+.vehicle-card .card-icon {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+}
+
+.driver-card .card-icon {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.route-card .card-icon {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+}
+
+.fleet-card .card-icon {
+  background: linear-gradient(135deg, #ff5722, #f44336);
+}
+
+.customer-card .card-icon {
+  background: linear-gradient(135deg, #1976d2, #f44336);
+}
+
+/* Quick Access Section */
+.quick-access-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
+  border: 1px solid #e3f2fd;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  color: #1565c0;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  
+  i {
+    color: #f44336;
+    margin-right: 0.5rem;
+  }
+}
+
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.quick-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &.primary {
+    background: linear-gradient(135deg, #1976d2, #1565c0);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #1565c0, #0d47a1);
+    }
+  }
+  
+  &.secondary {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    }
+  }
+  
+  &.tertiary {
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #1976d2, #1565c0);
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .welcome-content .main-title {
+    font-size: 2rem;
+  }
+
+  .management-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+  }
+
+  .quick-btn {
+    justify-content: center;
+  }
+}

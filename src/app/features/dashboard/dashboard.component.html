@@ -1,0 +1,170 @@
+<div class="dashboard-container">
+  <!-- Welcome Header -->
+  <div class="welcome-section">
+    <div class="welcome-content">
+      <h1 class="main-title">
+        <i class="fas fa-truck"></i>
+        Welcome to JR Transport Management
+      </h1>
+      <p class="subtitle">Comprehensive Transport Management System</p>
+      <p class="description">
+        Manage vehicles, drivers, routes, fleet tracking, and customer service with our integrated transport management system.
+      </p>
+    </div>
+  </div>
+
+  <!-- Management Cards -->
+  <div class="management-grid">
+    <!-- Vehicle Management Card -->
+    <div class="management-card vehicle-card" (click)="navigateToVehicleManagement()">
+      <div class="card-icon">
+        <i class="fas fa-truck"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Vehicle Management</h3>
+        <p class="card-description">
+          Register vehicles, manage documentation, track maintenance schedules, and monitor vehicle status.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-plus-circle"></i>
+            Register Vehicles
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-wrench"></i>
+            Maintenance
+          </span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+
+    <!-- Driver Management Card -->
+    <div class="management-card driver-card" (click)="navigateToDriverManagement()">
+      <div class="card-icon">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Driver Management</h3>
+        <p class="card-description">
+          Manage driver profiles, licenses, schedules, and performance tracking.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-id-card"></i>
+            Driver Profiles
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-calendar"></i>
+            Schedules
+          </span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+
+    <!-- Route Management Card -->
+    <div class="management-card route-card" (click)="navigateToRouteManagement()">
+      <div class="card-icon">
+        <i class="fas fa-route"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Route Management</h3>
+        <p class="card-description">
+          Plan routes, optimize paths, set schedules, and track route efficiency.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-plus"></i>
+            Create Routes
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-map"></i>
+            Route Optimization
+          </span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+
+    <!-- Fleet Tracking Card -->
+    <div class="management-card fleet-card" (click)="navigateToFleetTracking()">
+      <div class="card-icon">
+        <i class="fas fa-map-marked-alt"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Fleet Tracking</h3>
+        <p class="card-description">
+          Real-time vehicle tracking, monitor fleet status, and track location history.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-satellite-dish"></i>
+            Live Tracking
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-chart-line"></i>
+            Analytics
+          </span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+
+    <!-- Customer Management Card -->
+    <div class="management-card customer-card" (click)="navigateToCustomerManagement()">
+      <div class="card-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Customer Management</h3>
+        <p class="card-description">
+          Manage customer profiles, bookings, communication, and service records.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-user-plus"></i>
+            Add Customers
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-calendar-alt"></i>
+            Bookings
+          </span>
+        </div>
+      </div>
+      <div class="card-arrow">
+        <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Access Section -->
+  <div class="quick-access-section">
+    <h2 class="section-title">
+      <i class="fas fa-bolt"></i>
+      Quick Actions
+    </h2>
+    <div class="quick-actions">
+      <button class="quick-btn primary" (click)="navigateToVehicleManagement()">
+        <i class="fas fa-truck"></i>
+        Register New Vehicle
+      </button>
+      <button class="quick-btn secondary" (click)="navigateToFleetTracking()">
+        <i class="fas fa-map-marked-alt"></i>
+        Track Fleet
+      </button>
+      <button class="quick-btn tertiary" (click)="navigateToRouteManagement()">
+        <i class="fas fa-route"></i>
+        Plan Route
+      </button>
+    </div>
+  </div>
+</div>

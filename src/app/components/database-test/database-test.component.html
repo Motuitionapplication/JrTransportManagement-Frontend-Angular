@@ -1,0 +1,171 @@
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-database me-2"></i>
+        PostgreSQL Database Connection Test - Render
+      </h5>
+    </div>
+    <div class="card-body">
+      
+      <!-- Connection Status -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <div class="card" [class]="getConnectionStatusClass()">
+            <div class="card-body text-white text-center">
+              <i class="fas fa-2x mb-2" 
+                 [class.fa-check-circle]="connectionStatus?.connected" 
+                 [class.fa-times-circle]="!connectionStatus?.connected"></i>
+              <h6>{{ connectionStatus?.connected ? 'Connected' : 'Disconnected' }}</h6>
+              <small>{{ connectionStatus?.message || 'Not tested yet' }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card bg-info">
+            <div class="card-body text-white text-center">
+              <i class="fas fa-server fa-2x mb-2"></i>
+              <h6>Database Info</h6>
+              <small>{{ databaseInfo?.host || 'N/A' }}</small><br>
+              <small>{{ databaseInfo?.database || 'N/A' }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Buttons -->
+      <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-3">
+        <button class="btn btn-primary" 
+                (click)="testConnection()" 
+                [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!isLoading" class="fas fa-plug me-2"></i>
+          Test Connection
+        </button>
+        
+        <button class="btn btn-secondary" 
+                (click)="getDatabaseTables()" 
+                [disabled]="isLoading || !connectionStatus?.connected">
+          <i class="fas fa-table me-2"></i>
+          List Tables
+        </button>
+        
+        <button class="btn btn-info" 
+                (click)="clearResults()">
+          <i class="fas fa-eraser me-2"></i>
+          Clear
+        </button>
+      </div>
+
+      <!-- Error Messages -->
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ errorMessage }}
+        <div class="mt-2">
+          <small class="d-block">
+            <strong>Common Issues:</strong><br>
+            • Check your Render PostgreSQL connection string<br>
+            • Ensure your database is running and accessible<br>
+            • Verify SSL settings (Render requires SSL)<br>
+            • Check if your IP is whitelisted
+          </small>
+        </div>
+      </div>
+
+      <!-- Success Messages -->
+      <div *ngIf="successMessage" class="alert alert-success" role="alert">
+        <i class="fas fa-check me-2"></i>
+        {{ successMessage }}
+      </div>
+
+      <!-- Tables List -->
+      <div *ngIf="tables && tables.length > 0" class="mt-3">
+        <h6>Database Tables:</h6>
+        <div class="row">
+          <div class="col-md-6" *ngFor="let table of tables">
+            <div class="card mb-2">
+              <div class="card-body py-2">
+                <h6 class="card-title mb-1">
+                  <i class="fas fa-table me-2 text-primary"></i>
+                  {{ table.tableName || table.name || table }}
+                </h6>
+                <small class="text-muted">
+                  {{ table.tableType || 'Table' }}
+                  <span *ngIf="table.rowCount"> - {{ table.rowCount }} rows</span>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Query Section -->
+      <div class="mt-4">
+        <h6>Custom Query (Advanced):</h6>
+        <div class="mb-3">
+          <textarea class="form-control" 
+                    rows="3" 
+                    [(ngModel)]="customQuery" 
+                    placeholder="SELECT * FROM your_table_name LIMIT 10;"></textarea>
+        </div>
+        <button class="btn btn-warning" 
+                (click)="executeCustomQuery()" 
+                [disabled]="isLoading || !customQuery || !customQuery.trim()">
+          <i class="fas fa-play me-2"></i>
+          Execute Query
+        </button>
+      </div>
+
+      <!-- Query Results -->
+      <div *ngIf="queryResults && queryResults.length > 0" class="mt-3">
+        <h6>Query Results:</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead>
+              <tr>
+                <th *ngFor="let column of getColumnNames()" scope="col">{{ column }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of queryResults; let i = index" 
+                  [class.table-warning]="i >= 50">
+                <td *ngFor="let column of getColumnNames()">
+                  {{ getColumnValue(row, column) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <small class="text-muted">
+          Showing {{ queryResults.length }} result(s)
+          <span *ngIf="queryResults.length >= 50"> (limited to first 50 rows)</span>
+        </small>
+      </div>
+
+      <!-- Connection Instructions -->
+      <div class="mt-4">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h6 class="card-title">
+              <i class="fas fa-info-circle me-2 text-info"></i>
+              Render PostgreSQL Connection Instructions
+            </h6>
+            <ol class="mb-0">
+              <li>Go to your Render Dashboard</li>
+              <li>Select your PostgreSQL database</li>
+              <li>Copy the <strong>External Database URL</strong></li>
+              <li>Update the database configuration in environment files</li>
+              <li>Ensure your backend is configured to connect to Render PostgreSQL</li>
+            </ol>
+            <div class="mt-2">
+              <small class="text-muted">
+                Example connection string: <code>postgresql://user:pass@hostname:port/database</code>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

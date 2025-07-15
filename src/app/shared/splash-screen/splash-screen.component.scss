@@ -1,0 +1,310 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.5s ease-in-out;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.splash-container {
+  text-align: center;
+  color: white;
+  animation: fadeInUp 1s ease-out;
+}
+
+.logo-container {
+  margin-bottom: 2rem;
+  animation: bounceIn 1s ease-out;
+  position: relative;
+  width: 300px;
+  height: 120px;
+  margin: 0 auto 2rem auto;
+}
+
+.road-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.road {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #555;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #555;
+  }
+}
+
+.road-line {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px;
+  animation: roadMove 1.5s linear infinite;
+  
+  &.line-1 {
+    animation-delay: 0s;
+  }
+  
+  &.line-2 {
+    animation-delay: 0.5s;
+  }
+  
+  &.line-3 {
+    animation-delay: 1s;
+  }
+}
+
+.moving-truck {
+  position: relative;
+  z-index: 10;
+  animation: truckMoveAdvanced 4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.logo-icon {
+  font-size: 4rem;
+  color: white;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.logo {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: pulse 2s infinite;
+}
+
+.app-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  animation: slideInFromLeft 1s ease-out 0.3s both;
+}
+
+.app-subtitle {
+  font-size: 1.2rem;
+  font-weight: 300;
+  margin-bottom: 3rem;
+  opacity: 0.9;
+  animation: slideInFromRight 1s ease-out 0.6s both;
+}
+
+.loading-container {
+  animation: fadeIn 1s ease-out 0.9s both;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.loading-text {
+  font-size: 1rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// New truck and road animations
+@keyframes truckMove {
+  0% {
+    transform: translateX(-50px);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+  100% {
+    transform: translateX(-50px);
+  }
+}
+
+@keyframes roadMove {
+  0% {
+    left: -30px;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0) translateX(var(--truck-x, 0));
+  }
+  100% {
+    transform: translateY(-3px) translateX(var(--truck-x, 0));
+  }
+}
+
+// Enhanced truck movement with road position sync
+@keyframes truckMoveAdvanced {
+  0% {
+    transform: translateX(-40px) translateY(0);
+  }
+  25% {
+    transform: translateX(-10px) translateY(-2px);
+  }
+  50% {
+    transform: translateX(20px) translateY(0);
+  }
+  75% {
+    transform: translateX(10px) translateY(-2px);
+  }
+  100% {
+    transform: translateX(-40px) translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 2rem;
+  }
+  
+  .app-subtitle {
+    font-size: 1rem;
+  }
+  
+  .logo {
+    width: 100px;
+    height: 100px;
+  }
+}

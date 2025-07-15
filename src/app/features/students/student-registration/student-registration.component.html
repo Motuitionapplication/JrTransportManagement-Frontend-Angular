@@ -1,0 +1,306 @@
+<div class="student-registration-container">
+  <div class="registration-header">
+    <h2 class="page-title">
+      <i class="fas fa-user-plus"></i>
+      Student Registration
+    </h2>
+    <p class="page-description">Register a new student in the JR Transport management system</p>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert-container">
+    <div *ngIf="successMessage" class="alert alert-success" role="alert">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+  </div>
+
+  <!-- Registration Form -->
+  <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="registration-form">
+    
+    <!-- Personal Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <i class="fas fa-user"></i>
+        Personal Information
+      </h3>
+      
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="firstName" class="form-label">
+            First Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('firstName')"
+            placeholder="Enter first name">
+          <div *ngIf="isFieldInvalid('firstName')" class="invalid-feedback">
+            {{ getFieldError('firstName') }}
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="lastName" class="form-label">
+            Last Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('lastName')"
+            placeholder="Enter last name">
+          <div *ngIf="isFieldInvalid('lastName')" class="invalid-feedback">
+            {{ getFieldError('lastName') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="dateOfBirth" class="form-label">
+            Date of Birth <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('dateOfBirth')"
+            [min]="getMinDateOfBirth()"
+            [max]="getMaxDateOfBirth()">
+          <div *ngIf="isFieldInvalid('dateOfBirth')" class="invalid-feedback">
+            {{ getFieldError('dateOfBirth') }}
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="gender" class="form-label">
+            Gender <span class="required">*</span>
+          </label>
+          <select
+            id="gender"
+            formControlName="gender"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('gender')">
+            <option value="">Select Gender</option>
+            <option *ngFor="let option of genderOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <div *ngIf="isFieldInvalid('gender')" class="invalid-feedback">
+            {{ getFieldError('gender') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="address" class="form-label">
+          Address <span class="required">*</span>
+        </label>
+        <textarea
+          id="address"
+          formControlName="address"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('address')"
+          rows="3"
+          placeholder="Enter complete address"></textarea>
+        <div *ngIf="isFieldInvalid('address')" class="invalid-feedback">
+          {{ getFieldError('address') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Parent Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <i class="fas fa-users"></i>
+        Parent Information
+      </h3>
+      
+      <div class="form-group">
+        <label for="parentName" class="form-label">
+          Parent/Guardian Name <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="parentName"
+          formControlName="parentName"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('parentName')"
+          placeholder="Enter parent or guardian name">
+        <div *ngIf="isFieldInvalid('parentName')" class="invalid-feedback">
+          {{ getFieldError('parentName') }}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="parentPhone" class="form-label">
+            Parent Phone <span class="required">*</span>
+          </label>
+          <input
+            type="tel"
+            id="parentPhone"
+            formControlName="parentPhone"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('parentPhone')"
+            placeholder="Enter phone number">
+          <div *ngIf="isFieldInvalid('parentPhone')" class="invalid-feedback">
+            {{ getFieldError('parentPhone') }}
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="parentEmail" class="form-label">
+            Parent Email <span class="required">*</span>
+          </label>
+          <input
+            type="email"
+            id="parentEmail"
+            formControlName="parentEmail"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('parentEmail')"
+            placeholder="Enter email address">
+          <div *ngIf="isFieldInvalid('parentEmail')" class="invalid-feedback">
+            {{ getFieldError('parentEmail') }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Contact Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <i class="fas fa-phone"></i>
+        Emergency Contact
+      </h3>
+      
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="emergencyContact" class="form-label">
+            Emergency Contact Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="emergencyContact"
+            formControlName="emergencyContact"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('emergencyContact')"
+            placeholder="Enter emergency contact name">
+          <div *ngIf="isFieldInvalid('emergencyContact')" class="invalid-feedback">
+            {{ getFieldError('emergencyContact') }}
+          </div>
+        </div>
+
+        <div class="form-group col-md-6">
+          <label for="emergencyPhone" class="form-label">
+            Emergency Phone <span class="required">*</span>
+          </label>
+          <input
+            type="tel"
+            id="emergencyPhone"
+            formControlName="emergencyPhone"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('emergencyPhone')"
+            placeholder="Enter emergency phone number">
+          <div *ngIf="isFieldInvalid('emergencyPhone')" class="invalid-feedback">
+            {{ getFieldError('emergencyPhone') }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <i class="fas fa-heartbeat"></i>
+        Medical Information
+      </h3>
+      
+      <div class="form-group">
+        <label for="medicalInfo" class="form-label">
+          Medical Information
+        </label>
+        <textarea
+          id="medicalInfo"
+          formControlName="medicalInfo"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('medicalInfo')"
+          rows="3"
+          placeholder="Enter any medical conditions, medications, or special notes"></textarea>
+        <div *ngIf="isFieldInvalid('medicalInfo')" class="invalid-feedback">
+          {{ getFieldError('medicalInfo') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="allergies" class="form-label">
+          Allergies
+        </label>
+        <textarea
+          id="allergies"
+          formControlName="allergies"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('allergies')"
+          rows="2"
+          placeholder="Enter any known allergies"></textarea>
+        <div *ngIf="isFieldInvalid('allergies')" class="invalid-feedback">
+          {{ getFieldError('allergies') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Enrollment Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">
+        <i class="fas fa-calendar-alt"></i>
+        Enrollment Information
+      </h3>
+      
+      <div class="form-group col-md-6">
+        <label for="enrollmentDate" class="form-label">
+          Enrollment Date <span class="required">*</span>
+        </label>
+        <input
+          type="date"
+          id="enrollmentDate"
+          formControlName="enrollmentDate"
+          class="form-control"
+          [class.is-invalid]="isFieldInvalid('enrollmentDate')"
+          [max]="getMaxDate()">
+        <div *ngIf="isFieldInvalid('enrollmentDate')" class="invalid-feedback">
+          {{ getFieldError('enrollmentDate') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isSubmitting">
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="isSubmitting || registrationForm.invalid">
+        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+        <i *ngIf="!isSubmitting" class="fas fa-save"></i>
+        {{ isSubmitting ? (editMode ? 'Updating...' : 'Registering...') : (editMode ? 'Update Student' : 'Register Student') }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Splash Screens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        .splash-container {
+            margin: 20px 0;
+        }
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+    </style>
+</head>
+<body>
+    <h1>iOS Splash Screen Generator</h1>
+    <p>This tool generates PNG splash screens for iOS devices.</p>
+    
+    <div class="splash-container">
+        <h3>Generated Splash Screens:</h3>
+        <div id="canvases"></div>
+    </div>
+    
+    <button onclick="generateAllSplashScreens()">Generate All Splash Screens</button>
+    <button onclick="downloadAll()">Download All</button>
+
+    <script>
+        const splashSizes = [
+            { name: 'splash-640x1136.png', width: 640, height: 1136, device: 'iPhone 5/5S/5C/SE' },
+            { name: 'splash-750x1334.png', width: 750, height: 1334, device: 'iPhone 6/7/8' },
+            { name: 'splash-1242x2208.png', width: 1242, height: 2208, device: 'iPhone 6+/7+/8+' },
+            { name: 'splash-1125x2436.png', width: 1125, height: 2436, device: 'iPhone X/XS/11 Pro' },
+            { name: 'splash-828x1792.png', width: 828, height: 1792, device: 'iPhone XR/11' },
+            { name: 'splash-1242x2688.png', width: 1242, height: 2688, device: 'iPhone XS Max/11 Pro Max' },
+            { name: 'splash-1536x2048.png', width: 1536, height: 2048, device: 'iPad' },
+            { name: 'splash-1668x2224.png', width: 1668, height: 2224, device: 'iPad Pro 10.5"' },
+            { name: 'splash-2048x2732.png', width: 2048, height: 2732, device: 'iPad Pro 12.9"' }
+        ];
+
+        function createSplashScreen(width, height) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, '#ff6b35');
+            gradient.addColorStop(1, '#f7931e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Calculate responsive sizes
+            const scale = Math.min(width / 640, height / 1136);
+            const logoSize = 120 * scale;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            // Draw white circle background for logo
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, logoSize, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Draw school building
+            const buildingWidth = 120 * scale;
+            const buildingHeight = 70 * scale;
+            const buildingX = centerX - buildingWidth / 2;
+            const buildingY = centerY + 20 * scale;
+
+            // Building body
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(buildingX, buildingY, buildingWidth, buildingHeight);
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = 2 * scale;
+            ctx.strokeRect(buildingX, buildingY, buildingWidth, buildingHeight);
+
+            // Roof
+            ctx.fillStyle = '#4a90e2';
+            ctx.beginPath();
+            ctx.moveTo(buildingX - 10 * scale, buildingY);
+            ctx.lineTo(centerX, buildingY - 50 * scale);
+            ctx.lineTo(buildingX + buildingWidth + 10 * scale, buildingY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Door
+            const doorWidth = 30 * scale;
+            const doorHeight = 40 * scale;
+            const doorX = centerX - doorWidth / 2;
+            const doorY = buildingY + 30 * scale;
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(doorX, doorY, doorWidth, doorHeight);
+            ctx.strokeRect(doorX, doorY, doorWidth, doorHeight);
+
+            // Door handle
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.arc(doorX + doorWidth - 8 * scale, doorY + doorHeight / 2, 2 * scale, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Windows
+            const windowWidth = 20 * scale;
+            const windowHeight = 18 * scale;
+            ctx.fillStyle = '#87ceeb';
+            // Left window
+            ctx.fillRect(buildingX + 10 * scale, buildingY + 15 * scale, windowWidth, windowHeight);
+            ctx.strokeRect(buildingX + 10 * scale, buildingY + 15 * scale, windowWidth, windowHeight);
+            // Right window
+            ctx.fillRect(buildingX + buildingWidth - 30 * scale, buildingY + 15 * scale, windowWidth, windowHeight);
+            ctx.strokeRect(buildingX + buildingWidth - 30 * scale, buildingY + 15 * scale, windowWidth, windowHeight);
+
+            // School sign
+            const signWidth = 80 * scale;
+            const signHeight = 15 * scale;
+            const signX = centerX - signWidth / 2;
+            const signY = centerY - 5 * scale;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(signX, signY, signWidth, signHeight);
+            ctx.strokeRect(signX, signY, signWidth, signHeight);
+
+            // School sign text
+            ctx.fillStyle = '#333333';
+            ctx.font = `bold ${8 * scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('PlaySchool', centerX, signY + 10 * scale);
+
+            // App title
+            const titleY = centerY + logoSize + 60 * scale;
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${28 * scale}px Arial`;
+            ctx.fillText('PlaySchool Management', centerX, titleY);
+
+            // Subtitle
+            ctx.font = `${16 * scale}px Arial`;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillText('Comprehensive School Management', centerX, titleY + 30 * scale);
+
+            return canvas;
+        }
+
+        function generateAllSplashScreens() {
+            const container = document.getElementById('canvases');
+            container.innerHTML = '';
+
+            splashSizes.forEach(size => {
+                const canvas = createSplashScreen(size.width, size.height);
+                canvas.id = size.name;
+                canvas.title = `${size.device} - ${size.width}x${size.height}`;
+                
+                const div = document.createElement('div');
+                div.innerHTML = `<h4>${size.name} (${size.device})</h4>`;
+                div.appendChild(canvas);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.onclick = () => downloadCanvas(canvas, size.name);
+                div.appendChild(downloadBtn);
+                
+                container.appendChild(div);
+            });
+        }
+
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            splashSizes.forEach(size => {
+                const canvas = document.getElementById(size.name);
+                if (canvas) {
+                    setTimeout(() => downloadCanvas(canvas, size.name), 100 * splashSizes.indexOf(size));
+                }
+            });
+        }
+
+        // Generate splash screens on page load
+        window.onload = generateAllSplashScreens;
+    </script>
+</body>
+</html>

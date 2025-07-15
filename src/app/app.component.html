@@ -1,0 +1,159 @@
+<!-- JR Transport Management PWA -->
+<app-splash-screen></app-splash-screen>
+
+<!-- iOS Install Prompt -->
+<app-ios-install-prompt></app-ios-install-prompt>
+
+<div class="app-container" (click)="onDocumentClick($event)">
+  <!-- PWA Status Bar -->
+  <div class="status-bar" [class.offline]="!isOnline">
+    <div class="status-content">
+      <span class="status-text">{{ getStatusText() }}</span>
+      <button *ngIf="canInstallPwa" class="install-btn" (click)="installPwa()">
+        <i class="fas fa-download"></i> Install App
+      </button>
+    </div>
+  </div>
+
+  <!-- Environment Indicator -->
+  <div class="env-indicator" [style.background-color]="envService.getEnvironmentColor()">
+    <div class="env-content">
+      <i class="fas fa-server"></i>
+      <span class="env-text">{{ envService.getEnvironmentName() }} - {{ envService.getBackendStatus() }}</span>
+    </div>
+  </div>
+
+  <!-- Main App Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <i class="fas fa-truck app-icon"></i>
+        <h1 class="app-title">JR Transport Management</h1>
+      </div>
+      <nav class="main-nav">
+        <button class="nav-btn" routerLink="/dashboard" routerLinkActive="active">
+          <i class="fas fa-tachometer-alt"></i> Dashboard
+        </button>
+        <button class="nav-btn" routerLink="/vehicles" routerLinkActive="active">
+          <i class="fas fa-truck"></i> Vehicles
+        </button>
+        <button class="nav-btn" routerLink="/drivers" routerLinkActive="active">
+          <i class="fas fa-user-tie"></i> Drivers
+        </button>
+        <button class="nav-btn" routerLink="/routes" routerLinkActive="active">
+          <i class="fas fa-route"></i> Routes
+        </button>
+        <button class="nav-btn" routerLink="/fleet" routerLinkActive="active">
+          <i class="fas fa-map-marked-alt"></i> Fleet Tracking
+        </button>
+        <button class="nav-btn" routerLink="/customers" routerLinkActive="active">
+          <i class="fas fa-users"></i> Customers
+        </button>
+      </nav>
+      
+      <!-- User Authentication Section -->
+      <div class="auth-section">
+        <div *ngIf="authService.isAuthenticated; else authButtons" class="user-menu">
+          <div class="user-info" (click)="toggleUserMenu()">
+            <div class="user-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+              <span class="user-name">{{ getCurrentUserName() }}</span>
+              <span class="user-role">{{ getCurrentUserRole() }}</span>
+            </div>
+            <i class="fas fa-chevron-down" [class.rotated]="showUserMenu"></i>
+          </div>
+          
+          <div class="user-dropdown" [class.show]="showUserMenu">
+            <button class="dropdown-item" (click)="viewProfile()">
+              <i class="fas fa-user"></i>
+              Profile
+            </button>
+            <button class="dropdown-item" (click)="viewSettings()">
+              <i class="fas fa-cog"></i>
+              Settings
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item logout" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i>
+              Sign Out
+            </button>
+          </div>
+        </div>
+        
+        <ng-template #authButtons>
+          <div class="auth-buttons">
+            <button class="auth-btn login-btn" (click)="openLoginDialog()">
+              <i class="fas fa-sign-in-alt"></i>
+              Sign In
+            </button>
+            <button class="auth-btn signup-btn" (click)="openSignupDialog()">
+              <i class="fas fa-user-plus"></i>
+              Sign Up
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+      <!-- Welcome section when no route is active -->
+      <!-- <div class="welcome-section" *ngIf="!hasActiveRoute()">
+        <div class="welcome-content">
+          <h2>Welcome to Educare Management System</h2>
+          <p>Your comprehensive solution for managing Transport operations efficiently with JR Transport.</p>
+          <div class="feature-grid">
+            <div class="feature-card" routerLink="/students">
+              <i class="fas fa-users"></i>
+              <h3>Student Management</h3>
+              <p>Manage student enrollments, profiles, and academic records</p>
+            </div>
+            <div class="feature-card" routerLink="/teachers">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <h3>Teacher Management</h3>
+              <p>Handle staff profiles, assignments, and schedules</p>
+            </div>
+            <div class="feature-card" routerLink="/classes">
+              <i class="fas fa-school"></i>
+              <h3>Class Management</h3>
+              <p>Create and manage classes, schedules, and capacity</p>
+            </div>
+            <div class="feature-card" routerLink="/attendance">
+              <i class="fas fa-calendar-check"></i>
+              <h3>Attendance Tracking</h3>
+              <p>Track daily attendance with detailed reports</p>
+            </div>
+            <div class="feature-card" routerLink="/communication">
+              <i class="fas fa-comments"></i>
+              <h3>Parent Communication</h3>
+              <p>Send messages, announcements, and progress reports</p>
+            </div>
+            <div class="feature-card" routerLink="/dashboard">
+              <i class="fas fa-chart-bar"></i>
+              <h3>Analytics Dashboard</h3>
+              <p>View key metrics and insights at a glance</p>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Router Outlet for Feature Components -->
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>&copy; 2025 JR Transport Management System. Built with Angular PWA.</p>
+      <div class="footer-links">
+        <span class="status-indicator" [class.online]="isOnline" [class.offline]="!isOnline">
+          {{ isOnline ? 'Online' : 'Offline' }}
+        </span>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Educare Favicon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        .favicon-container {
+            margin: 20px 0;
+        }
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Educare Favicon Generator</h1>
+    <p>This tool generates a custom "E" favicon for Educare.</p>
+    
+    <div class="favicon-container">
+        <h3>Generated Favicon:</h3>
+        <canvas id="favicon" width="32" height="32"></canvas>
+        <button onclick="downloadFavicon()">Download favicon.ico</button>
+    </div>
+
+    <script>
+        function createEducareFavicon() {
+            const canvas = document.getElementById('favicon');
+            const ctx = canvas.getContext('2d');
+
+            // Clear canvas
+            ctx.clearRect(0, 0, 32, 32);
+
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 32, 32);
+            gradient.addColorStop(0, '#ff6b35');
+            gradient.addColorStop(1, '#f7931e');
+            
+            // Draw background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 32, 32);
+
+            // Draw the letter "E"
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('E', 16, 16);
+
+            // Add a subtle border
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(1, 1, 30, 30);
+        }
+
+        function downloadFavicon() {
+            const canvas = document.getElementById('favicon');
+            
+            // Create a temporary link element and trigger download
+            const link = document.createElement('a');
+            link.download = 'favicon.ico';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Generate favicon on page load
+        window.onload = createEducareFavicon;
+    </script>
+</body>
+</html>

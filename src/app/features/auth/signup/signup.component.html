@@ -1,0 +1,206 @@
+<!-- Beautiful Bootstrap Modal Signup Dialog with iOS-compatible height -->
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="max-height: 90vh; display: flex; flex-direction: column;">
+
+        <!-- Header - Fixed at top -->
+        <div class="card-header bg-gradient text-white text-center position-relative p-2 flex-shrink-0" style="background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;">
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" (click)="onCancel()" aria-label="Close"></button>
+          <div class="d-flex flex-column align-items-center">
+            <i class="fas fa-truck fa-lg text-white mb-1"></i>
+            <h5 class="fw-bold mb-0">Join JR Transport</h5>
+            <p class="mb-0 opacity-75" style="font-size: 0.75rem;">Create your transport management account</p>
+          </div>
+        </div>
+
+        <!-- Body - Scrollable content -->
+        <div class="card-body p-3 flex-grow-1 overflow-auto" #scrollContainer>>
+          <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+
+            <!-- Error Alert with retry option -->
+            <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center" role="alert">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <div class="flex-grow-1">{{ errorMessage }}</div>
+              <button *ngIf="errorMessage.includes('Unable to connect') || errorMessage.includes('Server is starting')" 
+                      type="button" 
+                      class="btn btn-outline-danger btn-sm ms-2"
+                      (click)="onSubmitWithRetry()"
+                      [disabled]="isLoading">
+                <i class="fas fa-redo me-1"></i>
+                Retry
+              </button>
+            </div>
+
+            <!-- First Name -->
+            <div class="mb-2">
+              <input id="firstName" 
+                     class="form-control" 
+                     formControlName="firstName" 
+                     placeholder="First Name"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('firstName')">
+              <small *ngIf="isFieldInvalid('firstName')" class="text-danger">{{ getFieldError('firstName') }}</small>
+            </div>
+
+            <!-- Last Name -->
+            <div class="mb-2">
+              <input id="lastName" 
+                     class="form-control" 
+                     formControlName="lastName" 
+                     placeholder="Last Name"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('lastName')">
+              <small *ngIf="isFieldInvalid('lastName')" class="text-danger">{{ getFieldError('lastName') }}</small>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-2">
+              <input id="email" 
+                     class="form-control" 
+                     [class.is-invalid]="isFieldInvalid('email')"
+                     [class.is-valid]="!isFieldInvalid('email') && signupForm.get('email')?.touched && signupForm.get('email')?.value"
+                     formControlName="email" 
+                     placeholder="Email Address"
+                     (focus)="onFieldFocus('email')"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('email')">
+              <small *ngIf="isFieldInvalid('email')" class="text-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
+              </small>
+            </div>
+
+            <!-- Username -->
+            <div class="mb-2">
+              <input id="username" 
+                     class="form-control" 
+                     [class.is-invalid]="isFieldInvalid('username')"
+                     [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
+                     formControlName="username" 
+                     placeholder="Username"
+                     (focus)="onFieldFocus('username')"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('username')">
+              <small *ngIf="isFieldInvalid('username')" class="text-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
+              </small>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="mb-2">
+              <input id="phoneNumber" 
+                     class="form-control" 
+                     formControlName="phoneNumber" 
+                     placeholder="Phone Number (optional)"
+                     (focus)="onFieldFocus('phoneNumber')"
+                     (keydown)="onFieldEnterKey($event)">
+              <small *ngIf="isFieldInvalid('phoneNumber')" class="text-danger">{{ getFieldError('phoneNumber') }}</small>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-2">
+              <div class="input-group">
+                <input [type]="hidePassword ? 'password' : 'text'" 
+                       id="password" 
+                       class="form-control" 
+                       formControlName="password" 
+                       placeholder="Password"
+                       (keydown)="onFieldEnterKey($event)"
+                       (blur)="onFieldBlur('password')"
+                       (focus)="onFieldFocus('password')">
+                <button class="btn btn-outline-secondary" type="button" (click)="hidePassword = !hidePassword">
+                  <i class="fas" [class.fa-eye]="hidePassword" [class.fa-eye-slash]="!hidePassword"></i>
+                </button>
+              </div>
+              <small *ngIf="isFieldInvalid('password')" class="text-danger">{{ getFieldError('password') }}</small>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-2">
+              <div class="input-group">
+                <input [type]="hideConfirmPassword ? 'password' : 'text'" 
+                       id="confirmPassword" 
+                       class="form-control" 
+                       formControlName="confirmPassword" 
+                       placeholder="Confirm Password"
+                       (keydown)="onLastFieldEnterKey($event)"
+                       (blur)="onFieldBlur('confirmPassword')"
+                       (focus)="onFieldFocus('confirmPassword')">
+                <button class="btn btn-outline-secondary" type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+                  <i class="fas" [class.fa-eye]="hideConfirmPassword" [class.fa-eye-slash]="!hideConfirmPassword"></i>
+                </button>
+              </div>
+              <small *ngIf="isFieldInvalid('confirmPassword')" class="text-danger">{{ getFieldError('confirmPassword') }}</small>
+            </div>
+
+            <!-- Role -->
+            <div class="mb-2">
+              <select class="form-select" 
+                      id="role" 
+                      formControlName="role"
+                      (keydown)="onFieldEnterKey($event)"
+                      (focus)="onFieldFocus('role')">
+                <option value="" disabled selected>Select Role</option>
+                <option *ngFor="let option of roleOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+              <small *ngIf="isFieldInvalid('role')" class="text-danger">{{ getFieldError('role') }}</small>
+            </div>
+
+            <!-- Terms -->
+            <div class="form-check mb-3">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     id="agreeTerms" 
+                     formControlName="agreeTerms"
+                     (keydown)="onLastFieldEnterKey($event)"
+                     (focus)="onFieldFocus('agreeTerms')"
+                     style="border-color: #dc3545; border-width: 2px; background-color: transparent;">
+              <label class="form-check-label fw-semibold" for="agreeTerms" style="color: #8b4513;">
+                I agree to the Terms and Conditions
+              </label>
+              <br />
+              <small *ngIf="isFieldInvalid('agreeTerms')" class="text-danger">{{ getFieldError('agreeTerms') }}</small>
+            </div>
+
+          </form>
+
+          <!-- Success Message at Bottom -->
+          <div *ngIf="successMessage" 
+               id="successMessage"
+               class="alert alert-success d-flex align-items-center mt-3" 
+               role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>{{ successMessage }}</div>
+          </div>
+        </div>
+
+        <!-- Footer - Fixed at bottom -->
+        <div class="card-footer bg-primary bg-opacity-10 text-center border-0 py-4 flex-shrink-0">
+          
+          <!-- Submit Button -->
+          <button #submitButton class="btn btn-primary btn-sm px-4 py-2 mb-3 rounded-pill fw-semibold" type="submit" [disabled]="signupForm.invalid || isLoading" form="signupForm">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+            <i *ngIf="!isLoading" class="fas fa-user-plus me-2"></i>
+            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+          </button>
+          
+          <small class="text-muted d-block">
+            <div class="mb-1">Already have an account? 
+              <button type="button" 
+                      class="btn btn-link p-0 text-decoration-none fw-semibold" 
+                      style="vertical-align: baseline; font-size: inherit;"
+                      (click)="switchToLogin()">
+                Login here
+              </button>
+            </div>
+            <div class="text-info small" style="font-size: 0.75rem;">
+              <i class="fas fa-info-circle me-1"></i>
+              First-time server connection may take 30-60 seconds
+            </div>
+          </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="schoolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f7931e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="roofGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#schoolGradient)" stroke="#ffffff" stroke-width="8"/>
+  
+  <!-- School Building -->
+  <rect x="120" y="280" width="272" height="160" fill="#ffffff" stroke="#333" stroke-width="3"/>
+  
+  <!-- School Roof -->
+  <polygon points="100,280 256,180 412,280" fill="url(#roofGradient)" stroke="#333" stroke-width="3"/>
+  
+  <!-- School Door -->
+  <rect x="220" y="350" width="72" height="90" fill="#8b4513" stroke="#333" stroke-width="2"/>
+  <circle cx="280" cy="395" r="4" fill="#ffd700"/>
+  
+  <!-- Windows -->
+  <rect x="140" y="320" width="50" height="40" fill="#87ceeb" stroke="#333" stroke-width="2"/>
+  <rect x="322" y="320" width="50" height="40" fill="#87ceeb" stroke="#333" stroke-width="2"/>
+  <line x1="165" y1="320" x2="165" y2="360" stroke="#333" stroke-width="1"/>
+  <line x1="140" y1="340" x2="190" y2="340" stroke="#333" stroke-width="1"/>
+  <line x1="347" y1="320" x2="347" y2="360" stroke="#333" stroke-width="1"/>
+  <line x1="322" y1="340" x2="372" y2="340" stroke="#333" stroke-width="1"/>
+  
+  <!-- School Sign -->
+  <rect x="180" y="240" width="152" height="30" fill="#ffffff" stroke="#333" stroke-width="2"/>
+  <text x="256" y="258" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">PlaySchool</text>
+  
+  <!-- Playground Elements -->
+  <!-- Swing -->
+  <rect x="80" y="380" width="6" height="60" fill="#8b4513"/>
+  <rect x="86" y="380" width="6" height="60" fill="#8b4513"/>
+  <line x1="83" y1="380" x2="83" y2="360" stroke="#333" stroke-width="2"/>
+  <line x1="89" y1="380" x2="89" y2="360" stroke="#333" stroke-width="2"/>
+  <rect x="75" y="430" width="20" height="8" fill="#ff6b35" rx="4"/>
+  
+  <!-- Tree -->
+  <rect x="420" y="380" width="12" height="60" fill="#8b4513"/>
+  <circle cx="426" cy="370" r="25" fill="#228b22"/>
+  
+  <!-- Children figures -->
+  <circle cx="160" cy="400" r="8" fill="#ffdbac"/>
+  <rect x="155" y="408" width="10" height="20" fill="#ff6b35"/>
+  <rect x="153" y="428" width="6" height="12" fill="#000080"/>
+  <rect x="161" y="428" width="6" height="12" fill="#000080"/>
+  
+  <circle cx="350" cy="400" r="8" fill="#ffdbac"/>
+  <rect x="345" y="408" width="10" height="20" fill="#ff69b4"/>
+  <rect x="343" y="428" width="6" height="12" fill="#000080"/>
+  <rect x="351" y="428" width="6" height="12" fill="#000080"/>
+  
+  <!-- Sun -->
+  <circle cx="100" cy="120" r="20" fill="#ffd700"/>
+  <line x1="100" y1="85" x2="100" y2="95" stroke="#ffd700" stroke-width="3"/>
+  <line x1="125" y1="95" x2="118" y2="102" stroke="#ffd700" stroke-width="3"/>
+  <line x1="135" y1="120" x2="125" y2="120" stroke="#ffd700" stroke-width="3"/>
+  <line x1="125" y1="145" x2="118" y2="138" stroke="#ffd700" stroke-width="3"/>
+  <line x1="100" y1="155" x2="100" y2="145" stroke="#ffd700" stroke-width="3"/>
+  <line x1="75" y1="145" x2="82" y2="138" stroke="#ffd700" stroke-width="3"/>
+  <line x1="65" y1="120" x2="75" y2="120" stroke="#ffd700" stroke-width="3"/>
+  <line x1="75" y1="95" x2="82" y2="102" stroke="#ffd700" stroke-width="3"/>
+</svg>

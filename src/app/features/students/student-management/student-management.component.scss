@@ -1,0 +1,411 @@
+.student-management-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  
+  .management-header {
+    background: white;
+    padding: 2rem;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    border-bottom: 3px solid #ff6b35;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .header-content {
+      .main-title {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        i {
+          color: #ff6b35;
+          font-size: 2.2rem;
+        }
+      }
+
+      .subtitle {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin: 0;
+        font-weight: 400;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 150px;
+        justify-content: center;
+
+        &.btn-primary {
+          background: #007bff;
+          color: white;
+          border-color: #007bff;
+
+          &:hover, &.active {
+            background: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+          }
+        }
+
+        &.btn-success {
+          background: #28a745;
+          color: white;
+          border-color: #28a745;
+
+          &:hover, &.active {
+            background: #1e7e34;
+            border-color: #1e7e34;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+          }
+        }
+
+        i {
+          font-size: 1rem;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 1.5rem;
+      text-align: center;
+
+      .header-content .main-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .action-buttons {
+        width: 100%;
+        
+        .btn {
+          flex: 1;
+          min-width: auto;
+        }
+      }
+    }
+  }
+
+  .breadcrumb-nav {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1rem 2rem;
+    backdrop-filter: blur(10px);
+
+    .breadcrumb {
+      margin: 0;
+      background: none;
+      padding: 0;
+
+      .breadcrumb-item {
+        font-size: 0.9rem;
+
+        a {
+          color: #ff6b35;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+
+          &:hover {
+            color: #e55a2b;
+            text-decoration: underline;
+          }
+
+          i {
+            font-size: 0.8rem;
+          }
+        }
+
+        &.active {
+          color: #6c757d;
+          font-weight: 500;
+        }
+
+        &:not(:last-child)::after {
+          content: "/";
+          margin: 0 0.5rem;
+          color: #6c757d;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 0.75rem 1rem;
+
+      .breadcrumb {
+        font-size: 0.8rem;
+        flex-wrap: wrap;
+      }
+    }
+  }
+
+  .content-area {
+    padding: 2rem;
+
+    .view-container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out;
+
+      .view-header {
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        color: white;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .view-title {
+          h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            i {
+              font-size: 1.6rem;
+            }
+          }
+
+          p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1rem;
+          }
+        }
+
+        .add-student-btn,
+        .back-btn {
+          background: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+          }
+        }
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+
+          .view-title h2 {
+            font-size: 1.5rem;
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+
+          .add-student-btn,
+          .back-btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 1rem;
+    }
+  }
+
+  .quick-stats {
+    position: static; // Remove fixed positioning
+    margin: 2rem 0; // Add margin instead of fixed positioning
+    margin-left: 0; // Extreme left alignment
+
+    .stats-container {
+      display: flex;
+      flex-direction: row; // Horizontal layout
+      gap: 1rem;
+      justify-content: flex-start; // Align to left
+      flex-wrap: wrap;
+
+      .stat-item {
+        background: white;
+        padding: 0.75rem; // Smaller padding
+        border-radius: 8px; // Smaller border radius
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem; // Smaller gap
+        min-width: 140px; // Smaller width
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+          width: 35px; // Smaller icon container
+          height: 35px; // Smaller icon container
+          background: linear-gradient(135deg, #ff6b35, #f7931e);
+          color: white;
+          border-radius: 8px; // Smaller border radius
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          i {
+            font-size: 1rem; // Smaller icon size
+          }
+        }
+
+        .stat-content {
+          .stat-number {
+            font-size: 1.25rem; // Smaller number
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+          }
+
+          .stat-label {
+            font-size: 0.75rem; // Smaller label
+            color: #6c757d;
+            margin-top: 0.25rem;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .stats-container {
+        flex-direction: row;
+        justify-content: flex-start; // Keep left alignment
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        .stat-item {
+          flex: 1;
+          min-width: 150px;
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.quick-stats .stat-item {
+  animation: slideInRight 0.6s ease-out;
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .student-management-container {
+    .management-header {
+      padding: 1rem;
+
+      .header-content .main-title {
+        font-size: 1.5rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        width: 100%;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+
+    .breadcrumb-nav {
+      padding: 0.5rem 1rem;
+    }
+
+    .content-area {
+      padding: 1rem 0.5rem;
+
+      .view-container .view-header {
+        padding: 1rem;
+
+        .view-title h2 {
+          font-size: 1.3rem;
+        }
+      }
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .student-management-container {
+    .management-header,
+    .breadcrumb-nav,
+    .quick-stats {
+      display: none;
+    }
+
+    .content-area {
+      padding: 0;
+
+      .view-container {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+      }
+    }
+  }
+}

@@ -1,0 +1,818 @@
+@use '@angular/material' as mat;
+@include mat.core();
+
+/* Global Styles for JR Transport Management PWA */
+
+// Prevent unwanted scrolling during page load and dialog initialization
+html, body {
+  scroll-behavior: auto !important;
+}
+
+// Override any smooth scroll behavior when dialogs are opened
+.cdk-overlay-container {
+  scroll-behavior: auto !important;
+}
+
+// Define custom color palettes for JR Transport Management
+$jr-blue: (
+  50: #e3f2fd,
+  100: #bbdefb,
+  200: #90caf9,
+  300: #64b5f6,
+  400: #42a5f5,
+  500: #2196f3,
+  600: #1e88e5,
+  700: #1976d2,
+  800: #1565c0,
+  900: #0d47a1,
+  A100: #82b1ff,
+  A200: #448aff,
+  A400: #2979ff,
+  A700: #2962ff,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
+  )
+);
+
+$jr-red: (
+  50: #ffebee,
+  100: #ffcdd2,
+  200: #ef9a9a,
+  300: #e57373,
+  400: #ef5350,
+  500: #f44336,
+  600: #e53935,
+  700: #d32f2f,
+  800: #c62828,
+  900: #b71c1c,
+  A100: #ff8a80,
+  A200: #ff5252,
+  A400: #ff1744,
+  A700: #d50000,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+    A100: rgba(black, 0.87),
+    A200: white,
+    A400: white,
+    A700: white,
+  )
+);
+
+// Define a custom theme with blue and red colors
+$primary: mat.define-palette($jr-blue, 600);
+$accent: mat.define-palette($jr-red, 500);
+$warn: mat.define-palette($jr-red, 700);
+
+$theme: mat.define-light-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  )
+));
+
+// Include only the Material components we need
+@include mat.button-theme($theme);
+@include mat.form-field-theme($theme);
+@include mat.input-theme($theme);
+@include mat.select-theme($theme);
+@include mat.dialog-theme($theme);
+@include mat.icon-theme($theme);
+@include mat.progress-spinner-theme($theme);
+@include mat.divider-theme($theme);
+
+// External CSS Libraries (optimized)
+@import '~bootstrap/dist/css/bootstrap.min.css';
+@import '~@fortawesome/fontawesome-free/css/all.min.css';
+
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f8f9fa;
+}
+
+body {
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* PWA specific styles */
+:root {
+  --primary-color: #1976d2;
+  --secondary-color: #2196f3;
+  --accent-color: #f44336;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #d32f2f;
+  --text-primary: #1565c0;
+  --text-secondary: #757575;
+  --background-light: #f8f9fa;
+  --background-white: #ffffff;
+  --border-color: #e3f2fd;
+  --shadow-light: 0 2px 10px rgba(25, 118, 210, 0.1);
+  --shadow-medium: 0 4px 20px rgba(25, 118, 210, 0.15);
+  --border-radius: 0.5rem;
+  --transition: all 0.3s ease;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.1rem; }
+h6 { font-size: 1rem; }
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* Links */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: var(--transition);
+
+  &:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+  }
+}
+
+/* Buttons */
+.btn {
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-medium);
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+
+  &:hover {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+  }
+}
+
+.btn-secondary {
+  background: var(--background-white);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+
+  &:hover {
+    background: var(--background-light);
+  }
+}
+
+.btn-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-danger {
+  background: var(--error-color);
+  color: white;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Cards */
+.card {
+  background: var(--background-white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+
+  &:hover {
+    box-shadow: var(--shadow-medium);
+  }
+}
+
+.card-header {
+  background: var(--background-light);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  background: var(--background-light);
+  border-top: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+  background: var(--background-white);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+  }
+
+  &.is-invalid {
+    border-color: var(--error-color);
+  }
+
+  &.is-valid {
+    border-color: var(--success-color);
+  }
+}
+
+.form-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.invalid-feedback {
+  color: var(--error-color);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.valid-feedback {
+  color: var(--success-color);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Alerts */
+.alert {
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.alert-warning {
+  background: rgba(255, 152, 0, 0.1);
+  border-color: var(--warning-color);
+  color: var(--warning-color);
+}
+
+.alert-danger {
+  background: rgba(244, 67, 54, 0.1);
+  border-color: var(--error-color);
+  color: var(--error-color);
+}
+
+.alert-info {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* Tables */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  background: var(--background-white);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-light);
+}
+
+.table th,
+.table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  background: var(--background-light);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 107, 53, 0.05);
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--primary-color); }
+.text-secondary { color: var(--text-secondary); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-danger { color: var(--error-color); }
+
+.bg-primary { background-color: var(--primary-color); }
+.bg-light { background-color: var(--background-light); }
+.bg-white { background-color: var(--background-white); }
+
+.d-none { display: none; }
+.d-block { display: block; }
+.d-inline { display: inline; }
+.d-inline-block { display: inline-block; }
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+
+.justify-content-center { justify-content: center; }
+.justify-content-between { justify-content: space-between; }
+.justify-content-around { justify-content: space-around; }
+.align-items-center { align-items: center; }
+.align-items-start { align-items: flex-start; }
+.align-items-end { align-items: flex-end; }
+
+.m-0 { margin: 0; }
+.m-1 { margin: 0.25rem; }
+.m-2 { margin: 0.5rem; }
+.m-3 { margin: 1rem; }
+.m-4 { margin: 1.5rem; }
+.m-5 { margin: 3rem; }
+
+.p-0 { padding: 0; }
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-3 { padding: 1rem; }
+.p-4 { padding: 1.5rem; }
+.p-5 { padding: 3rem; }
+
+.w-100 { width: 100%; }
+.h-100 { height: 100%; }
+
+/* Loading States */
+.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Utilities */
+@media (max-width: 575px) {
+  .d-sm-none { display: none; }
+  .d-sm-block { display: block; }
+}
+
+@media (max-width: 767px) {
+  .d-md-none { display: none; }
+  .d-md-block { display: block; }
+}
+
+@media (max-width: 991px) {
+  .d-lg-none { display: none; }
+  .d-lg-block { display: block; }
+}
+
+@media (max-width: 1199px) {
+  .d-xl-none { display: none; }
+  .d-xl-block { display: block; }
+}
+
+/* iOS-specific PWA styles */
+@supports (-webkit-appearance: none) {
+  html, body {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* iOS safe area support */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-right: env(safe-area-inset-right);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+  --safe-area-inset-left: env(safe-area-inset-left);
+}
+
+/* iOS PWA-specific styles when in standalone mode */
+@media (display-mode: standalone) {
+  body {
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+  }
+  
+  /* Prevent zoom on input focus (iOS Safari) */
+  input, select, textarea, button {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+}
+
+/* iOS touch improvements */
+button, .btn, .card, .nav-btn {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* iOS overscroll behavior */
+body, html {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent iOS zoom on double tap */
+* {
+  touch-action: manipulation;
+}
+
+/* iOS status bar handling */
+@media (max-device-width: 767px) and (-webkit-min-device-pixel-ratio: 2) {
+  .app-header {
+    padding-top: max(var(--safe-area-inset-top), 1rem);
+  }
+}
+
+/* Material Design Customizations */
+.mat-mdc-form-field {
+  &.mat-form-field-appearance-outline {
+    .mat-mdc-form-field-outline {
+      color: rgba(0, 0, 0, 0.12);
+    }
+
+    &.mat-focused .mat-mdc-form-field-outline-thick {
+      color: mat.get-color-from-palette($primary, 500);
+    }
+
+    &.mat-form-field-invalid .mat-mdc-form-field-outline-thick {
+      color: mat.get-color-from-palette($warn, 500);
+    }
+  }
+
+  .mat-mdc-form-field-label {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  &.mat-focused .mat-mdc-form-field-label {
+    color: mat.get-color-from-palette($primary, 500);
+  }
+
+  &.mat-form-field-invalid .mat-mdc-form-field-label {
+    color: mat.get-color-from-palette($warn, 500);
+  }
+}
+
+.mat-mdc-raised-button {
+  &.mat-primary {
+    background-color: mat.get-color-from-palette($primary, 500);
+    color: white;
+  }
+
+  &.mat-accent {
+    background-color: mat.get-color-from-palette($accent, 500);
+    color: white;
+  }
+}
+
+.mat-mdc-button {
+  &.mat-primary {
+    color: mat.get-color-from-palette($primary, 500);
+  }
+}
+
+/* Material Dialog Customizations */
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: white;
+  --mdc-dialog-supporting-text-color: rgba(0, 0, 0, 0.87);
+  border-radius: 12px;
+}
+
+/* Material Select Customizations */
+.mat-mdc-select-panel {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Material Error Styling */
+.mat-mdc-form-field-error {
+  color: mat.get-color-from-palette($warn, 500);
+  font-size: 0.75rem;
+}
+
+/* JR Transport Management Specific Styles */
+
+// JR Transport Color Variables
+:root {
+  --jr-blue-primary: #1976d2;
+  --jr-blue-secondary: #2196f3;
+  --jr-blue-light: #e3f2fd;
+  --jr-red-primary: #f44336;
+  --jr-red-secondary: #ff5252;
+  --jr-red-light: #ffebee;
+  --jr-gradient: linear-gradient(135deg, #1976d2 0%, #f44336 100%);
+  --jr-gradient-reverse: linear-gradient(135deg, #f44336 0%, #1976d2 100%);
+}
+
+// JR Transport App Icon Styling
+.app-icon {
+  font-size: 2rem;
+  color: var(--jr-blue-primary);
+  margin-right: 1rem;
+  text-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+}
+
+// JR Transport Header Styling
+.app-header {
+  background: var(--jr-gradient);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+  
+  .app-title {
+    background: linear-gradient(45deg, #ffffff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+  
+  .nav-btn {
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.active {
+      background: var(--jr-red-primary);
+      border-color: var(--jr-red-primary);
+    }
+  }
+}
+
+// JR Transport Button Styling
+.btn-jr-primary {
+  background: var(--jr-gradient);
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: var(--jr-gradient-reverse);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+  }
+}
+
+.btn-jr-secondary {
+  background: var(--jr-blue-light);
+  color: var(--jr-blue-primary);
+  border: 1px solid var(--jr-blue-primary);
+  
+  &:hover {
+    background: var(--jr-blue-primary);
+    color: white;
+  }
+}
+
+// JR Transport Card Styling
+.jr-card {
+  border-left: 4px solid var(--jr-blue-primary);
+  
+  &.danger {
+    border-left-color: var(--jr-red-primary);
+  }
+  
+  .card-header {
+    background: var(--jr-blue-light);
+    color: var(--jr-blue-primary);
+    font-weight: 600;
+  }
+}
+
+// JR Transport Status Indicators
+.status-indicator {
+  &.active {
+    color: var(--jr-blue-primary);
+  }
+  
+  &.inactive {
+    color: var(--jr-red-primary);
+  }
+  
+  &.warning {
+    color: #ff9800;
+  }
+}
+
+// JR Transport Form Styling
+.form-control {
+  &:focus {
+    border-color: var(--jr-blue-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+  }
+}
+
+// JR Transport Material Dialog Customizations
+.jr-dialog {
+  .mat-mdc-dialog-surface {
+    background: var(--jr-gradient);
+  }
+  
+  .mat-mdc-dialog-container {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 
+      0 25px 50px rgba(25, 118, 210, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
+    
+    // Prevent scrolling during dialog open/close
+    scroll-behavior: auto !important;
+  }
+  
+  // Prevent any unwanted scrolling animations during dialog initialization
+  .mat-mdc-dialog-content {
+    scroll-behavior: auto !important;
+    overflow: visible !important;
+  }
+}
+
+// JR Transport Dashboard Widgets
+.dashboard-widget {
+  background: linear-gradient(135deg, var(--jr-blue-light) 0%, var(--jr-red-light) 100%);
+  border: 1px solid var(--jr-blue-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  
+  .widget-icon {
+    color: var(--jr-blue-primary);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .widget-title {
+    color: var(--jr-blue-primary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .widget-value {
+    color: var(--jr-red-primary);
+    font-size: 2rem;
+    font-weight: bold;
+  }
+}
+
+// JR Transport Navigation Styling
+.main-nav .nav-btn {
+  i {
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 0.5rem;
+  }
+}
+
+// JR Transport Mobile Responsive
+@media (max-width: 768px) {
+  .app-header {
+    .logo-section {
+      .app-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+      }
+      
+      .app-title {
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
