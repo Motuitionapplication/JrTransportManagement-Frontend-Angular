@@ -1,5 +1,5 @@
 [build]
-  publish = "dist/playschool-management"
+  publish = "dist/jr-transport-management"
   command = "npm run build"
 
 [[redirects]]
