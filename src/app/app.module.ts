@@ -14,6 +14,11 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 // Feature Modules
 import { StudentsModule } from './features/students/students.module';
 import { AuthModule } from './features/auth/auth.module';
+import { OwnerModule } from './features/owner/owner.module';
+import { CustomerModule } from './features/customer/customer.module';
+import { DriverModule } from './features/driver/driver.module';
+import { AdminModule } from './features/admin/admin.module';
+import { SuperAdminModule } from './features/super-admin/super-admin.module';
 
 @NgModule({
   declarations: [
@@ -30,10 +35,13 @@ import { AuthModule } from './features/auth/auth.module';
     AppRoutingModule,
     StudentsModule,
     AuthModule,
+    OwnerModule,
+    CustomerModule,
+    DriverModule,
+    AdminModule,
+    SuperAdminModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
-      // Register the ServiceWorker as soon as the application is stable
-      // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000'
     })
   ],
