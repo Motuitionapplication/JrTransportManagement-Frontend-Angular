@@ -27,10 +27,11 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   private subscription = new Subscription();
 
   roleOptions = [
-    { value: 'parent', label: 'Parent', icon: 'family_restroom' },
-    { value: 'teacher', label: 'Teacher', icon: 'school' },
-    { value: 'staff', label: 'Staff', icon: 'badge' },
-    { value: 'admin', label: 'Administrator', icon: 'admin_panel_settings' }
+    { value: 'owner', label: 'Owner', icon: 'person' },
+    { value: 'driver', label: 'Driver', icon: 'local_shipping' },
+    { value: 'customer', label: 'Customer', icon: 'person_outline' },
+    { value: 'admin', label: 'Admin', icon: 'admin_panel_settings' },
+    { value: 'super_admin', label: 'Super Admin', icon: 'security' }
   ];
 
   constructor(
@@ -247,7 +248,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       phoneNumber: [''],  // Simplified - make it truly optional
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
-      role: ['parent', [Validators.required]],
+      role: ['owner', [Validators.required]],
       agreeTerms: [false, [this.checkboxRequiredValidator.bind(this)]]  // Using custom validator
     });
 
@@ -386,7 +387,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [this.signupForm.value.role]
+      role: [this.signupForm.value.role] // Now sends one of the new roles
     };
 
     console.log('📤 Sending signup data:', signupData);
