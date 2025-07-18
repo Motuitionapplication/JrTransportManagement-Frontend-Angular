@@ -1,8 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-owner',
   templateUrl: './owner.component.html',
   styleUrls: ['./owner.component.scss']
 })
-export class OwnerComponent {}
+export class OwnerComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+    console.log('🏢 Owner component initialized');
+  }
+
+}

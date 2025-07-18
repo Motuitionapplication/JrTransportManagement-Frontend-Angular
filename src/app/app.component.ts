@@ -56,6 +56,7 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe((event) => {
         if (event instanceof NavigationEnd) {
           this.currentRoute = event.url;
+          console.log('🧭 Route changed to:', this.currentRoute);
         }
       });
     
@@ -97,24 +98,27 @@ export class AppComponent implements OnInit, OnDestroy {
   openLoginDialog(): void {
     const dialogRef = this.dialog.open(LoginComponent, {
       width: '400px',
+      minWidth: '350px',
       maxWidth: '90vw',
-      maxHeight: '95vh',
+      height: '60vh',
       minHeight: '400px',
+      maxHeight: '70vh',
       disableClose: false,
-      panelClass: ['auth-dialog', 'jr-dialog'],
+      panelClass: ['auth-dialog', 'jr-dialog', 'stable-dialog'],
       autoFocus: false,
       hasBackdrop: true,
       backdropClass: 'auth-backdrop',
       restoreFocus: false,
-      scrollStrategy: this.overlay.scrollStrategies.block()
+      scrollStrategy: this.overlay.scrollStrategies.block(),
+      position: { top: '15vh' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result?.success) {
         console.log('✅ User logged in successfully');
         this.showUserMenu = false;
-        // Optionally navigate to dashboard
-        this.router.navigate(['/dashboard']);
+        // Navigation is already handled by the login component based on user role
+        // No need to override with dashboard navigation
       } else if (result?.action === 'switch-to-signup') {
         this.openSignupDialog();
       }
@@ -124,15 +128,19 @@ export class AppComponent implements OnInit, OnDestroy {
   openSignupDialog(): void {
     const dialogRef = this.dialog.open(SignupComponent, {
       width: '400px',
-      maxWidth: '90vw', 
-      maxHeight: '90vh',
+      minWidth: '350px',
+      maxWidth: '90vw',
+      height: '70vh',
+      minHeight: '500px',
+      maxHeight: '80vh',
       disableClose: false,
-      panelClass: ['auth-dialog', 'jr-dialog'],
+      panelClass: ['auth-dialog', 'jr-dialog', 'stable-dialog'],
       autoFocus: false,
       hasBackdrop: true,
       backdropClass: 'auth-backdrop',
       restoreFocus: false,
-      scrollStrategy: this.overlay.scrollStrategies.block()
+      scrollStrategy: this.overlay.scrollStrategies.block(),
+      position: { top: '10vh' }
     });
 
     dialogRef.afterClosed().subscribe(result => {

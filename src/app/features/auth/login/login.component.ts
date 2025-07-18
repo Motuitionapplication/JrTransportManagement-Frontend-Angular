@@ -119,6 +119,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.dialogRef.close({ success: false });
   }
 
+  switchToSignup(): void {
+    this.dialogRef.close({ action: 'switch-to-signup' });
+  }
+
   // Quick login methods for testing
   loginAsAdmin(): void {
     this.loginForm.patchValue({

@@ -15,7 +15,7 @@
         </div>
 
         <!-- Body - Scrollable content -->
-        <div class="card-body p-3 flex-grow-1 overflow-auto" #scrollContainer>>
+        <div class="card-body p-3 flex-grow-1 overflow-auto" #scrollContainer>
           <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
 
             <!-- Error Alert with retry option -->
@@ -163,19 +163,19 @@
             </div>
 
           </form>
-
-          <!-- Success Message at Bottom -->
-          <div *ngIf="successMessage" 
-               id="successMessage"
-               class="alert alert-success d-flex align-items-center mt-3" 
-               role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <div>{{ successMessage }}</div>
-          </div>
         </div>
 
         <!-- Footer - Fixed at bottom -->
         <div class="card-footer bg-primary bg-opacity-10 text-center border-0 py-4 flex-shrink-0">
+          
+          <!-- Success Message at Bottom -->
+          <div *ngIf="successMessage" 
+               id="successMessage"
+               class="alert alert-success d-flex align-items-center justify-content-center mb-3" 
+               role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <div>{{ successMessage }}</div>
+          </div>
           
           <!-- Submit Button -->
           <button #submitButton class="btn btn-primary btn-sm px-4 py-2 mb-3 rounded-pill fw-semibold" type="submit" [disabled]="signupForm.invalid || isLoading" form="signupForm">

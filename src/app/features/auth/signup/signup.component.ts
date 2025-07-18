@@ -47,8 +47,11 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     // Component is ready
     console.log('🔐 Signup component initialized');
     
-    // Setup auto-scroll on form field changes
-    this.setupAutoScroll();
+    // Disable auto-scroll setup to prevent dialog fluctuation
+    // this.setupAutoScroll(); // DISABLED
+    
+    // Setup field-specific error clearing on value change (not on focus)
+    this.setupFieldErrorClearing();
     
     // Debug form validation - focus on individual field progression
     this.signupForm.valueChanges.subscribe(() => {
@@ -59,24 +62,38 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private setupFieldErrorClearing(): void {
+    // Clear field errors only when user actually changes the field value
+    const fieldsToWatch = ['firstName', 'lastName', 'email', 'username', 'phoneNumber', 'password', 'confirmPassword', 'role'];
+    
+    fieldsToWatch.forEach(fieldName => {
+      const control = this.signupForm.get(fieldName);
+      if (control) {
+        control.valueChanges.subscribe((newValue) => {
+          // Clear server-side error for this specific field when user changes the value
+          if (this.fieldErrors[fieldName] && newValue !== null && newValue !== undefined) {
+            console.log(`🧹 Clearing error for ${fieldName} due to value change`);
+            delete this.fieldErrors[fieldName];
+          }
+        });
+      }
+    });
+  }
+
   ngAfterViewInit(): void {
-    // NO auto-scroll on load - let user see the form naturally
-    // Reset auto-scroll flag for fresh start
+    // Keep dialog stable - no auto-scroll behaviors
     this.hasAutoScrolled = false;
     
-    // Prevent any scrolling during initial load
+    // Ensure form starts at the top and stays stable
     if (this.scrollContainer) {
       this.scrollContainer.nativeElement.scrollTop = 0;
       this.scrollContainer.nativeElement.style.scrollBehavior = 'auto';
     }
     
+    // Check if content is scrollable but don't trigger auto-scrolling
     setTimeout(() => {
       this.checkScrollable();
-      // Only enable smooth scrolling after initial load is complete
-      if (this.scrollContainer) {
-        this.scrollContainer.nativeElement.style.scrollBehavior = 'smooth';
-      }
-    }, 500); // Increased delay to ensure stable loading
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -195,8 +212,13 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 150); // Slightly longer delay
   }
 
-  // Auto-scroll to success message
+  // Auto-scroll to success message - DISABLED since success message is now in footer
   private scrollToSuccessMessage(): void {
+    // Success message is now in the footer section which is always visible
+    // No need to scroll as it's already at the bottom and visible to user
+    // Commenting out scroll behavior to prevent dialog instability
+    
+    /* DISABLED - Success message now in footer, always visible
     setTimeout(() => {
       const successElement = document.getElementById('successMessage');
       if (successElement && this.scrollContainer) {
@@ -218,6 +240,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }
     }, 100);
+    */
   }
 
   private checkScrollable(): void {
@@ -344,7 +367,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   private clearMessages(): void {
     this.errorMessage = '';
     this.successMessage = '';
-    this.fieldErrors = {};
+    // DON'T clear fieldErrors - let them persist until user changes field values
+    // this.fieldErrors = {}; // REMOVED - field errors should persist
   }
 
   // Enhanced submit with server wakeup
@@ -877,19 +901,11 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Handle field focus - only scroll when user manually reaches bottom fields
+  // Handle field focus - DISABLED auto-scroll to prevent fluctuation
   onFieldFocus(fieldName: string): void {
-    // Prevent scrolling during initial component load
-    if (!this.hasAutoScrolled) {
-      return; // Don't scroll during initial load
-    }
-    
-    // Only scroll when user reaches the very last visible field (near bottom of container)
-    if (this.isLastVisibleField(fieldName)) {
-      setTimeout(() => {
-        this.scrollToRevealNext();
-      }, 300);
-    }
+    // DO NOT clear field errors on focus - let them persist until user changes the field
+    // This ensures server-side errors like "email already exists" remain visible
+    // until the user actually modifies the field value
   }
 
   private isLastVisibleField(fieldName: string): boolean {

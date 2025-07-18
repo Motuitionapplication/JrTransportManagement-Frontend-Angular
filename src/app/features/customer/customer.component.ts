@@ -1,9 +1,17 @@
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-customer',
   templateUrl: './customer.component.html',
   styleUrls: ['./customer.component.scss']
 })
-export class CustomerComponent {}
+export class CustomerComponent implements OnInit {
+
+  constructor() { }
+
+  ngOnInit(): void {
+    console.log('Customer component initialized');
+  }
+
+}

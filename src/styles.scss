@@ -816,3 +816,61 @@ body, html {
     }
   }
 }
+
+/* Stable Dialog Styles - Fix signup/login fluctuation */
+.stable-dialog {
+  .mat-mdc-dialog-container {
+    overflow: hidden !important;
+    transform: translateZ(0) !important; // Hardware acceleration
+    backface-visibility: hidden !important; // Prevent flickering
+    
+    .mdc-dialog__surface {
+      position: relative !important;
+      overflow: hidden !important;
+      height: 100% !important;
+      max-height: none !important;
+      
+      // Prevent any auto-resizing behaviors
+      will-change: auto !important;
+      contain: layout style paint !important;
+    }
+    
+    .mdc-dialog__content {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      scroll-behavior: auto !important;
+      padding: 0 !important;
+      
+      // Stabilize scrolling
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 2px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 2px;
+        
+        &:hover {
+          background: rgba(0, 0, 0, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// Prevent body scroll when dialog is open
+.cdk-global-overlay-wrapper {
+  pointer-events: auto !important;
+}
+
+.cdk-overlay-backdrop {
+  backdrop-filter: blur(2px) !important;
+}
