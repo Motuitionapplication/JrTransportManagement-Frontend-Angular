@@ -23,6 +23,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   hidePassword = true;
   hideConfirmPassword = true;
   showScrollHint = false;
+  role: string = '';
   private hasAutoScrolled = false; // Prevent multiple auto-scrolls
   private subscription = new Subscription();
 
@@ -46,9 +47,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     // Component is ready
     console.log('🔐 Signup component initialized');
-    
-    // Disable auto-scroll setup to prevent dialog fluctuation
-    // this.setupAutoScroll(); // DISABLED
+    // Set initial role from form value
+    this.role = this.signupForm.get('role')?.value || '';
     
     // Setup field-specific error clearing on value change (not on focus)
     this.setupFieldErrorClearing();
@@ -269,6 +269,10 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       phoneNumber: [''],  // Simplified - make it truly optional
+      vehicleNumber: ['', []], // Used for Owner and Driver
+      dlNumber: ['', []], // Only for Driver
+      address: ['', []], // Used for Owner and Driver
+     age: ['', []], // Only for Customer
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       role: ['owner', [Validators.required]],
@@ -411,8 +415,24 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [this.signupForm.value.role] // Now sends one of the new roles
+      role: [this.signupForm.value.role]
     };
+    // Add Owner-specific fields if role is Owner
+    if (this.signupForm.value.role === 'Owner') {
+      signupData['vehicleNumber'] = this.signupForm.value.vehicleNumber?.trim() || '';
+      signupData['address'] = this.signupForm.value.address?.trim() || '';
+    }
+    // Add Driver-specific fields if role is Driver
+    if (this.signupForm.value.role === 'Driver') {
+      signupData['vehicleNumber'] = this.signupForm.value.vehicleNumber?.trim() || '';
+      signupData['dlNumber'] = this.signupForm.value.dlNumber?.trim() || '';
+      signupData['address'] = this.signupForm.value.address?.trim() || '';
+   }
+   // Add Customer-specific fields if role is Customer
+   if (this.signupForm.value.role === 'Customer') {
+     signupData['age'] = this.signupForm.value.age?.trim() || '';
+     signupData['address'] = this.signupForm.value.address?.trim() || '';
+    }
 
     console.log('📤 Sending signup data:', signupData);
 
@@ -506,6 +526,16 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  // Called when role dropdown changes
+  onRoleChange(event: any): void {
+    const newRole = event.target.value;
+    this.role = newRole;
+    this.signupForm.get('role')?.setValue(newRole);
+    // Optionally, reset other fields if needed for role-specific logic
+    // Example: this.signupForm.reset({ role: newRole });
+    // But here we just update the role field
   }
 
   // Form validation helpers
