@@ -13,11 +13,17 @@
     <button mat-raised-button color="warn">Account Settings</button>
   </div>
   <div class="customer-info">
-    <h3>Quick Stats</h3>
-    <ul>
-      <li>Total Orders: 8</li>
-      <li>Open Queries: 2</li>
-      <li>Account Balance: $1,200</li>
-    </ul>
+    <h3>Customer Details</h3>
+    <ng-container *ngIf="customer; else loadingOrError">
+      <ul>
+        <li><strong>Name:</strong> {{ customer.profile.firstName }} {{ customer.profile.lastName }}</li>
+        <li><strong>Email:</strong> {{ customer.profile.email }}</li>
+        <li><strong>Phone:</strong> {{ customer.profile.phoneNumber }}</li>
+        <li><strong>Address:</strong> {{ customer.profile.address.street }}, {{ customer.profile.address.city }}, {{ customer.profile.address.state }} - {{ customer.profile.address.pincode }}, {{ customer.profile.address.country }}</li>
+      </ul>
+    </ng-container>
+    <ng-template #loadingOrError>
+      <p>Loading customer details...</p>
+    </ng-template>
   </div>
 </div>

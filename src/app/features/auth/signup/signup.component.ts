@@ -23,7 +23,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   hidePassword = true;
   hideConfirmPassword = true;
   showScrollHint = false;
-  role: string = '';
   private hasAutoScrolled = false; // Prevent multiple auto-scrolls
   private subscription = new Subscription();
 
@@ -47,8 +46,9 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     // Component is ready
     console.log('🔐 Signup component initialized');
-    // Set initial role from form value
-    this.role = this.signupForm.get('role')?.value || '';
+    
+    // Disable auto-scroll setup to prevent dialog fluctuation
+    // this.setupAutoScroll(); // DISABLED
     
     // Setup field-specific error clearing on value change (not on focus)
     this.setupFieldErrorClearing();
@@ -269,10 +269,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       phoneNumber: [''],  // Simplified - make it truly optional
-      vehicleNumber: ['', []], // Used for Owner and Driver
-      dlNumber: ['', []], // Only for Driver
-      address: ['', []], // Used for Owner and Driver
-     age: ['', []], // Only for Customer
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       role: ['owner', [Validators.required]],
@@ -408,6 +404,16 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private performSignup(): void {
+    // Map frontend role to backend role format
+    const roleMap: { [key: string]: string } = {
+      owner: 'ROLE_OWNER',
+      driver: 'ROLE_DRIVER',
+      customer: 'ROLE_CUSTOMER',
+      admin: 'ROLE_ADMIN',
+      super_admin: 'ROLE_SUPER_ADMIN'
+    };
+    const selectedRole = this.signupForm.value.role;
+    const backendRole = roleMap[selectedRole] || selectedRole;
     const signupData: SignupRequest = {
       username: this.signupForm.value.username.trim(),
       email: this.signupForm.value.email.trim().toLowerCase(),
@@ -415,24 +421,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [this.signupForm.value.role]
+      role: [backendRole] // Always sends backend role format
     };
-    // Add Owner-specific fields if role is Owner
-    if (this.signupForm.value.role === 'Owner') {
-      signupData['vehicleNumber'] = this.signupForm.value.vehicleNumber?.trim() || '';
-      signupData['address'] = this.signupForm.value.address?.trim() || '';
-    }
-    // Add Driver-specific fields if role is Driver
-    if (this.signupForm.value.role === 'Driver') {
-      signupData['vehicleNumber'] = this.signupForm.value.vehicleNumber?.trim() || '';
-      signupData['dlNumber'] = this.signupForm.value.dlNumber?.trim() || '';
-      signupData['address'] = this.signupForm.value.address?.trim() || '';
-   }
-   // Add Customer-specific fields if role is Customer
-   if (this.signupForm.value.role === 'Customer') {
-     signupData['age'] = this.signupForm.value.age?.trim() || '';
-     signupData['address'] = this.signupForm.value.address?.trim() || '';
-    }
 
     console.log('📤 Sending signup data:', signupData);
 
@@ -526,16 +516,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onCancel(): void {
     this.dialogRef.close();
-  }
-
-  // Called when role dropdown changes
-  onRoleChange(event: any): void {
-    const newRole = event.target.value;
-    this.role = newRole;
-    this.signupForm.get('role')?.setValue(newRole);
-    // Optionally, reset other fields if needed for role-specific logic
-    // Example: this.signupForm.reset({ role: newRole });
-    // But here we just update the role field
   }
 
   // Form validation helpers
