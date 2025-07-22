@@ -1,3 +1,16 @@
+/* Make dashboard icon black */
+.fa-tachometer-alt {
+  color: #111 !important;
+}
+/* Make menu bar and menu text bold black */
+.super-admin-title,
+.super-admin-subtitle,
+.super-admin-actions,
+.super-admin-welcome,
+.super-admin-info {
+  color: #111 !important;
+  font-weight: bold !important;
+}
 .super-admin-dashboard {
   text-align: center;
   margin-top: 40px;
