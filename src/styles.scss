@@ -659,10 +659,8 @@ body, html {
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
   
   .app-title {
-    background: linear-gradient(45deg, #ffffff, #e3f2fd);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #0d47a1;
+    background: none;
     text-shadow: none;
   }
   
