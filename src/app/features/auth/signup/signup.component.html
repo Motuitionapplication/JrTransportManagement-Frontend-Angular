@@ -20,11 +20,10 @@
             <!-- Select Role Dropdown at Top -->
             <div class="mb-3">
               <label for="role" class="form-label fw-semibold">Select Role</label>
-              <select class="form-select" id="role" formControlName="role" (change)="onRoleChange($event)">
-                <option value="" disabled selected>Select Role</option>
-                <option value="Owner">Owner</option>
-                <option value="Driver">Driver</option>
-                <option value="Customer">Customer</option>
+              <select class="form-select" id="role" formControlName="role">
+                <option value="owner">Owner</option>
+                <option value="driver">Driver</option>
+                <option value="customer">Customer</option>
               </select>
             </div>
 
@@ -43,7 +42,7 @@
             </div>
 
             <!-- Owner Registration Fields -->
-            <ng-container *ngIf="role === 'Owner'">
+            <ng-container *ngIf="signupForm.value.role === 'owner'">
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
@@ -119,7 +118,7 @@
             </ng-container>
 
             <!-- Driver Registration Fields -->
-            <ng-container *ngIf="role === 'Driver'">
+            <ng-container *ngIf="signupForm.value.role === 'driver'">
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
@@ -201,7 +200,7 @@
             </ng-container>
 
             <!-- Customer Registration Fields -->
-            <ng-container *ngIf="role === 'Customer'">
+            <ng-container *ngIf="signupForm.value.role === 'customer'">
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"

@@ -16,10 +16,19 @@
     <h3>Customer Details</h3>
     <ng-container *ngIf="customer; else loadingOrError">
       <ul>
-        <li><strong>Name:</strong> {{ customer.profile.firstName }} {{ customer.profile.lastName }}</li>
-        <li><strong>Email:</strong> {{ customer.profile.email }}</li>
-        <li><strong>Phone:</strong> {{ customer.profile.phoneNumber }}</li>
-        <li><strong>Address:</strong> {{ customer.profile.address.street }}, {{ customer.profile.address.city }}, {{ customer.profile.address.state }} - {{ customer.profile.address.pincode }}, {{ customer.profile.address.country }}</li>
+        <li><strong>Name:</strong> {{ customer.profile?.firstName || '-' }} {{ customer.profile?.lastName || '-' }}</li>
+        <li><strong>Email:</strong> {{ customer.profile?.email || '-' }}</li>
+        <li><strong>Phone:</strong> {{ customer.profile?.phoneNumber || '-' }}</li>
+        <li><strong>Address:</strong>
+          <ng-container *ngIf="customer.profile?.address; else noAddress">
+            {{ customer.profile.address.street || '-' }},
+            {{ customer.profile.address.city || '-' }},
+            {{ customer.profile.address.state || '-' }} -
+            {{ customer.profile.address.pincode || '-' }},
+            {{ customer.profile.address.country || '-' }}
+          </ng-container>
+          <ng-template #noAddress>-</ng-template>
+        </li>
       </ul>
     </ng-container>
     <ng-template #loadingOrError>
