@@ -404,6 +404,16 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private performSignup(): void {
+    // Map frontend role to backend role format
+    const roleMap: { [key: string]: string } = {
+      owner: 'ROLE_OWNER',
+      driver: 'ROLE_DRIVER',
+      customer: 'ROLE_CUSTOMER',
+      admin: 'ROLE_ADMIN',
+      super_admin: 'ROLE_SUPER_ADMIN'
+    };
+    const selectedRole = this.signupForm.value.role;
+    const backendRole = roleMap[selectedRole] || selectedRole;
     const signupData: SignupRequest = {
       username: this.signupForm.value.username.trim(),
       email: this.signupForm.value.email.trim().toLowerCase(),
@@ -411,7 +421,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [this.signupForm.value.role] // Now sends one of the new roles
+      role: [backendRole] // Always sends backend role format
     };
 
     console.log('📤 Sending signup data:', signupData);
