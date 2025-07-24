@@ -5,8 +5,8 @@
       <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="max-height: 90vh; display: flex; flex-direction: column;">
 
         <!-- Header - Fixed at top -->
-        <!-- Stylish Easy Booking Button (visible while loading) -->
-        <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center my-3">
+        <!-- Stylish Easy Booking Button (visible only during initial loading, not after submit) -->
+        <div *ngIf="isLoading && !errorMessage && !successMessage" class="d-flex justify-content-center align-items-center my-3">
           <button class="btn btn-warning btn-lg rounded-pill shadow-lg px-5 py-2 fw-bold animate__animated animate__pulse animate__infinite" style="font-size: 1.25rem; letter-spacing: 1px;">
             <i class="fas fa-calendar-check me-2"></i>
             Easy Booking
@@ -22,16 +22,25 @@
         </div>
 
         <!-- Body - Scrollable content -->
-        <div class="card-body p-3 flex-grow-1 overflow-auto" #scrollContainer>
+        <div class="card-body p-3 flex-grow-1" #scrollContainer style="max-height: 70vh; overflow-y: scroll; scrollbar-width: thin;">
           <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
             <!-- Select Role Dropdown at Top -->
             <div class="mb-3">
-              <label for="role" class="form-label fw-semibold">Select Role</label>
-              <select class="form-select" id="role" formControlName="role">
-                <option value="owner">Owner</option>
-                <option value="driver">Driver</option>
-                <option value="customer">Customer</option>
-              </select>
+              <label for="role" class="form-label fw-semibold" style="color: #ff6b35; font-size: 1.1rem; letter-spacing: 1px;">
+                <i class="fas fa-user-tag me-2" style="color: #ff9800;"></i>
+                Select Role
+              </label>
+              <div style="position: relative;">
+                <select class="form-select stylish-role-select" id="role" formControlName="role"
+                  style="background: linear-gradient(90deg, #fffbe6 0%, #ffe0b2 100%); border: 2px solid #ff9800; border-radius: 1.5rem; box-shadow: 0 2px 8px rgba(255,107,53,0.15); font-weight: 600; color: #d84315; padding-left: 2.5rem; font-size: 1.05rem;">
+                  <option value="admin">🛡️ Admin</option>
+                  <option value="super_admin">👑 Super Admin</option>
+                  <option value="owner">🏢 Owner</option>
+                  <option value="driver">🚚 Driver</option>
+                  <option value="customer">🧑‍💼 Customer</option>
+                </select>
+                <i class="fas fa-chevron-down" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #ff9800; pointer-events: none;"></i>
+              </div>
             </div>
 
             <!-- Error Alert with retry option -->
@@ -48,8 +57,14 @@
               </button>
             </div>
 
-            <!-- Owner Registration Fields -->
-            <ng-container *ngIf="signupForm.value.role === 'owner'">
+            <!-- Admin/Super Admin Registration Fields -->
+            <ng-container *ngIf="signupForm.value.role === 'admin' || signupForm.value.role === 'super_admin'">
+              <!-- Username -->
+              <div class="mb-2">
+                <input id="username" class="form-control" formControlName="username" placeholder="Username"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
+                <small *ngIf="isFieldInvalid('username')" class="text-danger">{{ getFieldError('username') }}</small>
+              </div>
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
@@ -72,33 +87,11 @@
                   <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
                 </small>
               </div>
-              <!-- Username -->
-              <div class="mb-2">
-                <input id="username" class="form-control" [class.is-invalid]="isFieldInvalid('username')"
-                  [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
-                  formControlName="username" placeholder="Username"
-                  (focus)="onFieldFocus('username')" (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
-                <small *ngIf="isFieldInvalid('username')" class="text-danger">
-                  <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
-                </small>
-              </div>
               <!-- Phone Number -->
               <div class="mb-2">
-                <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Phone Number (optional)"
+                <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Mobile Number"
                   (focus)="onFieldFocus('phoneNumber')" (keydown)="onFieldEnterKey($event)">
                 <small *ngIf="isFieldInvalid('phoneNumber')" class="text-danger">{{ getFieldError('phoneNumber') }}</small>
-              </div>
-              <!-- Vehicle Number -->
-              <div class="mb-2">
-                <input id="vehicleNumber" class="form-control" formControlName="vehicleNumber" placeholder="Vehicle Number"
-                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('vehicleNumber')">
-                <small *ngIf="isFieldInvalid('vehicleNumber')" class="text-danger">{{ getFieldError('vehicleNumber') }}</small>
-              </div>
-              <!-- Address -->
-              <div class="mb-2">
-                <input id="address" class="form-control" formControlName="address" placeholder="Address"
-                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('address')">
-                <small *ngIf="isFieldInvalid('address')" class="text-danger">{{ getFieldError('address') }}</small>
               </div>
               <!-- Password -->
               <div class="mb-2">
@@ -126,6 +119,17 @@
 
             <!-- Driver Registration Fields -->
             <ng-container *ngIf="signupForm.value.role === 'driver'">
+                <!-- Username -->
+              <div class="mb-2">
+                <input id="username" class="form-control" [class.is-invalid]="isFieldInvalid('username')"
+                  [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
+                  formControlName="username" placeholder="Username"
+                  (focus)="onFieldFocus('username')" (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
+                <small *ngIf="isFieldInvalid('username')" class="text-danger">
+                  <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
+                </small>
+              </div>
+              
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
@@ -148,16 +152,7 @@
                   <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
                 </small>
               </div>
-              <!-- Username -->
-              <div class="mb-2">
-                <input id="username" class="form-control" [class.is-invalid]="isFieldInvalid('username')"
-                  [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
-                  formControlName="username" placeholder="Username"
-                  (focus)="onFieldFocus('username')" (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
-                <small *ngIf="isFieldInvalid('username')" class="text-danger">
-                  <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
-                </small>
-              </div>
+            
               <!-- Phone Number -->
               <div class="mb-2">
                 <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Phone Number (optional)"
@@ -206,8 +201,14 @@
               </div>
             </ng-container>
 
-            <!-- Customer Registration Fields -->
-            <ng-container *ngIf="signupForm.value.role === 'customer'">
+            <!-- Owner Registration Fields -->
+            <ng-container *ngIf="signupForm.value.role === 'owner'">
+              <!-- Username -->
+              <div class="mb-2">
+                <input id="username" class="form-control" formControlName="username" placeholder="Username"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
+                <small *ngIf="isFieldInvalid('username')" class="text-danger">{{ getFieldError('username') }}</small>
+              </div>
               <!-- First Name -->
               <div class="mb-2">
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
@@ -230,33 +231,76 @@
                   <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
                 </small>
               </div>
+              <!-- Phone Number -->
+              <div class="mb-2">
+                <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Mobile Number"
+                  (focus)="onFieldFocus('phoneNumber')" (keydown)="onFieldEnterKey($event)">
+                <small *ngIf="isFieldInvalid('phoneNumber')" class="text-danger">{{ getFieldError('phoneNumber') }}</small>
+              </div>
+              <!-- Vehicle Number -->
+              <div class="mb-2">
+                <input id="vehicleNumber" class="form-control" formControlName="vehicleNumber" placeholder="Vehicle Number"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('vehicleNumber')">
+                <small *ngIf="isFieldInvalid('vehicleNumber')" class="text-danger">{{ getFieldError('vehicleNumber') }}</small>
+              </div>
+              <!-- Password -->
+              <div class="mb-2">
+                <div class="input-group">
+                  <input [type]="hidePassword ? 'password' : 'text'" id="password" class="form-control" formControlName="password" placeholder="Password"
+                    (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('password')" (focus)="onFieldFocus('password')">
+                  <button class="btn btn-outline-secondary" type="button" (click)="hidePassword = !hidePassword">
+                    <i class="fas" [class.fa-eye]="hidePassword" [class.fa-eye-slash]="!hidePassword"></i>
+                  </button>
+                </div>
+                <small *ngIf="isFieldInvalid('password')" class="text-danger">{{ getFieldError('password') }}</small>
+              </div>
+              <!-- Confirm Password -->
+              <div class="mb-2">
+                <div class="input-group">
+                  <input [type]="hideConfirmPassword ? 'password' : 'text'" id="confirmPassword" class="form-control" formControlName="confirmPassword" placeholder="Confirm Password"
+                    (keydown)="onLastFieldEnterKey($event)" (blur)="onFieldBlur('confirmPassword')" (focus)="onFieldFocus('confirmPassword')">
+                  <button class="btn btn-outline-secondary" type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+                    <i class="fas" [class.fa-eye]="hideConfirmPassword" [class.fa-eye-slash]="!hideConfirmPassword"></i>
+                  </button>
+                </div>
+                <small *ngIf="isFieldInvalid('confirmPassword')" class="text-danger">{{ getFieldError('confirmPassword') }}</small>
+              </div>
+            </ng-container>
+            <!-- Customer Registration Fields -->
+            <ng-container *ngIf="signupForm.value.role === 'customer'">
               <!-- Username -->
               <div class="mb-2">
-                <input id="username" class="form-control" [class.is-invalid]="isFieldInvalid('username')"
-                  [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
-                  formControlName="username" placeholder="Username"
-                  (focus)="onFieldFocus('username')" (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
-                <small *ngIf="isFieldInvalid('username')" class="text-danger">
-                  <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
+                <input id="username" class="form-control" formControlName="username" placeholder="Username"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('username')">
+                <small *ngIf="isFieldInvalid('username')" class="text-danger">{{ getFieldError('username') }}</small>
+              </div>
+              <!-- First Name -->
+              <div class="mb-2">
+                <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('firstName')">
+                <small *ngIf="isFieldInvalid('firstName')" class="text-danger">{{ getFieldError('firstName') }}</small>
+              </div>
+              <!-- Last Name -->
+              <div class="mb-2">
+                <input id="lastName" class="form-control" formControlName="lastName" placeholder="Last Name"
+                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('lastName')">
+                <small *ngIf="isFieldInvalid('lastName')" class="text-danger">{{ getFieldError('lastName') }}</small>
+              </div>
+              <!-- Email -->
+              <div class="mb-2">
+                <input id="email" class="form-control" [class.is-invalid]="isFieldInvalid('email')"
+                  [class.is-valid]="!isFieldInvalid('email') && signupForm.get('email')?.touched && signupForm.get('email')?.value"
+                  formControlName="email" placeholder="Email Address"
+                  (focus)="onFieldFocus('email')" (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('email')">
+                <small *ngIf="isFieldInvalid('email')" class="text-danger">
+                  <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
                 </small>
               </div>
               <!-- Phone Number -->
               <div class="mb-2">
-                <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Phone Number (optional)"
+                <input id="phoneNumber" class="form-control" formControlName="phoneNumber" placeholder="Mobile Number"
                   (focus)="onFieldFocus('phoneNumber')" (keydown)="onFieldEnterKey($event)">
                 <small *ngIf="isFieldInvalid('phoneNumber')" class="text-danger">{{ getFieldError('phoneNumber') }}</small>
-              </div>
-              <!-- Age -->
-              <div class="mb-2">
-                <input id="age" class="form-control" formControlName="age" placeholder="Age"
-                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('age')">
-                <small *ngIf="isFieldInvalid('age')" class="text-danger">{{ getFieldError('age') }}</small>
-              </div>
-              <!-- Address -->
-              <div class="mb-2">
-                <input id="address" class="form-control" formControlName="address" placeholder="Address"
-                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('address')">
-                <small *ngIf="isFieldInvalid('address')" class="text-danger">{{ getFieldError('address') }}</small>
               </div>
               <!-- Password -->
               <div class="mb-2">

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
@@ -9,7 +9,8 @@ import { SignupRequest } from '../../../models/auth.model';
 @Component({
   selector: 'app-signup',
   templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.scss']
+  styleUrls: ['./signup.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('scrollContainer', { static: false }) scrollContainer!: ElementRef;
@@ -272,6 +273,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       role: ['owner', [Validators.required]],
+      vehicleNumber: [''], // Only used for owner/driver
       agreeTerms: [false, [this.checkboxRequiredValidator.bind(this)]]  // Using custom validator
     });
 
@@ -421,7 +423,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [backendRole] // Always sends backend role format
+      role: [backendRole], // Always sends backend role format
+      vehicleNumber: (selectedRole === 'owner' || selectedRole === 'driver') ? this.signupForm.value.vehicleNumber?.trim() : undefined
     };
 
     console.log('📤 Sending signup data:', signupData);
