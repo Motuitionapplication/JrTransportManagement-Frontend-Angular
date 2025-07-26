@@ -135,17 +135,6 @@
             <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
             {{ isLoading ? 'Signing In...' : 'Sign In' }}
           </button>
-          
-          <!-- Switch to Signup link -->
-          <div class="mt-3 pt-3 border-top">
-            <p class="text-muted mb-2">Don't have an account?</p>
-            <button type="button" 
-                    class="btn btn-outline-primary btn-sm"
-                    (click)="switchToSignup()">
-              <i class="fas fa-user-plus me-2"></i>
-              Create Account
-            </button>
-          </div>
         </div>
       </div>
     </div>

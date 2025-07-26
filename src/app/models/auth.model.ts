@@ -13,10 +13,6 @@ export interface SignupRequest {
   lastName: string;
   phoneNumber?: string;
   role?: string[];
-  vehicleNumber?: string;
-  dlNumber?: string;
-  address?: string;
-  age?: string | number;
 }
 
 export interface JwtResponse {
