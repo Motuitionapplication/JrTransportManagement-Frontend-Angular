@@ -13,6 +13,9 @@ import { ComplaintManagementComponent } from './complaint-management.component';
 import { TermManagementComponent } from './term-management.component';
 import { WalletManagementComponent } from './wallet-management.component';
 import { AnalyticsComponent } from './analytics.component';
+import { CustomerManagementComponent } from './customer-management.component';
+import { OwnerManagementComponent } from './owner-management.component';
+import { DriverManagementComponent } from './driver-management.component';
 
 const routes: Routes = [
   {
@@ -20,6 +23,9 @@ const routes: Routes = [
     component: SuperAdminDashboardComponent,
     children: [
       { path: 'user-management', component: UserManagementComponent },
+      { path: 'customer-management', component: CustomerManagementComponent },
+      { path: 'owner-management', component: OwnerManagementComponent },
+      { path: 'driver-management', component: DriverManagementComponent },
       { path: 'approval-management', component: ApprovalManagementComponent },
       { path: 'vehicle-management', component: VehicleManagementComponent },
       { path: 'consignment-management', component: ConsignmentManagementComponent },
@@ -39,6 +45,9 @@ const routes: Routes = [
     SuperAdminDashboardComponent,
     SidebarComponent,
     UserManagementComponent,
+    CustomerManagementComponent,
+    OwnerManagementComponent,
+    DriverManagementComponent,
     ApprovalManagementComponent,
     VehicleManagementComponent,
     ConsignmentManagementComponent,

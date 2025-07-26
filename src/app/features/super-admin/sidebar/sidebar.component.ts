@@ -10,6 +10,9 @@ export class SidebarComponent {
 
   sections = [
     { label: 'User Management', icon: 'fas fa-users', route: '/super-admin/user-management' },
+    { label: 'Customer Management', icon: 'fas fa-user-friends', route: '/super-admin/customer-management' },
+    { label: 'Owner Management', icon: 'fas fa-user-tie', route: '/super-admin/owner-management' },
+    { label: 'Driver Management', icon: 'fas fa-id-badge', route: '/super-admin/driver-management' },
     { label: 'Approval Management', icon: 'fas fa-user-check', route: '/super-admin/approval-management' },
     { label: 'Vehicle Management', icon: 'fas fa-truck', route: '/super-admin/vehicle-management' },
     { label: 'Consignment Management', icon: 'fas fa-box', route: '/super-admin/consignment-management' },
