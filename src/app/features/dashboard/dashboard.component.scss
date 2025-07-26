@@ -12,7 +12,7 @@
   text-align: center;
   margin-bottom: 3rem;
   padding: 2rem;
-  background: white;
+background: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
   border: 1px solid #e3f2fd;
@@ -21,9 +21,9 @@
 .welcome-content {
   .main-title {
     font-size: 2.5rem;
-    color: #1565c0;
+    color: #222;
     margin-bottom: 1rem;
-    font-weight: 700;
+    font-weight: 800;
     
     i {
       color: #f44336;
@@ -147,15 +147,18 @@
 
 /* JR Transport Card Specific Colors */
 .vehicle-card .card-icon {
-  background: linear-gradient(135deg, #1976d2, #1565c0);
+  /* Vehicle Card */
+  background: linear-gradient(135deg, #43cea2, #185a9d);
 }
 
 .driver-card .card-icon {
-  background: linear-gradient(135deg, #f44336, #d32f2f);
+  /* Driver Card */
+  background: linear-gradient(135deg, #f7971e, #ffd200);
 }
 
 .route-card .card-icon {
-  background: linear-gradient(135deg, #2196f3, #1976d2);
+  /* Routes Card */
+  background: linear-gradient(135deg, #ee9ca7, #ffdde1);
 }
 
 .fleet-card .card-icon {

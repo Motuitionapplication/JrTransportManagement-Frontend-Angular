@@ -1,0 +1,38 @@
+<div class="customer-container">
+  <h2 class="customer-title">Welcome to JR Transport Management GKCT</h2>
+  <h3 class="customer-subtitle">Customer Service Dashboard</h3>
+  <div class="customer-welcome">
+    <p>
+      Track orders, manage customer queries, and ensure satisfaction with our integrated transport management system.<br>
+      <strong>Customer Dashboard:</strong> Here you can view your orders, contact support, and manage your account.
+    </p>
+  </div>
+  <div class="customer-actions">
+    <button mat-raised-button color="primary">View Orders</button>
+    <button mat-raised-button color="accent">Contact Support</button>
+    <button mat-raised-button color="warn">Account Settings</button>
+  </div>
+  <div class="customer-info">
+    <h3>Customer Details</h3>
+    <ng-container *ngIf="customer; else loadingOrError">
+      <ul>
+        <li><strong>Name:</strong> {{ customer.profile.firstName || '-' }} {{ customer.profile.lastName || '-' }}</li>
+        <li><strong>Email:</strong> {{ customer.profile.email || '-' }}</li>
+        <li><strong>Phone:</strong> {{ customer.profile.phoneNumber || '-' }}</li>
+        <li><strong>Address:</strong>
+          <ng-container *ngIf="customer.profile.address; else noAddress">
+            {{ customer.profile.address.street || '-' }},
+            {{ customer.profile.address.city || '-' }},
+            {{ customer.profile.address.state || '-' }} -
+            {{ customer.profile.address.pincode || '-' }},
+            {{ customer.profile.address.country || '-' }}
+          </ng-container>
+          <ng-template #noAddress>-</ng-template>
+        </li>
+      </ul>
+    </ng-container>
+    <ng-template #loadingOrError>
+      <p>Loading customer details...</p>
+    </ng-template>
+  </div>
+</div>
