@@ -16,6 +16,7 @@ import { AnalyticsComponent } from './analytics.component';
 import { CustomerManagementComponent } from './customer-management.component';
 import { OwnerManagementComponent } from './owner-management.component';
 import { DriverManagementComponent } from './driver-management.component';
+import { AdminManagementComponent } from './admin-management.component';
 
 const routes: Routes = [
   {
@@ -23,6 +24,7 @@ const routes: Routes = [
     component: SuperAdminDashboardComponent,
     children: [
       { path: 'user-management', component: UserManagementComponent },
+      { path: 'admin-management', component: AdminManagementComponent },
       { path: 'customer-management', component: CustomerManagementComponent },
       { path: 'owner-management', component: OwnerManagementComponent },
       { path: 'driver-management', component: DriverManagementComponent },
@@ -45,6 +47,7 @@ const routes: Routes = [
     SuperAdminDashboardComponent,
     SidebarComponent,
     UserManagementComponent,
+    AdminManagementComponent,
     CustomerManagementComponent,
     OwnerManagementComponent,
     DriverManagementComponent,

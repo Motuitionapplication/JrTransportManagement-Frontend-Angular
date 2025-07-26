@@ -83,9 +83,18 @@
   z-index: 0;
 }
 .sidebar.collapsed {
-  width: 70px;
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
   padding-top: 1rem;
   align-items: flex-start;
+  z-index: 1000;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 2px 0 24px rgba(129,212,250,0.18);
 }
 .btn {
   width: 90%;

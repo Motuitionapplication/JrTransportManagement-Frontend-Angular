@@ -5,10 +5,30 @@
   </button>
   <ul class="nav flex-column w-100">
     <li class="nav-item" *ngFor="let section of sections">
-      <a [routerLink]="section.route" routerLinkActive="active" class="nav-link">
-        <i [class]="section.icon + ' me-2'" aria-hidden="true"></i>
-        <span *ngIf="!collapsed">{{ section.label }}</span>
-      </a>
+      <!-- User Management with children -->
+      <ng-container *ngIf="section.label === 'User Management'; else normalSection">
+        <div class="nav-link d-flex justify-content-between align-items-center" (click)="toggleUserManagement()" style="cursor:pointer;">
+          <span class="d-flex align-items-center">
+            <i [class]="section.icon + ' me-2'" aria-hidden="true"></i>
+            <span *ngIf="!collapsed">{{ section.label }}</span>
+          </span>
+          <i *ngIf="!collapsed" class="fas" [ngClass]="userManagementExpanded ? 'fa-chevron-down' : 'fa-chevron-right'" style="margin-left:auto;"></i>
+        </div>
+        <ul *ngIf="userManagementExpanded && !collapsed" class="nav flex-column ms-3">
+          <li class="nav-item" *ngFor="let child of section.children">
+            <a [routerLink]="child.route" routerLinkActive="active" class="nav-link">
+              <i [class]="child.icon + ' me-2'" aria-hidden="true"></i>
+              <span>{{ child.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </ng-container>
+      <ng-template #normalSection>
+        <a [routerLink]="section.route" routerLinkActive="active" class="nav-link">
+          <i [class]="section.icon + ' me-2'" aria-hidden="true"></i>
+          <span *ngIf="!collapsed">{{ section.label }}</span>
+        </a>
+      </ng-template>
     </li>
   </ul>
 </nav>

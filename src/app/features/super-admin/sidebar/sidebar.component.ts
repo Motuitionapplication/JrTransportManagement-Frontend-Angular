@@ -7,12 +7,19 @@ import { Component } from '@angular/core';
 })
 export class SidebarComponent {
   collapsed = false;
+  userManagementExpanded = false;
 
   sections = [
-    { label: 'User Management', icon: 'fas fa-users', route: '/super-admin/user-management' },
-    { label: 'Customer Management', icon: 'fas fa-user-friends', route: '/super-admin/customer-management' },
-    { label: 'Owner Management', icon: 'fas fa-user-tie', route: '/super-admin/owner-management' },
-    { label: 'Driver Management', icon: 'fas fa-id-badge', route: '/super-admin/driver-management' },
+    {
+      label: 'User Management',
+      icon: 'fas fa-users',
+      children: [
+        { label: 'Admin Management', icon: 'fas fa-user-shield', route: '/super-admin/admin-management' },
+        { label: 'Customer Management', icon: 'fas fa-user-friends', route: '/super-admin/customer-management' },
+        { label: 'Owner Management', icon: 'fas fa-user-tie', route: '/super-admin/owner-management' },
+        { label: 'Driver Management', icon: 'fas fa-id-badge', route: '/super-admin/driver-management' }
+      ]
+    },
     { label: 'Approval Management', icon: 'fas fa-user-check', route: '/super-admin/approval-management' },
     { label: 'Vehicle Management', icon: 'fas fa-truck', route: '/super-admin/vehicle-management' },
     { label: 'Consignment Management', icon: 'fas fa-box', route: '/super-admin/consignment-management' },
@@ -26,5 +33,10 @@ export class SidebarComponent {
 
   toggleSidebar() {
     this.collapsed = !this.collapsed;
+    console.log('Sidebar collapsed:', this.collapsed);
+  }
+
+  toggleUserManagement() {
+    this.userManagementExpanded = !this.userManagementExpanded;
   }
 }
