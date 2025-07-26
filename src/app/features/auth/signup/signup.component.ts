@@ -27,11 +27,10 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   private subscription = new Subscription();
 
   roleOptions = [
-    { value: 'owner', label: 'Owner', icon: 'person' },
-    { value: 'driver', label: 'Driver', icon: 'local_shipping' },
-    { value: 'customer', label: 'Customer', icon: 'person_outline' },
-    { value: 'admin', label: 'Admin', icon: 'admin_panel_settings' },
-    { value: 'super_admin', label: 'Super Admin', icon: 'security' }
+    { value: 'parent', label: 'Parent', icon: 'family_restroom' },
+    { value: 'teacher', label: 'Teacher', icon: 'school' },
+    { value: 'staff', label: 'Staff', icon: 'badge' },
+    { value: 'admin', label: 'Administrator', icon: 'admin_panel_settings' }
   ];
 
   constructor(
@@ -47,11 +46,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     // Component is ready
     console.log('🔐 Signup component initialized');
     
-    // Disable auto-scroll setup to prevent dialog fluctuation
-    // this.setupAutoScroll(); // DISABLED
-    
-    // Setup field-specific error clearing on value change (not on focus)
-    this.setupFieldErrorClearing();
+    // Setup auto-scroll on form field changes
+    this.setupAutoScroll();
     
     // Debug form validation - focus on individual field progression
     this.signupForm.valueChanges.subscribe(() => {
@@ -62,38 +58,24 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private setupFieldErrorClearing(): void {
-    // Clear field errors only when user actually changes the field value
-    const fieldsToWatch = ['firstName', 'lastName', 'email', 'username', 'phoneNumber', 'password', 'confirmPassword', 'role'];
-    
-    fieldsToWatch.forEach(fieldName => {
-      const control = this.signupForm.get(fieldName);
-      if (control) {
-        control.valueChanges.subscribe((newValue) => {
-          // Clear server-side error for this specific field when user changes the value
-          if (this.fieldErrors[fieldName] && newValue !== null && newValue !== undefined) {
-            console.log(`🧹 Clearing error for ${fieldName} due to value change`);
-            delete this.fieldErrors[fieldName];
-          }
-        });
-      }
-    });
-  }
-
   ngAfterViewInit(): void {
-    // Keep dialog stable - no auto-scroll behaviors
+    // NO auto-scroll on load - let user see the form naturally
+    // Reset auto-scroll flag for fresh start
     this.hasAutoScrolled = false;
     
-    // Ensure form starts at the top and stays stable
+    // Prevent any scrolling during initial load
     if (this.scrollContainer) {
       this.scrollContainer.nativeElement.scrollTop = 0;
       this.scrollContainer.nativeElement.style.scrollBehavior = 'auto';
     }
     
-    // Check if content is scrollable but don't trigger auto-scrolling
     setTimeout(() => {
       this.checkScrollable();
-    }, 100);
+      // Only enable smooth scrolling after initial load is complete
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.style.scrollBehavior = 'smooth';
+      }
+    }, 500); // Increased delay to ensure stable loading
   }
 
   ngOnDestroy(): void {
@@ -212,13 +194,8 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 150); // Slightly longer delay
   }
 
-  // Auto-scroll to success message - DISABLED since success message is now in footer
+  // Auto-scroll to success message
   private scrollToSuccessMessage(): void {
-    // Success message is now in the footer section which is always visible
-    // No need to scroll as it's already at the bottom and visible to user
-    // Commenting out scroll behavior to prevent dialog instability
-    
-    /* DISABLED - Success message now in footer, always visible
     setTimeout(() => {
       const successElement = document.getElementById('successMessage');
       if (successElement && this.scrollContainer) {
@@ -240,7 +217,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }
     }, 100);
-    */
   }
 
   private checkScrollable(): void {
@@ -271,7 +247,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       phoneNumber: [''],  // Simplified - make it truly optional
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
-      role: ['owner', [Validators.required]],
+      role: ['parent', [Validators.required]],
       agreeTerms: [false, [this.checkboxRequiredValidator.bind(this)]]  // Using custom validator
     });
 
@@ -367,8 +343,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   private clearMessages(): void {
     this.errorMessage = '';
     this.successMessage = '';
-    // DON'T clear fieldErrors - let them persist until user changes field values
-    // this.fieldErrors = {}; // REMOVED - field errors should persist
+    this.fieldErrors = {};
   }
 
   // Enhanced submit with server wakeup
@@ -404,16 +379,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private performSignup(): void {
-    // Map frontend role to backend role format
-    const roleMap: { [key: string]: string } = {
-      owner: 'ROLE_OWNER',
-      driver: 'ROLE_DRIVER',
-      customer: 'ROLE_CUSTOMER',
-      admin: 'ROLE_ADMIN',
-      super_admin: 'ROLE_SUPER_ADMIN'
-    };
-    const selectedRole = this.signupForm.value.role;
-    const backendRole = roleMap[selectedRole] || selectedRole;
     const signupData: SignupRequest = {
       username: this.signupForm.value.username.trim(),
       email: this.signupForm.value.email.trim().toLowerCase(),
@@ -421,7 +386,7 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
       lastName: this.signupForm.value.lastName.trim(),
       password: this.signupForm.value.password,
       phoneNumber: this.signupForm.value.phoneNumber?.trim() || undefined,
-      role: [backendRole] // Always sends backend role format
+      role: [this.signupForm.value.role]
     };
 
     console.log('📤 Sending signup data:', signupData);
@@ -911,11 +876,19 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Handle field focus - DISABLED auto-scroll to prevent fluctuation
+  // Handle field focus - only scroll when user manually reaches bottom fields
   onFieldFocus(fieldName: string): void {
-    // DO NOT clear field errors on focus - let them persist until user changes the field
-    // This ensures server-side errors like "email already exists" remain visible
-    // until the user actually modifies the field value
+    // Prevent scrolling during initial component load
+    if (!this.hasAutoScrolled) {
+      return; // Don't scroll during initial load
+    }
+    
+    // Only scroll when user reaches the very last visible field (near bottom of container)
+    if (this.isLastVisibleField(fieldName)) {
+      setTimeout(() => {
+        this.scrollToRevealNext();
+      }, 300);
+    }
   }
 
   private isLastVisibleField(fieldName: string): boolean {
