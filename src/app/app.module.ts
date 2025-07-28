@@ -22,6 +22,7 @@ import { CustomerModule } from './features/customer/customer.module';
 import { DriverModule } from './features/driver/driver.module';
 import { AdminModule } from './features/admin/admin.module';
 import { SuperAdminModule } from './features/super-admin/super-admin.module';
+import { AgGridModule } from 'ag-grid-angular';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { SuperAdminModule } from './features/super-admin/super-admin.module';
     DashboardComponent
   ],
   imports: [
+    AgGridModule,
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
