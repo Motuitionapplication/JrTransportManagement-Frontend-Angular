@@ -17,6 +17,7 @@ import { CustomerManagementComponent } from './customer-management.component';
 import { OwnerManagementComponent } from './owner-management.component';
 import { DriverManagementComponent } from './driver-management.component';
 import { AdminManagementComponent } from './admin-management.component';
+import { AgGridModule } from "ag-grid-angular";
 
 const routes: Routes = [
   {
@@ -61,7 +62,7 @@ const routes: Routes = [
     WalletManagementComponent,
     AnalyticsComponent
   ],
-  imports: [CommonModule, RouterModule.forChild(routes)],
+  imports: [CommonModule, RouterModule.forChild(routes), AgGridModule],
 })
 export class SuperAdminModule {}
 
