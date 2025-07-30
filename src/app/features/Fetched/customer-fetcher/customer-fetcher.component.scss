@@ -1,0 +1,34 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+  background-color: #f8f9fa; // light background
+}
+
+h2 {
+  font-weight: 700;
+  color: #007bff; // Bootstrap primary
+  margin-bottom: 1rem;
+}
+
+.ag-theme-alpine {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  font-size: 14px;
+
+  .ag-header {
+    background-color: #e9ecef;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .ag-cell {
+    line-height: 1.5;
+    padding: 0.5rem;
+  }
+
+  .btn {
+    font-size: 13px;
+    padding: 0.25rem 0.5rem;
+  }
+}

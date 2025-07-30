@@ -18,6 +18,8 @@ import { OwnerManagementComponent } from './owner-management.component';
 import { DriverManagementComponent } from './driver-management.component';
 import { AdminManagementComponent } from './admin-management.component';
 import { AgGridModule } from "ag-grid-angular";
+import { CustomerFetcherComponent } from '../Fetched/customer-fetcher/customer-fetcher.component';
+import { FormsModule } from '@angular/forms';
 
 const routes: Routes = [
   {
@@ -60,9 +62,10 @@ const routes: Routes = [
     ComplaintManagementComponent,
     TermManagementComponent,
     WalletManagementComponent,
-    AnalyticsComponent
+    AnalyticsComponent,
+    CustomerFetcherComponent
   ],
-  imports: [CommonModule, RouterModule.forChild(routes), AgGridModule],
+  imports: [CommonModule, RouterModule.forChild(routes), AgGridModule,FormsModule],
 })
 export class SuperAdminModule {}
 
