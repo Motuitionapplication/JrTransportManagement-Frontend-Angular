@@ -9,6 +9,8 @@ import { CustomerService } from '../../customer/customer.service';
 })
 export class CustomerFetcherComponent implements OnInit {
   customers: Customer[] = [];
+  searchValue: string = '';
+  private gridApi: any;
 
   columnDefs = [
     {
@@ -22,12 +24,12 @@ export class CustomerFetcherComponent implements OnInit {
     {
       headerName: 'Phone Number',
       field: 'phoneNumber',
-      valueGetter: (params: any) => params.data?.phoneNumber || '-'
+      valueGetter: (params: any) => params.data.phoneNumber || '-'
     },
     {
       headerName: 'Email',
       field: 'email',
-      valueGetter: (params: any) => params.data?.email || '-'
+      valueGetter: (params: any) => params.data.email || '-'
     },
     {
       headerName: 'City',
@@ -59,31 +61,55 @@ export class CustomerFetcherComponent implements OnInit {
 
   ngOnInit(): void {
     const cachedData = localStorage.getItem('cachedCustomers');
-
     if (cachedData) {
       this.customers = JSON.parse(cachedData);
-      console.log('Loaded customers from localStorage.');
+      console.log('✅ Loaded customers from localStorage:', this.customers);
     } else {
-      this.fetchCustomers();
+      console.log('ℹ️ No cached data found in localStorage.');
     }
+
+    this.fetchCustomers(); // Always fetch latest in background
   }
 
-  fetchCustomers() {
-    this.customerService.getAllCustomers().subscribe((data) => {
-      this.customers = data;
-      localStorage.setItem('cachedCustomers', JSON.stringify(data));
-      console.log('Fetched customers from API and cached.');
-    });
+  fetchCustomers(): void {
+    console.log('📡 Fetching customers from API...');
+    this.customerService.getAllCustomers().subscribe(
+      (data) => {
+        this.customers = data;
+        localStorage.setItem('cachedCustomers', JSON.stringify(data));
+        console.log(`✅ Customers fetched from API (${data.length} records):`, data);
+      },
+      (error) => {
+        console.error('❌ Error fetching customers:', error);
+        alert('Failed to fetch customers. Please try again later.');
+      }
+    );
   }
 
-  refreshCustomers() {
-    // Manual refresh logic if needed
+  refreshCustomers(): void {
+    console.log('🔄 Refreshing customer list...');
     this.fetchCustomers();
   }
 
-  onGridReady(params: any) {
-    params.api.addEventListener('cellClicked', (event: any) => {
+  onQuickFilterChanged(event: any): void {
+    const value = event.target.value;
+    this.searchValue = value;
+    console.log('🔍 Quick filter changed:', value);
+    if (this.gridApi) {
+      this.gridApi.setQuickFilter(value);
+    }
+  }
+
+  onGridReady(params: any): void {
+    this.gridApi = params.api;
+    console.log('✅ AG Grid is ready. Total rows loaded:', this.customers.length);
+
+    this.gridApi.addEventListener('cellClicked', (event: any) => {
       const customer = event.data;
+      console.log('📌 Cell clicked. Customer data:', customer);
+
+      if (!customer) return;
+
       if (event.event.target.classList.contains('edit-btn')) {
         this.editCustomer(customer);
       } else if (event.event.target.classList.contains('delete-btn')) {
@@ -92,14 +118,21 @@ export class CustomerFetcherComponent implements OnInit {
     });
   }
 
-  editCustomer(customer: Customer) {
-    alert(`Edit customer: ${customer.profile.firstName} ${customer.profile.lastName}`);
+  editCustomer(customer: Customer): void {
+    console.log(`✏️ Edit customer: ${customer.profile?.firstName} ${customer.profile?.lastName}`, customer);
+    alert(`Edit customer: ${customer.profile?.firstName} ${customer.profile?.lastName}`);
   }
 
-  deleteCustomer(id: string) {
+  deleteCustomer(id?: string): void {
+    if (!id) {
+      console.warn('⚠️ Invalid customer ID for deletion.');
+      return alert('Invalid customer ID.');
+    }
+
     if (confirm('Are you sure you want to delete this customer?')) {
+      console.log(`🗑️ Deleting customer with ID: ${id}`);
       this.customerService.deleteCustomer(id).subscribe(() => {
-        // Remove cache on delete to refetch updated list
+        console.log(`✅ Customer ${id} deleted successfully.`);
         localStorage.removeItem('cachedCustomers');
         this.fetchCustomers();
       });
