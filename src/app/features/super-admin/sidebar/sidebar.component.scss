@@ -1,6 +1,87 @@
+// ...existing code...
+.sidebar {
+  transition: width 0.2s;
+}
+.sidebar.expanded {
+  width: 270px !important;
+  min-width: 200px !important;
+  max-width: 320px !important;
+}
+.sidebar.collapsed {
+  width: 80px !important;
+  min-width: 60px !important;
+  max-width: 100px !important;
+}
+// Minimal sidebar font size and padding
+.sidebar {
+  font-size: 0.85rem;
+}
+
+.sidebar .nav-link, .sidebar .dropdown-item {
+  font-size: 0.80rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.sidebar .sidebar-title {
+  font-size: 0.95rem;
+}
+
+/* Moved width properties into .sidebar for clarity */
+// ...existing code...
+// ...existing code...
+// ...existing code...
+// ...existing code...
+// ...existing code...
+// ...existing code...
+.sidebar {
+  width: 165px !important;
+  min-width: 130px !important;
+  max-width: 190px !important;
+}
+
+.sidebar.collapsed ::ng-deep .nav-link {
+  display: none !important;
+  width: 80px !important;
+  min-width: 60px !important;
+  max-width: 100px !important;
+  width: 100vw;
+  min-height: 48px;
+  max-height: 48px;
+  flex-direction: row;
+  border-radius: 0 0 1.2rem 1.2rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  box-shadow: 0 2px 8px rgba(129,212,250,0.10);
+  margin-top: 56px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: center;
+}
+.nav-link {
+  font-size: 0.92rem;
+  padding: 0.3rem 0.5rem;
+  margin: 0 0.1rem;
+  border-radius: 0.7rem;
+  min-width: 90px;
+  white-space: nowrap;
+}
+.btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  margin-bottom: 0;
+  margin-right: 0.3rem;
+}
+
+.sidebar.collapsed ::ng-deep .nav,
+.sidebar.collapsed ::ng-deep ul,
+.sidebar.collapsed ::ng-deep .nav-item,
+.sidebar.collapsed ::ng-deep .nav-link {
+  display: none !important;
+}
 @media (max-width: 600px) {
   .sidebar {
-    width: 100vw;
+    width: 70vw;
     min-height: 48px;
     max-height: 48px;
     flex-direction: row;
@@ -11,11 +92,11 @@
     margin-top: 56px;
     overflow-x: auto;
     overflow-y: hidden;
-    align-items: center;
+    align-items: flex-start;
   }
   .nav {
     flex-direction: row;
-    width: 100vw;
+    width: 70vw;
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
@@ -83,9 +164,9 @@
   z-index: 0;
 }
 .sidebar.collapsed {
-  width: 70px !important;
-  min-width: 70px !important;
-  max-width: 70px !important;
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
   padding-top: 1rem;
   align-items: flex-start;
   z-index: 1000;
@@ -95,6 +176,36 @@
   height: 100vh;
   transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
   box-shadow: 2px 0 24px rgba(129,212,250,0.18);
+}
+
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 16px auto;
+}
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+}
+.hamburger-icon span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: #1565c0;
+  margin: 3px 0;
+  border-radius: 2px;
+  transition: background 0.2s;
 }
 .btn {
   width: 90%;

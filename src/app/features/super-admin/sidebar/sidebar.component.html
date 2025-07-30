@@ -1,34 +1,41 @@
-<nav class="sidebar" [class.collapsed]="collapsed">
-  <button class="btn btn-outline-light mb-3" (click)="toggleSidebar()">
-    <i [class]="collapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left'"></i>
-    {{ collapsed ? 'Expand' : 'Collapse' }}
-  </button>
-  <ul class="nav flex-column w-100">
-    <li class="nav-item" *ngFor="let section of sections">
-      <!-- User Management with children -->
-      <ng-container *ngIf="section.label === 'User Management'; else normalSection">
-        <div class="nav-link d-flex justify-content-between align-items-center" (click)="toggleUserManagement()" style="cursor:pointer;">
-          <span class="d-flex align-items-center">
-            <i [class]="section.icon + ' me-2'" aria-hidden="true"></i>
-            <span *ngIf="!collapsed">{{ section.label }}</span>
-          </span>
-          <i *ngIf="!collapsed" class="fas" [ngClass]="userManagementExpanded ? 'fa-chevron-down' : 'fa-chevron-right'" style="margin-left:auto;"></i>
+<nav class="sidebar" [ngClass]="{'expanded': sidebarExpanded, 'collapsed': !sidebarExpanded}">
+  <div class="sidebar-header">
+  
+  </div>
+  <div class="sidebar-content">
+    <ul class="nav flex-column w-100">
+      <li class="nav-item" *ngFor="let section of sections">
+        <div class="nav-link d-flex align-items-center justify-content-center" (click)="toggleManagement()" style="cursor:pointer;">
+          <i class="fas fa-bars me-2" aria-hidden="true" style="margin-right: 0.5rem;"></i>
         </div>
-        <ul *ngIf="userManagementExpanded && !collapsed" class="nav flex-column ms-3">
+        <ul *ngIf="managementExpanded" class="nav flex-column ms-3" style="position:static;">
           <li class="nav-item" *ngFor="let child of section.children">
-            <a [routerLink]="child.route" routerLinkActive="active" class="nav-link">
-              <i [class]="child.icon + ' me-2'" aria-hidden="true"></i>
-              <span>{{ child.label }}</span>
-            </a>
+            <ng-container *ngIf="child.children; else directLink">
+              <div class="nav-link d-flex justify-content-between align-items-center" (click)="$event.stopPropagation(); toggleUserManagement()" style="cursor:pointer;">
+                <span class="d-flex align-items-center">
+                  <i [class]="child.icon + ' me-2'" aria-hidden="true"></i>
+                  <span>{{ child.label }}</span>
+                </span>
+                <i class="fas" [ngClass]="userManagementExpanded ? 'fa-chevron-right' : 'fa-chevron-down'" style="margin-left:8px;"></i>
+              </div>
+              <ul *ngIf="userManagementExpanded" class="nav flex-column ms-3" style="position:static;">
+                <li class="nav-item" *ngFor="let subchild of child.children">
+                  <a [routerLink]="subchild.route" routerLinkActive="active" class="nav-link">
+                    <i [class]="subchild.icon + ' me-2'" aria-hidden="true"></i>
+                    <span>{{ subchild.label }}</span>
+                  </a>
+                </li>
+              </ul>
+            </ng-container>
+            <ng-template #directLink>
+              <a [routerLink]="child.route" routerLinkActive="active" class="nav-link">
+                <i [class]="child.icon + ' me-2'" aria-hidden="true"></i>
+                <span>{{ child.label }}</span>
+              </a>
+            </ng-template>
           </li>
         </ul>
-      </ng-container>
-      <ng-template #normalSection>
-        <a [routerLink]="section.route" routerLinkActive="active" class="nav-link">
-          <i [class]="section.icon + ' me-2'" aria-hidden="true"></i>
-          <span *ngIf="!collapsed">{{ section.label }}</span>
-        </a>
-      </ng-template>
-    </li>
-  </ul>
+      </li>
+    </ul>
+  </div>
 </nav>
