@@ -20,6 +20,7 @@ import { AdminManagementComponent } from './admin-management.component';
 import { AgGridModule } from "ag-grid-angular";
 import { CustomerFetcherComponent } from '../Fetched/customer-fetcher/customer-fetcher.component';
 import { FormsModule } from '@angular/forms';
+import { AdminFetcherComponent } from '../Fetched/admin-fetcher/admin-fetcher.component';
 
 const routes: Routes = [
   {
@@ -63,7 +64,8 @@ const routes: Routes = [
     TermManagementComponent,
     WalletManagementComponent,
     AnalyticsComponent,
-    CustomerFetcherComponent
+    CustomerFetcherComponent,
+    AdminFetcherComponent
   ],
   imports: [CommonModule, RouterModule.forChild(routes), AgGridModule,FormsModule],
 })
