@@ -18,6 +18,7 @@ import { OwnerManagementComponent } from './owner-management.component';
 import { DriverManagementComponent } from './driver-management.component';
 import { AdminManagementComponent } from './admin-management.component';
 import { AgGridModule } from "ag-grid-angular";
+import { DashboardComponent } from '../dashboard/dashboard.component';
 
 const routes: Routes = [
   {
