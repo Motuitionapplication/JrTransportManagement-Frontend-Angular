@@ -23,13 +23,12 @@ import { DriverModule } from './features/driver/driver.module';
 import { AdminModule } from './features/admin/admin.module';
 import { SuperAdminModule } from './features/super-admin/super-admin.module';
 import { AgGridModule } from 'ag-grid-angular';
-
 @NgModule({
   declarations: [
     AppComponent,
     SplashScreenComponent,
     IosInstallPromptComponent,
-    DashboardComponent
+    DashboardComponent,
   ],
   imports: [
     AgGridModule,

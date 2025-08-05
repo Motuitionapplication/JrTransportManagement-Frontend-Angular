@@ -1,0 +1,27 @@
+// Expand Icon Styling
+.expand-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.expand-icon {
+  font-size: 14px;
+  width: 100%;
+  text-align: center;
+  user-select: none;
+}
+
+// Detail Row Styling
+.ag-theme-alpine .ag-details-row {
+  background-color: #f8f9fa;
+  padding: 15px;
+}
+
+// Button Styling
+.edit-btn, .delete-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
