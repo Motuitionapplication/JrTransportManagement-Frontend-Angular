@@ -1,4 +1,5 @@
 export interface VehicleOwner {
+  drivers: any[];
   id: string;
   profile: {
     firstName: string;
