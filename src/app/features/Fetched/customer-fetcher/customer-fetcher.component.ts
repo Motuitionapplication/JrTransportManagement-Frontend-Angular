@@ -11,8 +11,25 @@ export class CustomerFetcherComponent implements OnInit {
   customers: Customer[] = [];
   searchValue: string = '';
   private gridApi: any;
-
+  selectedCustomer: any = null;
   columnDefs = [
+        {
+      headerName: 'Actions',
+      cellRenderer: () => {
+        return `
+        <button type="button" class="btn btn-sm btn-primary edit-btn me-1" title="Edit">
+        <i class="bi bi-pencil-square"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-danger delete-btn" title="Delete">
+        <i class="bi bi-trash"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-info view-btn me-1" title="View">
+          <i class="bi bi-eye"></i>
+        </button>
+        `;
+      },
+      width: 180
+    },
     {
       headerName: 'Name',
       valueGetter: (params: any) => {
@@ -38,16 +55,6 @@ export class CustomerFetcherComponent implements OnInit {
     {
       headerName: 'Status',
       field: 'accountStatus'
-    },
-    {
-      headerName: 'Actions',
-      cellRenderer: () => {
-        return `
-          <button type="button" class="btn btn-sm btn-primary edit-btn">Edit</button>
-          <button type="button" class="btn btn-sm btn-danger delete-btn ms-1">Delete</button>
-        `;
-      },
-      width: 180
     }
   ];
 
@@ -114,9 +121,20 @@ export class CustomerFetcherComponent implements OnInit {
         this.editCustomer(customer);
       } else if (event.event.target.classList.contains('delete-btn')) {
         this.deleteCustomer(customer.id);
-      }
+      } else if (
+          event.event.target.classList.contains('view-btn') ||
+          event.event.target.closest('.view-btn')
+        ) {
+          this.viewCustomer(customer);
+        }
     });
+
   }
+  viewCustomer(customer: any): void {
+    console.log(`👁️ Viewing customer: ${customer.profile?.firstName} ${customer.profile?.lastName}`, customer);
+    this.selectedCustomer = customer;
+  }
+
 
   editCustomer(customer: Customer): void {
     console.log(`✏️ Edit customer: ${customer.profile?.firstName} ${customer.profile?.lastName}`, customer);
