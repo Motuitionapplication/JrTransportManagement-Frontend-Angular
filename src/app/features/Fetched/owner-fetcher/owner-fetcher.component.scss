@@ -113,3 +113,22 @@
 .modal-dialog {
   margin-top: 10%;
 }
+.ag-theme-quartz .ag-header-cell.multiline-header {
+  /* You may need to adjust the height if it's still too small */
+  
+  height: 100% !important; 
+}
+
+/* Target the text container inside that specific header */
+::ng-deep .ag-theme-quartz .ag-header-cell.multiline-header .ag-header-cell-text {
+  white-space: normal !important;
+  line-height: 1.4;
+  text-align: center;
+}
+::ng-deep .ag-theme-quartz {
+  font-size: 14px; /* Adjust this value as needed */
+}
+::ng-deep .ag-theme-quartz .driver-header-row {
+  font-weight: bold !important;
+  background-color: #f0f0f0; /* Optional: light grey background */
+}

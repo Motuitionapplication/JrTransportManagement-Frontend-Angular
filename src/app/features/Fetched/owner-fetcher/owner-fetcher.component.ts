@@ -42,6 +42,7 @@ export class OwnerFetcherComponent implements OnInit {
   gridColumnApi: any;
 
   expandedOwnerIds: Set<string> = new Set<string>();
+  
 
   showCustomMessage: boolean = false;
   customMessage: string = '';
@@ -97,8 +98,10 @@ export class OwnerFetcherComponent implements OnInit {
   columnDefs: ColDef[] = [
     
     {
-      headerName: '',
-      width: 80,
+      headerName: 'Expand For Driver Info',
+      headerClass: 'multiline-header',
+      width: 110,
+      
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
           return ''; // No button for header row
@@ -144,21 +147,19 @@ export class OwnerFetcherComponent implements OnInit {
     {
       headerName: 'First Name',
       field: 'firstName',
-      editable: (params: any) => !params.data.isDriverHeaderRow, // Not editable for header row
+      editable: (params: any) => !params.data.isDriverHeaderRow, 
       resizable: true,
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
-          // Display the header text across the first name column
           const div = document.createElement('div');
           div.innerHTML = `<span class="driver-header-text">Drivers for ${params.data.ownerName}</span>`;
           return div;
         }
-        return params.value; // Default rendering for other rows
+        return params.value; 
       },
-      // Span the header text across multiple columns
       colSpan: (params: any) => {
         if (params.data.isDriverHeaderRow) {
-          return 6; // Span across 6 columns (adjust based on your actual column count after S.No. and List)
+          return 6; 
         }
         return 1;
       }
