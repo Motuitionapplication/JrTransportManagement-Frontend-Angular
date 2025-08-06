@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { OwnerService } from '../../owner/owner.service';
 import { DriverService } from '../../driver/driver.service';
+import { forkJoin } from 'rxjs';
+import { ColDef, GridOptions } from 'ag-grid-community'; // Import necessary types
 
+// Interface and constant definitions remain the same...
 interface DriverWithEdit {
   id: string;
   firstName: string;
@@ -18,16 +21,13 @@ interface DriverWithEdit {
     phoneNumber: string;
     status: string;
   };
-  // New properties for custom nested rows
   isDriverRow?: boolean;
   parentOwnerId?: string;
-  _sNo?: string; // Added for hierarchical S.No.
-  // Add a property to identify a header row
+  _sNo?: string;
   isDriverHeaderRow?: boolean;
 }
-
-// Define a constant for the special header row type
 const DRIVER_HEADER_ROW_TYPE = 'driver-header';
+
 
 @Component({
   selector: 'app-owner-fetcher',
@@ -35,6 +35,8 @@ const DRIVER_HEADER_ROW_TYPE = 'driver-header';
   styleUrls: ['./owner-fetcher.component.scss']
 })
 export class OwnerFetcherComponent implements OnInit {
+  public modifiedRows: Set<any> = new Set<any>();
+
   ownersForGrid: any[] = [];
   gridApi: any;
   gridColumnApi: any;
@@ -48,28 +50,55 @@ export class OwnerFetcherComponent implements OnInit {
   confirmMessage: string = '';
   confirmCallback: (() => void) | null = null;
 
-  columnDefs = [
-    {
-      headerName: 'S.No.',
-      field: '_sNo',
-      width: 80,
-      editable: false,
-      sortable: false,
-      filter: false,
-      resizable: true,
-      cellClass: (params: any) => {
-        if (params.data.isDriverRow) {
-          return 'driver-sno-indent';
-        }
-        if (params.data.isDriverHeaderRow) {
-          return 'driver-header-sno'; // Class for header S.No.
-        }
-        return '';
+
+  public actionsCellRenderer = (params: any) => {
+    if (params.data.isDriverHeaderRow) {
+      return '';
+    }
+
+    const eGui = document.createElement('div');
+    const isModified = this.modifiedRows.has(params.data);
+
+    const editOrSaveBtn = document.createElement('button');
+    editOrSaveBtn.innerText = isModified ? 'Save' : 'Edit';
+
+    editOrSaveBtn.className = isModified ? 'btn btn-sm btn-success' : 'btn btn-sm btn-primary';
+
+    editOrSaveBtn.addEventListener('click', () => {
+      if (isModified) {
+        this.onSaveRow(params.data);
+      } else {
+        params.api.startEditingCell({ rowIndex: params.rowIndex, colKey: 'firstName' });
       }
-    },
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerText = 'Delete';
+    deleteBtn.className = 'btn btn-sm btn-danger ms-1'; 
+
+    deleteBtn.addEventListener('click', () => {
+      if (params.data.isDriverRow) {
+        this.showConfirmation(`Are you sure you want to delete driver ${params.data.firstName} ${params.data.lastName}?`, () => {
+          this.deleteDriver(params.data.id, params.data.parentOwnerId);
+        });
+      } else {
+        this.showConfirmation(`Are you sure you want to delete owner ${params.data.firstName} ${params.data.lastName}?`, () => {
+          this.deleteOwner(params.data.id);
+        });
+      }
+    });
+
+    eGui.appendChild(editOrSaveBtn);
+    eGui.appendChild(deleteBtn);
+
+    return eGui;
+  }
+
+  columnDefs: ColDef[] = [
+    
     {
-      headerName: 'List',
-      width: 50,
+      headerName: '',
+      width: 80,
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
           return ''; // No button for header row
@@ -93,6 +122,24 @@ export class OwnerFetcherComponent implements OnInit {
       sortable: false,
       filter: false,
       resizable: true
+    },
+    {
+      headerName: 'S.No.',
+      field: '_sNo',
+      width: 80,
+      editable: false,
+      sortable: false,
+      filter: false,
+      resizable: true,
+      cellClass: (params: any) => {
+        if (params.data.isDriverRow) {
+          return 'driver-sno-indent';
+        }
+        if (params.data.isDriverHeaderRow) {
+          return 'driver-header-sno'; // Class for header S.No.
+        }
+        return '';
+      }
     },
     {
       headerName: 'First Name',
@@ -128,42 +175,15 @@ export class OwnerFetcherComponent implements OnInit {
     { headerName: 'Status', field: 'status', editable: true, resizable: true },
     {
       headerName: 'Actions',
-      cellRenderer: (params: any) => {
-        if (params.data.isDriverHeaderRow) {
-          return ''; // No actions for header row
-        }
-        const container = document.createElement('div');
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-sm btn-primary edit-btn';
-        editBtn.innerText = 'Edit';
-        editBtn.addEventListener('click', () => {
-          params.api.startEditingCell({ rowIndex: params.rowIndex, colKey: 'firstName' });
-        });
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-sm btn-danger delete-btn ms-1';
-        deleteBtn.innerText = 'Delete';
-        deleteBtn.addEventListener('click', () => {
-          if (params.data.isDriverRow) {
-            this.showConfirmation(`Are you sure you want to delete driver ${params.data.firstName} ${params.data.lastName}?`, () => {
-              this.deleteDriver(params.data.id, params.data.parentOwnerId);
-            });
-          } else {
-            this.showConfirmation(`Are you sure you want to delete owner ${params.data.firstName} ${params.data.lastName}?`, () => {
-              this.deleteOwner(params.data.id);
-            });
-          }
-        });
-
-        container.appendChild(editBtn);
-        container.appendChild(deleteBtn);
-        return container;
-      },
+      cellRenderer: this.actionsCellRenderer, // Use the new renderer function
       width: 180,
       editable: false,
-      resizable: true
+      resizable: true,
+      sortable: false,
+      filter: false
     }
   ];
+  // === MODIFIED SECTION END ===
 
   defaultColDef = {
     sortable: true,
@@ -174,12 +194,13 @@ export class OwnerFetcherComponent implements OnInit {
   constructor(
     private ownerService: OwnerService,
     private driverService: DriverService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.fetchOwners();
   }
 
+  // ... fetchOwners, updateRowSNo, and toggleRowExpansion methods remain the same ...
   fetchOwners() {
     this.ownerService.getAllOwners().subscribe((owners) => {
       this.ownersForGrid = owners.map(owner => ({
@@ -222,7 +243,7 @@ export class OwnerFetcherComponent implements OnInit {
           } else {
             const existingHeader = this.ownersForGrid.find(row => row.isDriverHeaderRow && row.parentOwnerId === owner.id);
             if (existingHeader) {
-                newOwnersForGrid.push(existingHeader);
+              newOwnersForGrid.push(existingHeader);
             }
           }
 
@@ -257,27 +278,17 @@ export class OwnerFetcherComponent implements OnInit {
       this.showMessage('Loading drivers...', false);
       this.ownerService.getDriversByOwner(ownerId).subscribe({
         next: (drivers) => {
-          // --- For Debugging: See what the API is actually returning ---
-          console.log('Drivers received from API:', drivers);
-          // --- Check this log in your browser console to confirm the ID field name ---
 
           const ownerIndex = this.ownersForGrid.findIndex(row => row.id === ownerId && !row.isDriverRow && !row.isDriverHeaderRow);
           if (ownerIndex !== -1) {
-            
-            // ========================= FIX IS HERE =========================
-            // The problem was that the driver object from the API likely has its ID
-            // in a field like '_id' or 'id' from the DTO, but it needs to be explicitly
-            // mapped to the 'id' property of the grid row data.
+
             const driverRows = drivers.map(driver => ({
               ...driver,
-              // The driver object from your API might have its ID in a field named 'id' or '_id'.
-              // This line ensures that the 'id' property required by the grid is correctly set.
               id: driver.id || driver._id, // <-- THE CRUCIAL FIX!
               isDriverRow: true,
               parentOwnerId: ownerId,
               status: driver.status || 'Active'
             }));
-            // ===============================================================
 
             const headerRow = {
               id: `${ownerId}-${DRIVER_HEADER_ROW_TYPE}`, // Unique ID for header
@@ -309,39 +320,53 @@ export class OwnerFetcherComponent implements OnInit {
     params.api.sizeColumnsToFit();
 
     this.gridApi.getRowClass = (params: any) => {
-      if (params.data.isDriverRow) {
-        return 'driver-row-indent';
-      }
-      if (params.data.isDriverHeaderRow) {
-        return 'driver-header-row'; // Apply class for header row styling
-      }
+      if (params.data.isDriverRow) { return 'driver-row-indent'; }
+      if (params.data.isDriverHeaderRow) { return 'driver-header-row'; }
       return '';
     };
 
+    // === MODIFIED SECTION START: onGridReady ===
     this.gridApi.addEventListener('cellValueChanged', (event: any) => {
-      const updatedData = { ...event.node.data, ...event.data };
-      console.log('Attempting to update driver/owner. updatedData:', updatedData);
+      this.modifiedRows.add(event.node.data);
+      // CRITICAL: This refresh tells the actionsCellRenderer to re-run and swap the button
+      event.api.redrawRows({ rowNodes: [event.node] });
+    });
+    // === MODIFIED SECTION END ===
+  }
 
-      if (updatedData.isDriverRow) {
-        this.driverService.updateDriverDetails(updatedData.id, updatedData).subscribe({
-          next: () => this.showMessage('Driver updated successfully.', false),
-          error: (error) => {
-            console.error('Failed to update driver:', error);
-            this.showMessage('Failed to update driver.', true);
-          }
-        });
-      } else if (!updatedData.isDriverHeaderRow) { // Don't try to update header row
-        this.ownerService.updateOwnerDetails(updatedData.id, updatedData).subscribe({
-          next: () => this.showMessage('Owner updated successfully.', false),
-          error: (error) => {
-            console.error('Failed to update owner:', error);
-            this.showMessage('Failed to update owner.', true);
-          }
-        });
+  // === NEW METHOD START: Replaces onSaveChanges with a row-specific save ===
+  public onSaveRow(rowData: any) {
+    console.log('Attempting to save row:', rowData);
+
+    const updateObservable = rowData.isDriverRow
+      ? this.driverService.updateDriverDetails(rowData.id, rowData)
+      // Ensure we don't try to save the header row
+      : !rowData.isDriverHeaderRow ? this.ownerService.updateOwnerDetails(rowData.id, rowData) : null;
+
+    if (!updateObservable) return;
+
+    updateObservable.subscribe({
+      next: () => {
+        this.showMessage(`${rowData.isDriverRow ? 'Driver' : 'Owner'} updated successfully.`, false);
+        // CRITICAL: Remove the row from the set of modified rows
+        this.modifiedRows.delete(rowData);
+
+        // Find the specific row node to refresh its cell
+        const rowNode = this.gridApi.getRowNode(rowData.id);
+        if (rowNode) {
+          // Refresh the row to swap the button back from "Save" to "Edit"
+          this.gridApi.redrawRows({ rowNodes: [rowNode] });
+        }
+      },
+      error: (error) => {
+        console.error('Failed to update row:', error);
+        this.showMessage('Failed to save changes.', true);
       }
     });
   }
+  // === NEW METHOD END ===
 
+  // ... onQuickFilterChanged, deleteOwner, deleteDriver, showMessage, and confirmation methods remain the same
   onQuickFilterChanged(event: any) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.gridApi.setQuickFilter(filterValue);

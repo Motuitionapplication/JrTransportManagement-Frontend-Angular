@@ -2,14 +2,12 @@
   <h2 class="fw-bold text-primary mb-3">Owner Management</h2>
   <input type="text" class="form-control mb-3" placeholder="Search owners..." (input)="onQuickFilterChanged($event)" />
 
-  <!-- Custom Message Display -->
   <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
        [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" role="alert">
     {{ customMessage }}
     <button type="button" class="btn-close" (click)="showCustomMessage = false" aria-label="Close"></button>
   </div>
 
-  <!-- Custom Confirmation Modal -->
   <div *ngIf="showCustomConfirm" class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -28,7 +26,6 @@
     </div>
   </div>
 
-  <!-- AG-Grid Section -->
   <ag-grid-angular class="ag-theme-alpine" style="width: 100%; height: 600px;"
     [rowData]="ownersForGrid"
     [columnDefs]="columnDefs"
@@ -37,5 +34,3 @@
   </ag-grid-angular>
 
 </div>
-
-
