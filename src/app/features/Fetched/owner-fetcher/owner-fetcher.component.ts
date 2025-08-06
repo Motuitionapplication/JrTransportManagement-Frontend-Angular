@@ -42,6 +42,7 @@ export class OwnerFetcherComponent implements OnInit {
   gridColumnApi: any;
 
   expandedOwnerIds: Set<string> = new Set<string>();
+  
 
   showCustomMessage: boolean = false;
   customMessage: string = '';
@@ -97,8 +98,10 @@ export class OwnerFetcherComponent implements OnInit {
   columnDefs: ColDef[] = [
     
     {
-      headerName: '',
-      width: 80,
+      headerName: 'Drivers for Them',
+      headerClass: 'multiline-header',
+      width: 100,
+      
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
           return ''; // No button for header row
