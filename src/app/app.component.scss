@@ -1,100 +1,100 @@
 // Footer Section Styles
-// .footer-section {
-//   background-color: #0d1b3f;
-//   color: #fff;
-//   padding: 50px 30px 20px;
-//   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.footer-section {
+  background-color: #0d1b3f;
+  color: #fff;
+  padding: 50px 30px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
-//   .footer-container {
-//     display: flex;
-//     flex-wrap: wrap;
-//     justify-content: space-between;
-//     gap: 40px;
-//     max-width: 1400px;
-//     margin: auto;
-//   }
+  .footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px;
+    max-width: 1400px;
+    margin: auto;
+  }
 
-//   .footer-column {
-//     flex: 1 1 180px;
+  .footer-column {
+    flex: 1 1 180px;
 
-//     h4 {
-//       font-size: 18px;
-//       font-weight: 600;
-//       margin-bottom: 12px;
-//     }
+    h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
 
-//     ul {
-//       list-style: none;
-//       padding: 0;
+    ul {
+      list-style: none;
+      padding: 0;
 
-//       li {
-//         font-size: 14px;
-//         margin-bottom: 8px;
-//         cursor: pointer;
+      li {
+        font-size: 14px;
+        margin-bottom: 8px;
+        cursor: pointer;
 
-//         &:hover {
-//           text-decoration: underline;
-//         }
-//       }
-//     }
-//   }
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
 
-//   .logo-socials {
-//     flex: 1 1 240px;
+  .logo-socials {
+    flex: 1 1 240px;
 
-//     .footer-logo {
-//       font-size: 24px;
-//       font-weight: 700;
-//       letter-spacing: 1px;
-//     }
+    .footer-logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
 
-//     .footer-subtext {
-//       font-size: 14px;
-//       margin: 10px 0;
-//     }
+    .footer-subtext {
+      font-size: 14px;
+      margin: 10px 0;
+    }
 
-//     .footer-icons {
-//       display: flex;
-//       gap: 12px;
-//       font-size: 18px;
+    .footer-icons {
+      display: flex;
+      gap: 12px;
+      font-size: 18px;
 
-//       i {
-//         cursor: pointer;
-//         transition: color 0.3s;
+      i {
+        cursor: pointer;
+        transition: color 0.3s;
 
-//         &:hover {
-//           color: #1e90ff;
-//         }
-//       }
-//     }
-//   }
+        &:hover {
+          color: #1e90ff;
+        }
+      }
+    }
+  }
 
-//   .footer-bottom {
-//     border-top: 1px solid #333;
-//     margin-top: 40px;
-//     padding-top: 20px;
-//     text-align: center;
-//     font-size: 13px;
-//     color: #bbb;
+  .footer-bottom {
+    border-top: 1px solid #333;
+    margin-top: 40px;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #bbb;
 
-//     p {
-//       margin: 4px 0;
-//     }
-//   }
+    p {
+      margin: 4px 0;
+    }
+  }
 
-//   @media (max-width: 900px) {
-//     .footer-container {
-//       flex-direction: column;
-//       gap: 24px;
-//       align-items: flex-start;
-//     }
-//     .footer-column, .logo-socials {
-//       width: 100%;
-//       flex: unset;
-//       margin-bottom: 18px;
-//     }
-//   }
-// }
+  @media (max-width: 900px) {
+    .footer-container {
+      flex-direction: column;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .footer-column, .logo-socials {
+      width: 100%;
+      flex: unset;
+      margin-bottom: 18px;
+    }
+  }
+}
 // Grouped fields row for Quick Booking
 .booking-fields-row {
   display: flex;
