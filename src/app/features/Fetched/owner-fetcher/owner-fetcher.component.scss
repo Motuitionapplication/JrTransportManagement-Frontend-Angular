@@ -1,0 +1,134 @@
+// Expand Icon Styling
+.expand-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.expand-icon {
+  font-size: 14px;
+  width: 100%;
+  text-align: center;
+  user-select: none;
+}
+
+// Detail Row Styling
+.ag-theme-alpine .ag-details-row {
+  background-color: #f8f9fa;
+  padding: 15px;
+}
+
+// Button Styling
+.edit-btn, .delete-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Styling for owner-fetcher.component.scss */
+
+// Use ::ng-deep to pierce view encapsulation for AG-Grid elements
+// This allows styles defined here to affect elements rendered outside this component's direct DOM.
+
+::ng-deep .ag-theme-alpine {
+  .ag-row {
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  // Styling for owner rows (the "master" rows)
+  .ag-row:not(.driver-row-indent):not(.driver-header-row).ag-row-level-0,
+  .ag-row:not(.driver-row-indent):not(.driver-header-row).ag-row-level-0.ag-row-odd,
+  .ag-row:not(.driver-row-indent):not(.driver-header-row).ag-row-level-0.ag-row-even {
+    /* Removed background-color */
+    font-weight: 600;
+    color: #343a40; /* Resetting to a standard dark text color */
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #e9ecef !important; /* Standard light hover */
+    }
+  }
+
+  // Styling for driver rows (the "detail" / expanded rows)
+  .driver-row-indent.ag-row-odd,
+  .driver-row-indent.ag-row-even {
+    /* Removed background-color */
+    color: #495057; /* Resetting to a standard text color */
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #f0f0f0 !important; /* Standard light hover */
+    }
+
+    .ag-cell:first-child {
+      padding-left: 50px !important;
+    }
+
+    .ag-cell.driver-sno-indent {
+      padding-left: 30px !important;
+    }
+  }
+
+  // Styling for the new Driver Header Row
+  .driver-header-row {
+    background-color: #d1ecf1 !important; // A light blue/cyan for the header
+    font-weight: bold !important;
+    color: #0c5460 !important;
+    text-align: center; // Center the header text
+    padding: 8px 0; // Add some vertical padding
+    border-bottom: 2px solid #bee5eb !important; // Stronger border below header
+    // Ensure it spans the entire row visually
+    .ag-cell {
+      border-right: none !important; // Remove vertical cell borders for a cleaner look
+      border-left: none !important;
+    }
+    .ag-cell-last-left-pinned {
+      border-right: none !important;
+    }
+  }
+
+  // Style for the S.No. cell in the header row
+  .driver-header-sno {
+    font-weight: bold !important;
+    color: #0c5460 !important;
+    text-align: center;
+  }
+
+  // Style for the header text within the cell
+  .driver-header-text {
+    font-size: 1.1em;
+    font-weight: bold !important; /* Make the text bold */
+    padding-left: 10px; // A little padding if not fully centered by colSpan
+  }
+
+  
+}
+
+/* General modal styling (from previous HTML - keep this if not already global) */
+.modal {
+  display: block;
+  background-color: rgba(0,0,0,0.5);
+}
+.modal-dialog {
+  margin-top: 10%;
+}
+.ag-theme-quartz .ag-header-cell.multiline-header {
+  /* You may need to adjust the height if it's still too small */
+  
+  height: 100% !important; 
+}
+
+/* Target the text container inside that specific header */
+::ng-deep .ag-theme-quartz .ag-header-cell.multiline-header .ag-header-cell-text {
+  white-space: normal !important;
+  line-height: 1.4;
+  text-align: center;
+}
+::ng-deep .ag-theme-quartz {
+  font-size: 14px; /* Adjust this value as needed */
+}
+::ng-deep .ag-theme-quartz .driver-header-row {
+  font-weight: bold !important;
+  background-color: #f0f0f0; /* Optional: light grey background */
+}

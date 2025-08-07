@@ -1,0 +1,40 @@
+<div class="p-3">
+  <h2 class="fw-bold text-primary mb-3">Owner Management</h2>
+  <input type="text" class="form-control mb-3" placeholder="Search owners..." (input)="onQuickFilterChanged($event)" />
+
+  <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
+       [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" role="alert">
+    {{ customMessage }}
+    <button type="button" class="btn-close" (click)="showCustomMessage = false" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="showCustomConfirm" class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Action</h5>
+          <button type="button" class="btn-close" (click)="onConfirmNo()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>{{ confirmMessage }}</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onConfirmNo()">No</button>
+          <button type="button" class="btn btn-primary" (click)="onConfirmYes()">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ag-grid-angular class="ag-theme-quartz" style="width: 100%; height: 600px;"
+    [rowData]="ownersForGrid"
+    [columnDefs]="columnDefs"
+    [headerHeight]="48"
+    [rowHeight]="45"
+    [defaultColDef]="defaultColDef"
+    [rowClassRules]="{ 'driver-header-row': 'data.isDriverHeaderRow' }"
+    (gridReady)="onGridReady($event)">
+    
+  </ag-grid-angular>
+
+</div>

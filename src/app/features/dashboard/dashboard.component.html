@@ -1,184 +1,243 @@
-<div class="dashboard-container">
-  <!-- Welcome Header -->
-  <div class="welcome-section">
-    <div class="welcome-content">
-      <h1 class="main-title">
-        <i class="fas fa-truck"></i>
-        Welcome to JR Transport Management
-      </h1>
-      <p class="subtitle">Comprehensive Transport Management System</p>
-      <p class="description">
-        Manage vehicles, drivers, routes, fleet tracking, and customer service with our integrated transport management system.
-      </p>
-      <!-- Stylish Easy Booking Button -->
-      <div class="d-flex justify-content-center align-items-center my-4">
-        <button class="btn btn-warning btn-lg rounded-pill shadow-lg px-5 py-2 fw-bold animate__animated animate__pulse animate__infinite" style="font-size: 1.25rem; letter-spacing: 1px;">
-          <i class="fas fa-calendar-check me-2"></i>
-          Easy Booking
-        </button>
-      </div>
-      <!-- Live Tracking Link/Button -->
-      <div class="d-flex justify-content-center align-items-center mb-4">
-        <a class="btn btn-info btn-lg rounded-pill shadow px-5 py-2 fw-bold animate__animated animate__fadeIn" style="font-size: 1.15rem; letter-spacing: 1px;" [routerLink]="['/fleet-tracking']">
-          <i class="fas fa-satellite-dish me-2"></i>
-          Live Tracking of Vehicles & Goods
-        </a>
-      </div>
-    </div>
-  </div>
+<section class="hero-section">
+  <img src="assets/icons/truckmain.png" alt="Grab a Return Truck & Save Big on Logistics">
+</section>
 
-  <!-- Management Cards -->
-  <div class="management-grid">
-    <!-- Vehicle Management Card -->
-    <div class="management-card vehicle-card" (click)="navigateToVehicleManagement()">
-      <div class="card-icon">
-        <i class="fas fa-truck"></i>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">Vehicle Management</h3>
-        <p class="card-description">
-          Register vehicles, manage documentation, track maintenance schedules, and monitor vehicle status.
-        </p>
-        <div class="card-stats">
-          <span class="stat-item">
-            <i class="fas fa-plus-circle"></i>
-            Register Vehicles
-          </span>
-          <span class="stat-item">
-            <i class="fas fa-wrench"></i>
-            Maintenance
-          </span>
-        </div>
-      </div>
-      <div class="card-arrow">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-    </div>
 
-    <!-- Driver Management Card -->
-    <div class="management-card driver-card" (click)="navigateToDriverManagement()">
-      <div class="card-icon">
-        <i class="fas fa-user-tie"></i>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">Driver Management</h3>
-        <p class="card-description">
-          Manage driver profiles, licenses, schedules, and performance tracking.
-        </p>
-        <div class="card-stats">
-          <span class="stat-item">
-            <i class="fas fa-id-card"></i>
-            Driver Profiles
-          </span>
-          <span class="stat-item">
-            <i class="fas fa-calendar"></i>
-            Schedules
-          </span>
-        </div>
-      </div>
-      <div class="card-arrow">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-    </div>
-
-    <!-- Route Management Card -->
-    <div class="management-card route-card" (click)="navigateToRouteManagement()">
-      <div class="card-icon">
-        <i class="fas fa-route"></i>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">Route Management</h3>
-        <p class="card-description">
-          Plan routes, optimize paths, set schedules, and track route efficiency.
-        </p>
-        <div class="card-stats">
-          <span class="stat-item">
-            <i class="fas fa-plus"></i>
-            Create Routes
-          </span>
-          <span class="stat-item">
-            <i class="fas fa-map"></i>
-            Route Optimization
-          </span>
-        </div>
-      </div>
-      <div class="card-arrow">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-    </div>
-
-    <!-- Fleet Tracking Card -->
-    <div class="management-card fleet-card" (click)="navigateToFleetTracking()">
-      <div class="card-icon">
-        <i class="fas fa-map-marked-alt"></i>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">Fleet Tracking</h3>
-        <p class="card-description">
-          Real-time vehicle tracking, monitor fleet status, and track location history.
-        </p>
-        <div class="card-stats">
-          <span class="stat-item">
-            <i class="fas fa-satellite-dish"></i>
-            Live Tracking
-          </span>
-          <span class="stat-item">
-            <i class="fas fa-chart-line"></i>
-            Analytics
-          </span>
-        </div>
-      </div>
-      <div class="card-arrow">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-    </div>
-
-    <!-- Customer Management Card -->
-    <div class="management-card customer-card" (click)="navigateToCustomerManagement()">
-      <div class="card-icon">
-        <i class="fas fa-users"></i>
-      </div>
-      <div class="card-content">
-        <h3 class="card-title">Customer Management</h3>
-        <p class="card-description">
-          Manage customer profiles, bookings, communication, and service records.
-        </p>
-        <div class="card-stats">
-          <span class="stat-item">
-            <i class="fas fa-user-plus"></i>
-            Add Customers
-          </span>
-          <span class="stat-item">
-            <i class="fas fa-calendar-alt"></i>
-            Bookings
-          </span>
-        </div>
-      </div>
-      <div class="card-arrow">
-        <i class="fas fa-arrow-right"></i>
-      </div>
-    </div>
-  </div>
-
-  <!-- Quick Access Section -->
-  <div class="quick-access-section">
-    <h2 class="section-title">
+<section class="card-section">
+  <div class="card-booking">
+    <div class="brilliant-icon-bg">
       <i class="fas fa-bolt"></i>
-      Quick Actions
-    </h2>
-    <div class="quick-actions">
-      <button class="quick-btn primary" (click)="navigateToVehicleManagement()">
-        <i class="fas fa-truck"></i>
-        Register New Vehicle
-      </button>
-      <button class="quick-btn secondary" (click)="navigateToFleetTracking()">
-        <i class="fas fa-map-marked-alt"></i>
-        Track Fleet
-      </button>
-      <button class="quick-btn tertiary" (click)="navigateToRouteManagement()">
-        <i class="fas fa-route"></i>
-        Plan Route
-      </button>
     </div>
+    <div class="brilliant-label">Quick Booking</div>
+    <div class="brilliant-card-desc" style="margin-bottom: 10px;">
+      Book a truck instantly for your next delivery. Fast, reliable, and hassle-free.
+    </div>
+    <form>
+      <div class="booking-fields-row">
+        <input type="text" placeholder="Pickup Location" required />
+        <input type="text" placeholder="Drop Location" required />
+      </div>
+      <div class="booking-fields-row">
+        <input type="date" required />
+        <select required>
+          <option disabled selected>Select Truck Type</option>
+          <option>Mini Truck</option>
+          <option>Container</option>
+          <option>Trailer</option>
+        </select>
+      </div>
+      <button class="btn full">🔍 Search Trucks</button>
+    </form>
+  </div>
+</section>
+
+
+
+<section class="services-heading-section">
+  <div class="brilliant-services-header">
+    <h2 class="services-heading">Our Services</h2>
+    <div class="brilliant-underline"></div>
+    <p class="services-desc">Explore our range of logistics solutions designed for speed, safety, and reliability across India.</p>
+  </div>
+</section>
+
+<section class="service-section">
+  <div class="brilliant-services-grid">
+    <a class="brilliant-service-card" routerLink="/trucks">
+      <div class="brilliant-card-content">
+        <div class="brilliant-icon-bg"><img src="assets/icons/truck.png" alt="Trucks" /></div>
+        <p class="brilliant-label"><i class="fas fa-truck-moving"></i> Return Trucks</p>
+        <span class="brilliant-card-desc">Book a variety of trucks for all your shipping needs.</span>
+      </div>
+    </a>
+
+    <a class="brilliant-service-card" routerLink="/booknow">
+      <div class="brilliant-card-content">
+        <div class="brilliant-icon-bg"><img src="assets/icons/booknow.png" alt="Book Now" /></div>
+        <p class="brilliant-label"><i class="fas fa-bolt"></i> Book Now</p>
+        <span class="brilliant-card-desc">Instant booking for urgent and scheduled deliveries.</span>
+      </div>
+    </a>
+
+    <a class="brilliant-service-card" routerLink="/packers-movers">
+      <div class="brilliant-card-content">
+        <div class="brilliant-icon-bg"><img src="assets/icons/location.png" alt="Tracking" /></div>
+        <p class="brilliant-label"><i class="fas fa-map-marker-alt"></i> Tracking</p>
+        <span class="brilliant-card-desc">Live tracking for peace of mind and transparency.</span>
+      </div>
+    </a>
+
+    <a class="brilliant-service-card" routerLink="/all-india-parcel">
+      <div class="brilliant-card-content">
+        <div class="brilliant-icon-bg"><img src="assets/icons/group.png" alt="All India Transport" /></div>
+        <p class="brilliant-label"><i class="fas fa-globe-asia"></i>All India Transport</p>
+        <span class="brilliant-card-desc">Nationwide shipment and freight solutions at your fingertips.</span>
+      </div>
+    </a>
+
+    <a class="brilliant-service-card" routerLink="/cheapest-price">
+      <div class="brilliant-card-content">
+        <div class="brilliant-icon-bg"><img src="assets/icons/box.png" alt="Cheapest Price" /></div>
+        <p class="brilliant-label"><i class="fas fa-tags"></i>Cheapest Price</p>
+        <span class="brilliant-card-desc">Cheapest price pickup for all product categories.</span>
+      </div>
+    </a>
+  </div>
+</section>
+<section class="card-section">
+  <div class="card-booking">
+    <div class="brilliant-icon-bg">
+      <i class="fas fa-bolt"></i>
+    </div>
+    <div class="brilliant-label">Quick Booking</div>
+    <div class="brilliant-card-desc" style="margin-bottom: 10px;">
+      Book a truck instantly for your next delivery. Fast, reliable, and hassle-free.
+    </div>
+    <form>
+      <div class="booking-fields-row">
+        <input type="text" placeholder="Pickup Location" required />
+        <input type="text" placeholder="Drop Location" required />
+      </div>
+      <div class="booking-fields-row">
+        <input type="date" required />
+        <select required>
+          <option disabled selected>Select Truck Type</option>
+          <option>Mini Truck</option>
+          <option>Container</option>
+          <option>Trailer</option>
+        </select>
+      </div>
+      <button class="btn full">🔍 Search Trucks</button>
+    </form>
+  </div>
+</section>
+
+<!-- Tracking -->
+<!-- <section class="track-section">
+  <h2>Track Your Shipment</h2>
+  <form>
+    <input type="text" placeholder="Enter Consignment Number" required />
+    <button type="submit">📦 Track Shipment</button>
+  </form>
+</section>
+-->
+
+<!-- Features -->
+<section class="features">
+  <h2>Why Choose JR Transport?</h2>
+  <div class="feature-grid">
+    <div class="feature-item"><i class="fas fa-truck-fast"></i><p>Easy Booking</p></div>
+    <div class="feature-item"><i class="fas fa-map-location-dot"></i><p>Live Tracking</p></div>
+    <div class="feature-item"><i class="fas fa-lock"></i><p>Secure Payments</p></div>
+    <div class="feature-item"><i class="fas fa-users"></i><p>Verified Drivers</p></div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials">
+  <h2>Customer Reviews</h2>
+  <div class="testimonial">
+    <p>“Super fast service. My shipment reached on time!”</p>
+    <strong>- Aryan Patel</strong>
+  </div>
+  <div class="testimonial">
+    <p>“Love the tracking feature. Easy to use on mobile.”</p>
+    <strong>- Neha Sharma</strong>
+  </div>
+</section>
+<!-- Fixed Right Toolbar -->
+<div class="fixed-toolbar">
+  <div class="toolbar-item">
+    <i class="fas fa-comment-dots"></i>
+    <span>Chat</span>
+  </div>
+
+  
+ 
+  <div class="toolbar-item">
+    <i class="fas fa-share-alt"></i>
+    <span>Invite</span>
   </div>
 </div>
+
+
+<!-- CTA -->
+<section class="cta-footer">
+  <h2>Ready to Get Started?</h2>
+  <p>Join thousands of happy customers and trusted drivers.</p>
+  <div class="cta-buttons">
+    <button class="btn primary">Start Booking</button>
+    <button class="btn outline">Become a Driver</button>
+  </div>
+</section>
+<!-- <footer> -->
+  
+<!-- Footer Section -->
+<section class="footer-section">
+  <div class="footer-container">
+    <div class="footer-column logo-socials">
+      <h2 class="footer-logo">JR TRANSPORT</h2>
+      <p class="footer-subtext">Follow us on</p>
+      <div class="footer-icons">
+        <i class="fab fa-facebook-f"></i>
+        <i class="fab fa-twitter"></i>
+        <i class="fab fa-instagram"></i>
+        <i class="fab fa-linkedin-in"></i>
+        <i class="fab fa-youtube"></i>
+      </div>
+    </div>
+
+    <div class="footer-column">
+      <h4>Company</h4>
+      <ul>
+        <li>About Us</li>
+        <li>Careers</li>
+        <li>Blog</li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Quick Links</h4>
+      <ul>
+        <li>API Integrations</li>
+        <li>Intercity Courier</li>
+        <li>Packers & Movers</li>
+        <li>Trucks</li>
+        <li>Two Wheelers</li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Support</h4>
+      <ul>
+        <li>Contact Us</li>
+        <li>Privacy Policy</li>
+        <li>Terms of Service</li>
+        <li>Insurance FAQs</li>
+        <li>Zero Tolerance Policy</li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Countries</h4>
+      <ul>
+        <li>India</li>
+        <li>UAE</li>
+        <li>Turkey</li>
+        <li>Bangladesh</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2025 JR Transport Logistics Pvt. Ltd. All rights reserved.</p>
+    <p>Email: support&#64;jrtransport.in | Phone: 080 4410 4410</p>
+  </div>
+</section>
+
+
+
+
+
+
+

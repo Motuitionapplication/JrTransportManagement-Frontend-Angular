@@ -1,6 +1,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
+import { MatTreeModule } from '@angular/material/tree';
+import { MatIconModule } from '@angular/material/icon';
+import { AgGridModule } from 'ag-grid-angular';
+import { FormsModule } from '@angular/forms';
 import { SuperAdminDashboardComponent } from './dashboard/super-admin-dashboard.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { UserManagementComponent } from './user-management.component';
@@ -17,10 +21,9 @@ import { CustomerManagementComponent } from './customer-management.component';
 import { OwnerManagementComponent } from './owner-management.component';
 import { DriverManagementComponent } from './driver-management.component';
 import { AdminManagementComponent } from './admin-management.component';
-import { AgGridModule } from "ag-grid-angular";
 import { CustomerFetcherComponent } from '../Fetched/customer-fetcher/customer-fetcher.component';
-import { FormsModule } from '@angular/forms';
 import { AdminFetcherComponent } from '../Fetched/admin-fetcher/admin-fetcher.component';
+import { OwnerFetcherComponent } from '../Fetched/owner-fetcher/owner-fetcher.component';
 
 const routes: Routes = [
   {
@@ -41,7 +44,6 @@ const routes: Routes = [
       { path: 'term-management', component: TermManagementComponent },
       { path: 'wallet-management', component: WalletManagementComponent },
       { path: 'analytics', component: AnalyticsComponent },
-      // Removed default redirect so dashboard shows welcome message and sidebar
     ]
   }
 ];
@@ -65,10 +67,16 @@ const routes: Routes = [
     WalletManagementComponent,
     AnalyticsComponent,
     CustomerFetcherComponent,
-    AdminFetcherComponent
+    AdminFetcherComponent,
+    OwnerFetcherComponent
   ],
-  imports: [CommonModule, RouterModule.forChild(routes), AgGridModule,FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule.forChild(routes),
+    AgGridModule,
+    FormsModule,
+    MatTreeModule,
+    MatIconModule
+  ]
 })
 export class SuperAdminModule {}
-
-// Removed duplicate NgModule and SuperAdminComponent reference
