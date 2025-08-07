@@ -124,6 +124,16 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     });
   }
+showMobileMenu = false;
+
+toggleMobileMenu() {
+  this.showMobileMenu = !this.showMobileMenu;
+
+  const nav = document.querySelector('.main-nav');
+  if (nav) {
+    nav.classList.toggle('open', this.showMobileMenu);
+  }
+}
 
   openSignupDialog(): void {
     const dialogRef = this.dialog.open(SignupComponent, {
@@ -202,3 +212,4 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 }
+  
