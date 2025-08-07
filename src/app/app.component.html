@@ -1,4 +1,3 @@
-
 <!-- JR Transport Management PWA -->
 <app-splash-screen></app-splash-screen>
 
@@ -98,237 +97,63 @@
       </div>
     </div>
   </header>
-<!-- Hero Section -->
-<!-- <section class="hero-section">
-  <div class="overlay">
-    <div class="container text-center">
-      <div class="hero-accent-bar"></div>
-      <h1 class="hero-heading">
-        Move Goods. Simplify Shipping.<br>
-        <span class="highlight">JR Transport</span> is Your All-in-One Truck Booking Solution.
-      </h1>
-      <div class="hero-tagline">Empowering India’s logistics with technology, trust, and transparency.</div>
-      <p class="hero-subtext">
-        From <strong>instant truck bookings</strong> to <strong>live tracking</strong> and <strong>safe deliveries</strong> —
-        we make logistics simple, affordable, and reliable. Book your truck with confidence.
-      </p>
-      <div class="cta-buttons">
-        <a class="btn btn-primary" routerLink="/book">📦 Book a Truck</a>
-        <a class="btn btn-outline-light" routerLink="/driver-register">🚚 Register as a Driver</a>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+      <!-- Welcome section when no route is active -->
+      <!-- <div class="welcome-section" *ngIf="!hasActiveRoute()">
+        <div class="welcome-content">
+          <h2>Welcome to Educare Management System</h2>
+          <p>Your comprehensive solution for managing Transport operations efficiently with JR Transport.</p>
+          <div class="feature-grid">
+            <div class="feature-card" routerLink="/students">
+              <i class="fas fa-users"></i>
+              <h3>Student Management</h3>
+              <p>Manage student enrollments, profiles, and academic records</p>
+            </div>
+            <div class="feature-card" routerLink="/teachers">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <h3>Teacher Management</h3>
+              <p>Handle staff profiles, assignments, and schedules</p>
+            </div>
+            <div class="feature-card" routerLink="/classes">
+              <i class="fas fa-school"></i>
+              <h3>Class Management</h3>
+              <p>Create and manage classes, schedules, and capacity</p>
+            </div>
+            <div class="feature-card" routerLink="/attendance">
+              <i class="fas fa-calendar-check"></i>
+              <h3>Attendance Tracking</h3>
+              <p>Track daily attendance with detailed reports</p>
+            </div>
+            <div class="feature-card" routerLink="/communication">
+              <i class="fas fa-comments"></i>
+              <h3>Parent Communication</h3>
+              <p>Send messages, announcements, and progress reports</p>
+            </div>
+            <div class="feature-card" routerLink="/dashboard">
+              <i class="fas fa-chart-bar"></i>
+              <h3>Analytics Dashboard</h3>
+              <p>View key metrics and insights at a glance</p>
+            </div>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Router Outlet for Feature Components -->
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>&copy; 2025 JR Transport Management System. Built with Angular PWA.</p>
+      <div class="footer-links">
+        <span class="status-indicator" [class.online]="isOnline" [class.offline]="!isOnline">
+          {{ isOnline ? 'Online' : 'Offline' }}
+        </span>
       </div>
     </div>
-  </div>
-</section> -->
-<!-- Hero Section -->
-
-<!-- Hero Section -->
-<section class="hero-section">
-  <img src="assets/icons/truck3.png" alt="Grab a Return Truck & Save Big on Logistics">
-</section>
-
-
-<section class="services-heading-section">
-  <div class="brilliant-services-header">
-    <h2 class="services-heading">Our Services</h2>
-    <div class="brilliant-underline"></div>
-    <p class="services-desc" style="text-align:center;">Explore our range of logistics solutions designed for speed, safety, and reliability across India.</p>
-  </div>
-</section>
-<section _ngcontent-slw-c8 class="service-section">
-  <div class="brilliant-services-grid">
-    <!-- Card 1 -->
-    <a class="brilliant-service-card" routerLink="/trucks">
-      <div class="brilliant-card-content">
-        <div class="brilliant-icon-bg"><img src="assets/icons/truck.png" alt="Trucks" /></div>
-        <p class="brilliant-label"><i class="fas fa-truck-moving"></i> Trucks</p>
-        <span class="brilliant-card-desc">Book a variety of trucks for all your shipping needs.</span>
-      </div>
-    </a>
-
-    <!-- Card 2 -->
-    <a class="brilliant-service-card" routerLink="booknow">
-      <div class="brilliant-card-content">
-        <div class="brilliant-icon-bg"><img src="assets/icons/booknow.png" alt="book now" /></div>
-        <p class="brilliant-label"><i class="fas fa-bolt"></i> Book Now</p>
-        <span class="brilliant-card-desc">Instant booking for urgent and scheduled deliveries.</span>
-      </div>
-    </a>
-
-    <!-- Card 3 -->
-    <a class="brilliant-service-card" routerLink="/packers-movers">
-      <div class="brilliant-card-content">
-        <div class="brilliant-icon-bg"><img src="assets/icons/location.png" alt="live tracking" /></div>
-        <p class="brilliant-label"><i class="fas fa-map-marker-alt"></i> Tracking</p>
-        <span class="brilliant-card-desc">Live tracking for peace of mind and transparency.</span>
-      </div>
-    </a>
-
-    <!-- Card 4 -->
-    <a class="brilliant-service-card" routerLink="/all-india-parcel">
-      <div class="brilliant-card-content">
-        <div class="brilliant-icon-bg"><img src="assets/icons/group.png" alt="All India transport" /></div>
-        <p class="brilliant-label"><i class="fas fa-globe-asia"></i> All India Transport</p>
-        <span class="brilliant-card-desc">Nationwide shipment and freight solutions at your fingertips.</span>
-      </div>
-    </a>
-  </div>
-</section>
-
-
-
-
-
-<!-- Booking Form -->
-<section class="card-section">
-  <div class="card-booking">
-    <div class="brilliant-icon-bg">
-      <i class="fas fa-bolt"></i>
-    </div>
-    <div class="brilliant-label">Quick Booking</div>
-    <div class="brilliant-card-desc" style="margin-bottom: 10px;">
-      Book a truck instantly for your next delivery. Fast, reliable, and hassle-free.
-    </div>
-    <form>
-      <div class="booking-fields-row">
-        <input type="text" placeholder="Pickup Location" required />
-        <input type="text" placeholder="Drop Location" required />
-      </div>
-      <div class="booking-fields-row">
-        <input type="date" required />
-        <select required>
-          <option disabled selected>Select Truck Type</option>
-          <option>Mini Truck</option>
-          <option>Container</option>
-          <option>Trailer</option>
-        </select>
-      </div>
-      <button class="btn full">🔍 Search Trucks</button>
-    </form>
-  </div>
-</section>
-
-<!-- Tracking -->
-<!-- <section class="track-section">
-  <h2>Track Your Shipment</h2>
-  <form>
-    <input type="text" placeholder="Enter Consignment Number" required />
-    <button type="submit">📦 Track Shipment</button>
-  </form>
-</section>
--->
-
-<!-- Features -->
-<section class="features">
-  <h2>Why Choose JR Transport?</h2>
-  <div class="feature-grid">
-    <div class="feature-item"><i class="fas fa-truck-fast"></i><p>Easy Booking</p></div>
-    <div class="feature-item"><i class="fas fa-map-location-dot"></i><p>Live Tracking</p></div>
-    <div class="feature-item"><i class="fas fa-lock"></i><p>Secure Payments</p></div>
-    <div class="feature-item"><i class="fas fa-users"></i><p>Verified Drivers</p></div>
-  </div>
-</section>
-
-<!-- Testimonials -->
-<section class="testimonials">
-  <h2>Customer Reviews</h2>
-  <div class="testimonial">
-    <p>“Super fast service. My shipment reached on time!”</p>
-    <strong>- Aryan Patel</strong>
-  </div>
-  <div class="testimonial">
-    <p>“Love the tracking feature. Easy to use on mobile.”</p>
-    <strong>- Neha Sharma</strong>
-  </div>
-</section>
-<!-- Fixed Right Toolbar -->
-<div class="fixed-toolbar">
-  <div class="toolbar-item">
-    <i class="fas fa-comment-dots"></i>
-    <span>Chat</span>
-  </div>
-
-  <div class="toolbar-item">
-    <i class="fas fa-users"></i>
-    <span>2/13</span>
-  </div>
- 
-  <div class="toolbar-item">
-    <i class="fas fa-share-alt"></i>
-    <span>Invite</span>
-  </div>
+  </footer>
 </div>
-
-
-<!-- CTA -->
-<section class="cta-footer">
-  <h2>Ready to Get Started?</h2>
-  <p>Join thousands of happy customers and trusted drivers.</p>
-  <div class="cta-buttons">
-    <button class="btn primary">Start Booking</button>
-    <button class="btn outline">Become a Driver</button>
-  </div>
-</section>
-<!-- <footer> -->
-  
-<!-- Footer Section -->
-<section class="footer-section">
-  <div class="footer-container">
-    <div class="footer-column logo-socials">
-      <h2 class="footer-logo">JR TRANSPORT</h2>
-      <p class="footer-subtext">Follow us on</p>
-      <div class="footer-icons">
-        <i class="fab fa-facebook-f"></i>
-        <i class="fab fa-twitter"></i>
-        <i class="fab fa-instagram"></i>
-        <i class="fab fa-linkedin-in"></i>
-        <i class="fab fa-youtube"></i>
-      </div>
-    </div>
-
-    <div class="footer-column">
-      <h4>Company</h4>
-      <ul>
-        <li>About Us</li>
-        <li>Careers</li>
-        <li>Blog</li>
-      </ul>
-    </div>
-
-    <div class="footer-column">
-      <h4>Quick Links</h4>
-      <ul>
-        <li>API Integrations</li>
-        <li>Intercity Courier</li>
-        <li>Packers & Movers</li>
-        <li>Trucks</li>
-        <li>Two Wheelers</li>
-      </ul>
-    </div>
-
-    <div class="footer-column">
-      <h4>Support</h4>
-      <ul>
-        <li>Contact Us</li>
-        <li>Privacy Policy</li>
-        <li>Terms of Service</li>
-        <li>Insurance FAQs</li>
-        <li>Zero Tolerance Policy</li>
-      </ul>
-    </div>
-
-    <div class="footer-column">
-      <h4>Countries</h4>
-      <ul>
-        <li>India</li>
-        <li>UAE</li>
-        <li>Turkey</li>
-        <li>Bangladesh</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="footer-bottom">
-    <p>© 2025 JR Transport Logistics Pvt. Ltd. All rights reserved.</p>
-    <p>Email: support&#64;jrtransport.in | Phone: 080 4410 4410</p>
-  </div>
-</section>
