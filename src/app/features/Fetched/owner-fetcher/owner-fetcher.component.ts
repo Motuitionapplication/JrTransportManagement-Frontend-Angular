@@ -3,6 +3,10 @@ import { OwnerService } from '../../owner/owner.service';
 import { DriverService } from '../../driver/driver.service';
 import { forkJoin } from 'rxjs';
 import { ColDef, GridOptions } from 'ag-grid-community'; // Import necessary types
+import { v4 as uuidv4 } from 'uuid'; // Import a library for generating unique IDs
+import { MatDialog } from '@angular/material/dialog';
+import { DriverFormComponent } from '../../form/driver-form/driver-form.component';
+import { OwnerFormComponent } from '../../form/owner-form/owner-form.component';
 
 // Interface and constant definitions remain the same...
 interface DriverWithEdit {
@@ -25,6 +29,7 @@ interface DriverWithEdit {
   parentOwnerId?: string;
   _sNo?: string;
   isDriverHeaderRow?: boolean;
+  isNew?: boolean; // <-- NEW: Flag for newly added rows
 }
 const DRIVER_HEADER_ROW_TYPE = 'driver-header';
 
@@ -42,7 +47,6 @@ export class OwnerFetcherComponent implements OnInit {
   gridColumnApi: any;
 
   expandedOwnerIds: Set<string> = new Set<string>();
-  
 
   showCustomMessage: boolean = false;
   customMessage: string = '';
@@ -58,7 +62,8 @@ export class OwnerFetcherComponent implements OnInit {
     }
 
     const eGui = document.createElement('div');
-    const isModified = this.modifiedRows.has(params.data);
+    // A row is considered "modified" if it's in the set OR if it's a new, unsaved row
+    const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
 
     const editOrSaveBtn = document.createElement('button');
     editOrSaveBtn.innerText = isModified ? 'Save' : 'Edit';
@@ -75,9 +80,17 @@ export class OwnerFetcherComponent implements OnInit {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.innerText = 'Delete';
-    deleteBtn.className = 'btn btn-sm btn-danger ms-1'; 
+    deleteBtn.className = 'btn btn-sm btn-danger ms-1';
 
     deleteBtn.addEventListener('click', () => {
+      // If it's a new, unsaved row, just remove it locally without a confirmation
+      if (params.data.isNew) {
+        this.ownersForGrid = this.ownersForGrid.filter(row => row.id !== params.data.id);
+        this.updateRowSNo();
+        this.gridApi.setRowData(this.ownersForGrid);
+        return;
+      }
+
       if (params.data.isDriverRow) {
         this.showConfirmation(`Are you sure you want to delete driver ${params.data.firstName} ${params.data.lastName}?`, () => {
           this.deleteDriver(params.data.id, params.data.parentOwnerId);
@@ -96,12 +109,10 @@ export class OwnerFetcherComponent implements OnInit {
   }
 
   columnDefs: ColDef[] = [
-    
     {
       headerName: 'Expand For Driver Info',
       headerClass: 'multiline-header',
-      width: 110,
-      
+      width: 140,
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
           return ''; // No button for header row
@@ -131,7 +142,7 @@ export class OwnerFetcherComponent implements OnInit {
       field: '_sNo',
       width: 80,
       editable: false,
-      sortable: false,
+      sortable: true,
       filter: false,
       resizable: true,
       cellClass: (params: any) => {
@@ -147,19 +158,47 @@ export class OwnerFetcherComponent implements OnInit {
     {
       headerName: 'First Name',
       field: 'firstName',
-      editable: (params: any) => !params.data.isDriverHeaderRow, 
+      editable: (params: any) => !params.data.isDriverHeaderRow,
       resizable: true,
+      // === MODIFIED SECTION START: cellRenderer for First Name ===
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
-          const div = document.createElement('div');
-          div.innerHTML = `<span class="driver-header-text">Drivers for ${params.data.ownerName}</span>`;
-          return div;
+          const container = document.createElement('div');
+          container.style.display = 'flex';
+          container.style.justifyContent = 'space-between';
+          container.style.alignItems = 'center';
+          container.style.width = '80%';
+
+          // Text part
+          const text = document.createElement('span');
+          text.className = 'driver-header-text';
+          text.innerText = `Drivers for ${params.data.ownerName}`;
+
+          // Button part
+          const addButton = document.createElement('button');
+          addButton.className = 'btn btn-sm btn-outline-success';
+
+          // Optional: Add styling for an icon-only button
+          addButton.style.padding = '3px';
+          addButton.style.lineHeight = '2';
+          const addIcon = document.createElement('img');
+          addIcon.src = 'assets/icons/add-driver.png';
+          addIcon.alt = 'Add Driver';
+          addIcon.style.width = '38px';
+          addIcon.style.height = '38px';
+          addButton.appendChild(addIcon);
+
+          addButton.addEventListener('click', () => this.initiateAddDriver(params.data.parentOwnerId));
+          container.appendChild(text);
+          container.appendChild(addButton);
+          return container;
         }
-        return params.value; 
+        return params.value;
       },
+      // === MODIFIED SECTION END ===
       colSpan: (params: any) => {
         if (params.data.isDriverHeaderRow) {
-          return 6; 
+          return 6;
         }
         return 1;
       }
@@ -176,7 +215,7 @@ export class OwnerFetcherComponent implements OnInit {
     { headerName: 'Status', field: 'status', editable: true, resizable: true },
     {
       headerName: 'Actions',
-      cellRenderer: this.actionsCellRenderer, // Use the new renderer function
+      cellRenderer: this.actionsCellRenderer,
       width: 180,
       editable: false,
       resizable: true,
@@ -184,7 +223,6 @@ export class OwnerFetcherComponent implements OnInit {
       filter: false
     }
   ];
-  // === MODIFIED SECTION END ===
 
   defaultColDef = {
     sortable: true,
@@ -194,14 +232,15 @@ export class OwnerFetcherComponent implements OnInit {
 
   constructor(
     private ownerService: OwnerService,
-    private driverService: DriverService
+    private driverService: DriverService,
+    public dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
     this.fetchOwners();
   }
 
-  // ... fetchOwners, updateRowSNo, and toggleRowExpansion methods remain the same ...
+  // fetchOwners, updateRowSNo, and toggleRowExpansion methods remain the same
   fetchOwners() {
     this.ownerService.getAllOwners().subscribe((owners) => {
       this.ownersForGrid = owners.map(owner => ({
@@ -260,6 +299,29 @@ export class OwnerFetcherComponent implements OnInit {
     });
     this.ownersForGrid = newOwnersForGrid;
   }
+  initiateAddOwner(): void {
+    const dialogRef = this.dialog.open(OwnerFormComponent, {
+      width: '600px',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      // The 'result' is the complete owner object from the form
+      if (result) {
+        // Call your existing ownerService method
+        this.ownerService.createowner(result).subscribe({
+          next: () => {
+            this.showMessage('Owner added successfully!', false);
+            // Refresh the grid to show the new owner
+            this.fetchOwners();
+          },
+          error: (err) => {
+            console.error("Error adding owner:", err);
+            this.showMessage('Failed to add owner. Please check the details.', true);
+          }
+        });
+      }
+    });
+  }
 
   toggleRowExpansion(ownerData: any) {
     const ownerId = ownerData.id;
@@ -279,10 +341,8 @@ export class OwnerFetcherComponent implements OnInit {
       this.showMessage('Loading drivers...', false);
       this.ownerService.getDriversByOwner(ownerId).subscribe({
         next: (drivers) => {
-
           const ownerIndex = this.ownersForGrid.findIndex(row => row.id === ownerId && !row.isDriverRow && !row.isDriverHeaderRow);
           if (ownerIndex !== -1) {
-
             const driverRows = drivers.map(driver => ({
               ...driver,
               id: driver.id || driver._id, // <-- THE CRUCIAL FIX!
@@ -326,22 +386,25 @@ export class OwnerFetcherComponent implements OnInit {
       return '';
     };
 
-    // === MODIFIED SECTION START: onGridReady ===
     this.gridApi.addEventListener('cellValueChanged', (event: any) => {
-      this.modifiedRows.add(event.node.data);
-      // CRITICAL: This refresh tells the actionsCellRenderer to re-run and swap the button
+      // Don't mark new rows as modified until a cell is changed
+      if (!event.data.isNew) {
+        this.modifiedRows.add(event.node.data);
+      }
       event.api.redrawRows({ rowNodes: [event.node] });
     });
-    // === MODIFIED SECTION END ===
   }
 
-  // === NEW METHOD START: Replaces onSaveChanges with a row-specific save ===
+  // === MODIFIED SECTION START: onSaveRow updated to handle new rows ===
   public onSaveRow(rowData: any) {
-    console.log('Attempting to save row:', rowData);
+    if (rowData.isNew) {
+      this.addDriver(rowData);
+      return;
+    }
 
+    console.log('Attempting to update row:', rowData);
     const updateObservable = rowData.isDriverRow
       ? this.driverService.updateDriverDetails(rowData.id, rowData)
-      // Ensure we don't try to save the header row
       : !rowData.isDriverHeaderRow ? this.ownerService.updateOwnerDetails(rowData.id, rowData) : null;
 
     if (!updateObservable) return;
@@ -349,13 +412,9 @@ export class OwnerFetcherComponent implements OnInit {
     updateObservable.subscribe({
       next: () => {
         this.showMessage(`${rowData.isDriverRow ? 'Driver' : 'Owner'} updated successfully.`, false);
-        // CRITICAL: Remove the row from the set of modified rows
         this.modifiedRows.delete(rowData);
-
-        // Find the specific row node to refresh its cell
         const rowNode = this.gridApi.getRowNode(rowData.id);
         if (rowNode) {
-          // Refresh the row to swap the button back from "Save" to "Edit"
           this.gridApi.redrawRows({ rowNodes: [rowNode] });
         }
       },
@@ -365,9 +424,47 @@ export class OwnerFetcherComponent implements OnInit {
       }
     });
   }
+  // === MODIFIED SECTION END ===
+
+  // === NEW METHOD START: initiateAddDriver ===
+  initiateAddDriver(ownerId: string) {
+    const dialogRef = this.dialog.open(DriverFormComponent, {
+      width: '400px',
+      // disableClose: true,  
+      data: { ownerId: ownerId }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      // 3. 'result' is the complete form object from the dialog
+      if (result) {
+        // 4. We need to manually add the ownerId before sending it to the service
+        const payload = {
+          ...result, // Contains everything from the form
+          ownerId: ownerId // Add the ownerId
+        };
+        this.addDriver(payload);
+      }
+    });
+  }
+
   // === NEW METHOD END ===
 
-  // ... onQuickFilterChanged, deleteOwner, deleteDriver, showMessage, and confirmation methods remain the same
+  // === NEW METHOD START: addDriver ===
+  addDriver(driverData: any) {
+    this.ownerService.createDriver(driverData).subscribe({
+      next: (savedDriver) => {
+        this.showMessage('Driver added successfully!', false);
+        // Logic to refresh the grid...
+      },
+      error: (err) => {
+        console.error("Error adding driver:", err);
+        this.showMessage('Failed to add driver.', true);
+      }
+    });
+  }
+  // === NEW METHOD END ===
+
+  // onQuickFilterChanged, deleteOwner, deleteDriver, showMessage, and confirmation methods remain the same
   onQuickFilterChanged(event: any) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.gridApi.setQuickFilter(filterValue);

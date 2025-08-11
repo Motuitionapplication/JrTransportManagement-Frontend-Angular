@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { EnvironmentService } from 'src/app/core/services/environment.service';
+import { Driver } from 'src/app/models/driver.model';
 import { VehicleOwner } from 'src/app/models/owner.model';
 
 @Injectable({
@@ -41,32 +42,42 @@ export class OwnerService {
     return this.http.put(`${this.apiUrl}/${id}`, owner);
   }
 
-  // === MODIFIED: This method now uses the cache ===
   getDriversByOwner(ownerId: string): Observable<any[]> {
-    // 1. Check if the drivers for this owner are already in the cache
     if (this.driversCache.has(ownerId)) {
-      // If yes, return the cached data as an Observable using `of()`
       console.log(`Returning cached drivers for ownerId: ${ownerId}`);
       return of(this.driversCache.get(ownerId)!);
     }
 
-    // 2. If not in the cache, make the HTTP request
     console.log(`Fetching drivers from API for ownerId: ${ownerId}`);
     return this.http.get<any[]>(`${this.apiUrl}/${ownerId}/drivers`).pipe(
-      // 3. Use the `tap` operator to save the result to the cache before returning
       tap(drivers => {
         console.log(`Caching drivers for ownerId: ${ownerId}`);
         this.driversCache.set(ownerId, drivers);
       })
     );
   }
-
-  // === NEW: Method to clear the cache for a specific owner ===
-  // This ensures data is fresh after an update, add, or delete.
+  
   public clearDriversCacheForOwner(ownerId: string): void {
     if (this.driversCache.has(ownerId)) {
       this.driversCache.delete(ownerId);
       console.log(`Cache cleared for ownerId: ${ownerId}`);
     }
+  }
+
+createDriver(driverData: any): Observable<Driver> {
+    const { ownerId, ...driverPayload } = driverData;
+    if (!ownerId) {
+      throw new Error('Owner ID is required to create a driver.');
+    }
+    const url = `${this.apiUrl}/${ownerId}/drivers`;
+
+    console.log(`Sending POST request to: ${url}`);
+    console.log('With payload:', driverPayload);
+    return this.http.post<Driver>(url, driverPayload);
+  }
+
+  createowner(owner:any)
+  {
+    return this.http.post(`${this.apiUrl}`, owner);
   }
 }

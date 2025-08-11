@@ -1,13 +1,27 @@
 <div class="p-3">
   <h2 class="fw-bold text-primary mb-3">Owner Management</h2>
-  <input type="text" class="form-control mb-3" placeholder="Search owners..." (input)="onQuickFilterChanged($event)" />
 
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <input 
+      type="text" 
+      class="form-control" 
+      style="max-width: 1100px;" 
+      placeholder="Search owners..." 
+      (input)="onQuickFilterChanged($event)" 
+    />
+    <button mat-raised-button color="primary" (click)="initiateAddOwner()">
+      <span class="material-icons" style="vertical-align: middle; margin-right: 4px;"></span>
+      👤➕
+    </button>
+    
+    
+  </div>
   <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
        [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" role="alert">
     {{ customMessage }}
     <button type="button" class="btn-close" (click)="showCustomMessage = false" aria-label="Close"></button>
   </div>
-
+  
   <div *ngIf="showCustomConfirm" class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -26,7 +40,9 @@
     </div>
   </div>
 
-  <ag-grid-angular class="ag-theme-quartz" style="width: 100%; height: 600px;"
+  <ag-grid-angular 
+    class="ag-theme-quartz" 
+    style="width: 100%; height: 600px;"
     [rowData]="ownersForGrid"
     [columnDefs]="columnDefs"
     [headerHeight]="48"
@@ -34,7 +50,5 @@
     [defaultColDef]="defaultColDef"
     [rowClassRules]="{ 'driver-header-row': 'data.isDriverHeaderRow' }"
     (gridReady)="onGridReady($event)">
-    
   </ag-grid-angular>
-
 </div>
