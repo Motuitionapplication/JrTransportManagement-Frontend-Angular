@@ -33,6 +33,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { OwnerFormComponent } from './features/form/owner-form/owner-form.component';
+import { PaymentComponent } from './features/payment/payment.component';
+import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
 
 
 @NgModule({
@@ -43,6 +45,8 @@ import { OwnerFormComponent } from './features/form/owner-form/owner-form.compon
     DashboardComponent,
     DriverFormComponent,
     OwnerFormComponent,
+    PaymentComponent,
+    PaymentDialogComponent,
   ],
   imports: [
     AgGridModule,

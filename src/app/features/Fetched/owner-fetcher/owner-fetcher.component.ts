@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid'; // Import a library for generating unique I
 import { MatDialog } from '@angular/material/dialog';
 import { DriverFormComponent } from '../../form/driver-form/driver-form.component';
 import { OwnerFormComponent } from '../../form/owner-form/owner-form.component';
+import { PaymentService } from '../../payment/payment.service';
+import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
 
 // Interface and constant definitions remain the same...
 interface DriverWithEdit {
@@ -57,56 +59,74 @@ export class OwnerFetcherComponent implements OnInit {
 
 
   public actionsCellRenderer = (params: any) => {
-    if (params.data.isDriverHeaderRow) {
-      return '';
-    }
-
-    const eGui = document.createElement('div');
-    // A row is considered "modified" if it's in the set OR if it's a new, unsaved row
-    const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
-
-    const editOrSaveBtn = document.createElement('button');
-    editOrSaveBtn.innerText = isModified ? 'Save' : 'Edit';
-
-    editOrSaveBtn.className = isModified ? 'btn btn-sm btn-success' : 'btn btn-sm btn-primary';
-
-    editOrSaveBtn.addEventListener('click', () => {
-      if (isModified) {
-        this.onSaveRow(params.data);
-      } else {
-        params.api.startEditingCell({ rowIndex: params.rowIndex, colKey: 'firstName' });
-      }
-    });
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerText = 'Delete';
-    deleteBtn.className = 'btn btn-sm btn-danger ms-1';
-
-    deleteBtn.addEventListener('click', () => {
-      // If it's a new, unsaved row, just remove it locally without a confirmation
-      if (params.data.isNew) {
-        this.ownersForGrid = this.ownersForGrid.filter(row => row.id !== params.data.id);
-        this.updateRowSNo();
-        this.gridApi.setRowData(this.ownersForGrid);
-        return;
-      }
-
-      if (params.data.isDriverRow) {
-        this.showConfirmation(`Are you sure you want to delete driver ${params.data.firstName} ${params.data.lastName}?`, () => {
-          this.deleteDriver(params.data.id, params.data.parentOwnerId);
-        });
-      } else {
-        this.showConfirmation(`Are you sure you want to delete owner ${params.data.firstName} ${params.data.lastName}?`, () => {
-          this.deleteOwner(params.data.id);
-        });
-      }
-    });
-
-    eGui.appendChild(editOrSaveBtn);
-    eGui.appendChild(deleteBtn);
-
-    return eGui;
+  if (params.data.isDriverHeaderRow) {
+    return '';
   }
+
+  const eGui = document.createElement('div');
+  const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
+
+  // Edit/Save button
+  const editOrSaveBtn = document.createElement('button');
+  editOrSaveBtn.innerHTML = isModified
+    ? '<i class="bi bi-save"></i>'
+    : '<i class="bi bi-pencil-square"></i>';
+  editOrSaveBtn.className = isModified
+    ? 'btn btn-sm btn-success me-1'
+    : 'btn btn-sm btn-primary me-1';
+  editOrSaveBtn.title = isModified ? 'Save' : 'Edit';
+  editOrSaveBtn.addEventListener('click', () => {
+    if (isModified) {
+      this.onSaveRow(params.data);
+    } else {
+      params.api.startEditingCell({ rowIndex: params.rowIndex, colKey: 'firstName' });
+    }
+  });
+
+  // Delete button
+  const deleteBtn = document.createElement('button');
+  deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+  deleteBtn.className = 'btn btn-sm btn-danger me-1';
+  deleteBtn.title = 'Delete';
+  deleteBtn.addEventListener('click', () => {
+    if (params.data.isNew) {
+      this.ownersForGrid = this.ownersForGrid.filter(row => row.id !== params.data.id);
+      this.updateRowSNo();
+      this.gridApi.setRowData(this.ownersForGrid);
+      return;
+    }
+    if (params.data.isDriverRow) {
+      this.showConfirmation(
+        `Are you sure you want to delete driver ${params.data.firstName} ${params.data.lastName}?`,
+        () => this.deleteDriver(params.data.id, params.data.parentOwnerId)
+      );
+    } else {
+      this.showConfirmation(
+        `Are you sure you want to delete owner ${params.data.firstName} ${params.data.lastName}?`,
+        () => this.deleteOwner(params.data.id)
+      );
+    }
+  });
+
+  // Payment button only for driver rows
+  if (params.data && params.data.isDriverRow) {
+    const paymentBtn = document.createElement('button');
+    paymentBtn.innerHTML = '<i class="bi bi-cash-coin"></i>';
+    paymentBtn.className = 'btn btn-sm btn-warning me-1';
+    paymentBtn.title = 'View Payments';
+    paymentBtn.addEventListener('click', () => {
+      this.driverrecord(params.data);
+    });
+    
+    eGui.appendChild(paymentBtn);
+  }
+
+  eGui.appendChild(editOrSaveBtn);
+  eGui.appendChild(deleteBtn);
+
+  return eGui;
+};
+
 
   columnDefs: ColDef[] = [
     {
@@ -160,6 +180,7 @@ export class OwnerFetcherComponent implements OnInit {
       field: 'firstName',
       editable: (params: any) => !params.data.isDriverHeaderRow,
       resizable: true,
+      width:120,
       // === MODIFIED SECTION START: cellRenderer for First Name ===
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
@@ -176,22 +197,21 @@ export class OwnerFetcherComponent implements OnInit {
 
           // Button part
           const addButton = document.createElement('button');
-          addButton.className = 'btn btn-sm btn-outline-success';
+          addButton.className = 'btn btn-sm btn-outline-success d-flex align-items-center';
+          addButton.style.gap = '5px'; // space between icon and text
 
-          // Optional: Add styling for an icon-only button
-          addButton.style.padding = '3px';
-          addButton.style.lineHeight = '2';
-          const addIcon = document.createElement('img');
-          addIcon.src = 'assets/icons/add-driver.png';
-          addIcon.alt = 'Add Driver';
-          addIcon.style.width = '38px';
-          addIcon.style.height = '38px';
-          addButton.appendChild(addIcon);
+          // Bootstrap icon + text
+          addButton.innerHTML = `<i class="bi-patch-plus-fill"></i> Add`;
 
-          addButton.addEventListener('click', () => this.initiateAddDriver(params.data.parentOwnerId));
+          addButton.addEventListener('click', () =>
+            this.initiateAddDriver(params.data.parentOwnerId)
+          );
+
           container.appendChild(text);
           container.appendChild(addButton);
+
           return container;
+
         }
         return params.value;
       },
@@ -205,22 +225,23 @@ export class OwnerFetcherComponent implements OnInit {
     },
     { headerName: 'Last Name', field: 'lastName', editable: true, resizable: true },
     { headerName: 'Email', field: 'email', editable: true, resizable: true },
-    { headerName: 'Phone', field: 'phoneNumber', editable: true, resizable: true },
+    { headerName: 'Phone', field: 'phoneNumber', editable: true, resizable: true,width:150 },
+
+    { headerName: 'Status', field: 'status', editable: true, resizable: true ,width:130},
+    {
+      headerName: 'Actions',
+      cellRenderer: this.actionsCellRenderer,
+      width: 190  ,
+      editable: false,
+      resizable: true,
+      sortable: false,
+      filter: false
+    },
     {
       headerName: 'City',
       valueGetter: (params: any) => params.data.isDriverRow ? '-' : (params.data?.address?.city || '-'),
       editable: false,
       resizable: true
-    },
-    { headerName: 'Status', field: 'status', editable: true, resizable: true },
-    {
-      headerName: 'Actions',
-      cellRenderer: this.actionsCellRenderer,
-      width: 180,
-      editable: false,
-      resizable: true,
-      sortable: false,
-      filter: false
     }
   ];
 
@@ -233,12 +254,20 @@ export class OwnerFetcherComponent implements OnInit {
   constructor(
     private ownerService: OwnerService,
     private driverService: DriverService,
+    private paymentservice : PaymentService,
     public dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
     this.fetchOwners();
   }
+  driverrecord(driverData: any) {
+  console.log('Opening payment dialog for driver:', driverData);
+  this.dialog.open(PaymentDialogComponent, {
+    width: '800px',
+    data: { driverId: driverData.id } // <-- make sure this matches backend param
+  });
+}
 
   // fetchOwners, updateRowSNo, and toggleRowExpansion methods remain the same
   fetchOwners() {
@@ -305,13 +334,10 @@ export class OwnerFetcherComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      // The 'result' is the complete owner object from the form
       if (result) {
-        // Call your existing ownerService method
         this.ownerService.createowner(result).subscribe({
           next: () => {
             this.showMessage('Owner added successfully!', false);
-            // Refresh the grid to show the new owner
             this.fetchOwners();
           },
           error: (err) => {
@@ -322,6 +348,7 @@ export class OwnerFetcherComponent implements OnInit {
       }
     });
   }
+  
 
   toggleRowExpansion(ownerData: any) {
     const ownerId = ownerData.id;

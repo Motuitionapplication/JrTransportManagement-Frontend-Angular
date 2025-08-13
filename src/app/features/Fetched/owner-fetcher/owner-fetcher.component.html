@@ -5,15 +5,14 @@
     <input 
       type="text" 
       class="form-control" 
-      style="max-width: 1100px;" 
+      style="max-width: 1000px;" 
       placeholder="Search owners..." 
       (input)="onQuickFilterChanged($event)" 
     />
-    <button mat-raised-button color="primary" (click)="initiateAddOwner()">
-      <span class="material-icons" style="vertical-align: middle; margin-right: 4px;"></span>
-      👤➕
+   <button type="button" class="btn btn-warning btn-sm d-flex align-items-center" (click)="initiateAddOwner()">
+  <i class="bi bi-person-fill-add me-1"></i>
+      Owner
     </button>
-    
     
   </div>
   <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
@@ -49,6 +48,7 @@
     [rowHeight]="45"
     [defaultColDef]="defaultColDef"
     [rowClassRules]="{ 'driver-header-row': 'data.isDriverHeaderRow' }"
+    [editType]="'fullRow'"  (gridReady)="onGridReady($event)"
     (gridReady)="onGridReady($event)">
   </ag-grid-angular>
 </div>
