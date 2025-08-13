@@ -36,4 +36,9 @@ export class AdminService {
   editAdmin(id: number, admin: Admin): Observable<any> {
     return this.http.put(`${this.apiUrl}/edit/${id}`, admin);
   }
+
+  // Delete admin
+  deleteAdmin(id: string | number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/delete/${id}`);
+  }
 }
