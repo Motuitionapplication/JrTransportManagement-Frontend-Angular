@@ -11,32 +11,39 @@ export class AdminFetcherComponent implements OnInit {
   admins: Admin[] = [];
   searchValue: string = '';
   private gridApi: any;
+  showAddAdminModal = false;
+  newAdmin = { username: '', email: '', password: '' };
 
   columnDefs = [
     { 
       headerName: 'Name', 
+      field: 'name',
+      editable: true,
       valueGetter: (params: any) => {
         const firstName = params.data?.firstName || '';
         const lastName = params.data?.lastName || '';
-        return `${firstName} ${lastName}`.trim() || params.data.username || '-';
+        return `${firstName} ${lastName}`.trim() || params.data.username || params.data.name || '-';
       }
     },
-    { headerName: 'Email', field: 'email', valueGetter: (params: any) => params.data.email || '-' },
+    { headerName: 'Email', field: 'email', editable: true, valueGetter: (params: any) => params.data.email || '-' },
     {
       headerName: 'Actions',
-      cellRenderer: () => {
+      pinned: 'right' as const,
+      cellRenderer: (params: any) => {
         return `
-          <button type=\"button\" class=\"btn btn-sm btn-primary edit-btn\">Edit</button>
+          <button type="button" class="btn btn-sm btn-primary edit-btn">Edit</button>
+          <button type="button" class="btn btn-sm btn-danger delete-btn ms-1">Delete</button>
         `;
       },
-      width: 120
+      width: 180
     }
   ];
 
   defaultColDef = {
     sortable: true,
     filter: true,
-    resizable: true
+    resizable: true,
+    editable: true
   };
 
   constructor(private adminService: AdminService) {}
@@ -84,22 +91,38 @@ export class AdminFetcherComponent implements OnInit {
   onGridReady(params: any): void {
     this.gridApi = params.api;
     console.log('✅ AG Grid is ready. Total rows loaded:', this.admins.length);
-
+    this.gridApi.addEventListener('cellEditingStopped', (event: any) => {
+      const admin = event.data;
+      if (!admin) return;
+      // Only send id, name, and email fields
+      const updatedAdmin = {
+        id: admin.id,
+        name: admin.name,
+        email: admin.email
+      };
+      this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
+        () => {
+          this.fetchAdmins();
+        },
+        (error) => {
+          alert('Failed to update admin.');
+          console.error(error);
+        }
+      );
+    });
     this.gridApi.addEventListener('cellClicked', (event: any) => {
       const admin = event.data;
-      console.log('📌 Cell clicked. Admin data:', admin);
       if (!admin) return;
       if (event.event.target.classList.contains('edit-btn')) {
-        this.editAdmin(admin);
+        // Optionally start editing the first editable cell
+        this.gridApi.startEditingCell({ rowIndex: event.rowIndex, colKey: 'name' });
+      } else if (event.event.target.classList.contains('delete-btn')) {
+        this.deleteAdmin(admin.id);
       }
     });
   }
 
   editAdmin(admin: Admin): void {
-    if (!admin.id) {
-      alert('Invalid admin ID.');
-      return;
-    }
     // Example: Prompt for new name/email, then call editAdmin
     const newName = prompt('Edit admin name:', admin.name);
     const newEmail = prompt('Edit admin email:', admin.email);
@@ -108,7 +131,6 @@ export class AdminFetcherComponent implements OnInit {
       this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
         () => {
           alert('Admin updated successfully!');
-          localStorage.removeItem('cachedAdmins');
           this.fetchAdmins();
         },
         (error) => {
@@ -117,5 +139,50 @@ export class AdminFetcherComponent implements OnInit {
         }
       );
     }
+  }
+
+  deleteAdmin(id: string | number): void {
+    if (confirm('Are you sure you want to delete this admin?')) {
+      this.adminService.deleteAdmin(id).subscribe(
+        () => {
+          alert('Admin deleted successfully!');
+          this.fetchAdmins();
+        },
+        (error) => {
+          alert('Failed to delete admin.');
+          console.error(error);
+        }
+      );
+    }
+  }
+
+  openAddAdminDialog(): void {
+    this.showAddAdminModal = true;
+    this.newAdmin = { username: '', email: '', password: '' };
+  }
+
+  closeAddAdminDialog(): void {
+    this.showAddAdminModal = false;
+  }
+
+  submitAddAdmin(): void {
+    const { username, email, password } = this.newAdmin;
+    if (!username || !email || !password) {
+      alert('All fields are required!');
+      return;
+    }
+    // You may want to adjust the Admin model to include username and password
+    const adminToAdd: any = { name: username, email, password };
+    this.adminService.addAdmin(adminToAdd).subscribe(
+      () => {
+        alert('Admin added successfully!');
+        this.fetchAdmins();
+        this.closeAddAdminDialog();
+      },
+      (error) => {
+        alert('Failed to add admin.');
+        console.error(error);
+      }
+    );
   }
 }
