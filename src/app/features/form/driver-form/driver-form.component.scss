@@ -1,0 +1,25 @@
+form.driver-form {
+  margin-top: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px; 
+}
+
+.form-row > mat-form-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-form-field {
+    margin-top: 15px;
+//   margin-bottom: 8px;
+}
+
+[mat-dialog-actions] {
+  justify-content: flex-end;
+}

@@ -25,7 +25,5 @@ export class DriverService {
     deleteDriver(driverId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${driverId}`);
     }
-  
-
 }
 
