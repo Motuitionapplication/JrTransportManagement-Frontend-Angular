@@ -25,9 +25,11 @@ import { AdminModule } from './features/admin/admin.module';
 import { SuperAdminModule } from './features/super-admin/super-admin.module';
 import { AgGridModule } from 'ag-grid-angular';
 import { DriverFormComponent } from './features/form/driver-form/driver-form.component';
+import { VehicleFormComponent } from './features/form/vehicle-form/vehicle-form.component';
+
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule,ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
@@ -35,6 +37,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { OwnerFormComponent } from './features/form/owner-form/owner-form.component';
 import { PaymentComponent } from './features/payment/payment.component';
 import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
+import { VehicleComponent } from './features/vehicle/vehicle.component';
+import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicle-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-vehicle.component';
+
 
 
 @NgModule({
@@ -44,9 +51,13 @@ import { PaymentDialogComponent } from './features/Fetched/payment-dialog/paymen
     IosInstallPromptComponent,
     DashboardComponent,
     DriverFormComponent,
+    VehicleFormComponent,
     OwnerFormComponent,
     PaymentComponent,
     PaymentDialogComponent,
+    VehicleComponent,
+    VehicleDialogComponent,
+    AssignVehicleComponent,
   ],
   imports: [
     AgGridModule,
@@ -72,7 +83,9 @@ import { PaymentDialogComponent } from './features/Fetched/payment-dialog/paymen
     MatNativeDateModule,
     MatSelectModule,
     MatInputModule,
-    MatButtonModule
+    MatIconModule,
+    MatButtonModule,
+    FormsModule
 ],
   providers: [
     {

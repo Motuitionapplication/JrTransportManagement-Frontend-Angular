@@ -1,0 +1,37 @@
+<div class="dialog-header">
+  <h1 mat-dialog-title>Vehicle Records</h1>
+  <!-- This button is now hidden during the loading state -->
+  <button *ngIf="!isLoading" mat-raised-button color="primary" (click)="openAddVehicleForm()">
+    Add Vehicle
+  </button>
+</div>
+
+<div mat-dialog-content>
+  <!-- Loading, Error, and Grid sections remain the same -->
+  <div *ngIf="isLoading" class="dialog-state-container">
+    <p>Loading vehicles...</p>
+  </div>
+  <div *ngIf="error" class="dialog-state-container error-message">
+    <p>{{ error }}</p>
+  </div>
+  <div *ngIf="!isLoading && !error">
+    <ag-grid-angular
+      *ngIf="vehicles.length > 0; else noVehiclesFound"
+      style="width: 100%; height: 400px;"
+      class="ag-theme-alpine"
+      [rowData]="vehicles"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+    ></ag-grid-angular>
+    <ng-template #noVehiclesFound>
+      <div class="dialog-state-container">
+        <p>No vehicles found for this owner.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button mat-dialog-close>Close</button>
+</div>

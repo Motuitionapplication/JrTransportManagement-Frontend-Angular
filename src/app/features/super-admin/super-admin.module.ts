@@ -24,6 +24,8 @@ import { AdminManagementComponent } from './admin-management.component';
 import { CustomerFetcherComponent } from '../Fetched/customer-fetcher/customer-fetcher.component';
 import { AdminFetcherComponent } from '../Fetched/admin-fetcher/admin-fetcher.component';
 import { OwnerFetcherComponent } from '../Fetched/owner-fetcher/owner-fetcher.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 const routes: Routes = [
   {
@@ -76,7 +78,9 @@ const routes: Routes = [
     AgGridModule,
     FormsModule,
     MatTreeModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule,
+    MatFormFieldModule
   ]
 })
 export class SuperAdminModule {}

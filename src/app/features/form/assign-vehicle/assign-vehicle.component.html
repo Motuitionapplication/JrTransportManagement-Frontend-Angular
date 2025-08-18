@@ -1,0 +1,46 @@
+  <h1 mat-dialog-title>
+    Assign Vehicle to {{ driver.firstName }} {{ driver.lastName }}
+  </h1>
+
+  <div mat-dialog-content>
+    <p *ngIf="availableVehicles.length === 0">
+      No unallotted vehicles are available for this owner.
+    </p>
+
+    <mat-form-field
+      appearance="outline"
+      *ngIf="availableVehicles.length > 0"
+      style="width: 100%;"
+    >
+      <mat-label>Select an Available Vehicle</mat-label>
+      <mat-select [ngModel]="selectedVehicleId" (selectionChange)="onVehicleSelectionChange($event)">
+        <mat-select-trigger>
+          {{ getSelectedVehicleText() }}
+        </mat-select-trigger>
+
+        <mat-option
+          *ngFor="let vehicle of availableVehicles"
+          [value]="vehicle.id"
+        >
+          {{ vehicle.vehicleNumber }} - ({{ vehicle.manufacturer }}
+          {{ vehicle.model }})
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div
+      *ngIf="error"
+      style="color: red; margin-top: 15px; text-align: center;"
+    >
+      {{ error }}
+    </div>
+  </div>
+
+  <div mat-dialog-actions align="end">
+  <button mat-raised-button color="primary"
+          (click)="onConfirm()"
+          [disabled]="isLoading || !selectedVehicleId"
+          cdkFocusInitial>
+    {{ isLoading ? 'Assigning...' : 'Confirm Assignment' }}
+  </button>
+  </div>
