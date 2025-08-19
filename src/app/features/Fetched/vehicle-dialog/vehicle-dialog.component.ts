@@ -19,6 +19,15 @@ export class VehicleDialogComponent implements OnInit {
   private gridApi!: GridApi;
 
   public columnDefs: ColDef[] = [
+    {
+    headerName: 'S. No.',
+    valueGetter: (params) =>  {return params.node && params.node.rowIndex != null ? params.node.rowIndex + 1 : '';}
+,
+    width: 80,
+    sortable: false,
+    filter: false,
+    resizable: true,
+  },
     { headerName: 'Vehicle Number', field: 'vehicleNumber', sortable: true, filter: true },
     { headerName: 'Manufacturer', field: 'manufacturer', sortable: true, filter: true },
     { headerName: 'Model', field: 'model', sortable: true, filter: true },
@@ -71,6 +80,10 @@ export class VehicleDialogComponent implements OnInit {
       }
     });
   }
+  onQuickFilterChanged(event: any) {
+  const filterValue = event.target.value;
+  this.gridApi.setQuickFilter(filterValue);
+}
 
   /**
    * Opens the VehicleFormComponent to add a new vehicle.

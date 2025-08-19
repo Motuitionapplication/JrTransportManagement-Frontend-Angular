@@ -43,4 +43,16 @@
           cdkFocusInitial>
     {{ isLoading ? 'Assigning...' : 'Confirm Assignment' }}
   </button>
+
+  <!-- Existing template content -->
+
+<!-- Confirmation dialog -->
+<div *ngIf="showConfirmDialog" class="confirmation-overlay">
+  <div class="confirmation-dialog">
+    <p>{{ confirmMessage }}</p>
+    <button mat-button color="primary" (click)="onConfirmYes()">Yes</button>
+    <button mat-button (click)="onConfirmNo()">No</button>
+  </div>
+</div>
+
   </div>

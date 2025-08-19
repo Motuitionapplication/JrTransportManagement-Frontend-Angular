@@ -15,6 +15,12 @@
     <p>{{ error }}</p>
   </div>
   <div *ngIf="!isLoading && !error">
+    <input
+  type="text"
+  placeholder="Search vehicles..."
+  (input)="onQuickFilterChanged($event)"
+  class="form-control mb-2"
+/>
     <ag-grid-angular
       *ngIf="vehicles.length > 0; else noVehiclesFound"
       style="width: 100%; height: 400px;"

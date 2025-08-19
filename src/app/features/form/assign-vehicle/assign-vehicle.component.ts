@@ -15,18 +15,17 @@ export class AssignVehicleComponent {
   availableVehicles: Vehicle[];
   driver: any;
 
-  constructor(
+    showConfirmDialog: boolean = false;
+  confirmMessage: string = '';
+  confirmCallback: (() => void) | null = null;
+
+   constructor(
     public dialogRef: MatDialogRef<AssignVehicleComponent>,
     private driverService: DriverService,
     @Inject(MAT_DIALOG_DATA) public data: { driver: any; vehicles: Vehicle[] }
   ) {
     this.driver = data.driver;
-    if (data.vehicles && data.vehicles.length > 0) {
-      console.log('Inspecting vehicle data:', data.vehicles[0]);
-    } 
-    this.availableVehicles = data.vehicles.filter(
-      v => !v.driverId || v.driverId.trim() === ''
-    );
+    this.availableVehicles = data.vehicles.filter(v => !v.driverId || v.driverId.trim() === '');
   }
    public onVehicleSelectionChange(event: any): void {
     console.log('Selection event fired! Selected Vehicle ID:', event.value);
@@ -46,30 +45,54 @@ export class AssignVehicleComponent {
       : '';
   }
 
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+   showConfirmation(message: string, callback: () => void) {
+    this.confirmMessage = message;
+    this.confirmCallback = callback;
+    this.showConfirmDialog = true;
+  }
+  onConfirmYes() {
+    if (this.confirmCallback) {
+      this.confirmCallback();
+    }
+    this.showConfirmDialog = false;
+    this.confirmCallback = null;
+  }
+
+  onConfirmNo() {
+    this.showConfirmDialog = false;
+    this.confirmCallback = null;
+  }
+
+  // Updated onConfirm method with double confirmation
   onConfirm(): void {
     if (!this.selectedVehicleId) {
       this.error = 'Please select a vehicle to assign.';
       return;
     }
-    this.isLoading = true;
-    this.error = null;
 
-    this.driverService.assignVehicle(this.driver.id, this.selectedVehicleId).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.dialogRef.close({ success: true });
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.error =
-          err.error?.message ||
-          'Failed to assign vehicle. It might already be allotted.';
-        console.error(err);
+    this.showConfirmation(
+      `Are you sure you want to assign this vehicle to ${this.driver.firstName}?`,
+      () => {
+        this.isLoading = true;
+        this.error = null;
+
+        this.driverService.assignVehicle(this.driver.id, this.selectedVehicleId).subscribe({
+          next: () => {
+            this.isLoading = false;
+            this.dialogRef.close({ success: true });
+          },
+          error: (err) => {
+            this.isLoading = false;
+            this.error =
+              err.error?.message ||
+              'Failed to assign vehicle. It might already be allotted.';
+            console.error(err);
+          },
+        });
       }
-    });
-  }
-
-  onCancel(): void {
-    this.dialogRef.close();
+    );
   }
 }

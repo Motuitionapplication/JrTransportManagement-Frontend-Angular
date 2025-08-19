@@ -31,5 +31,9 @@ export class DriverService {
 
   return this.http.patch(`${this.apiUrl}/${driverId}/assign-vehicle`, requestBody);
 }
+unassignvehicle(driverId : string){
+    return this.http.patch(`${this.apiUrl}/${driverId}/unassign-vehicle`, { driverId });
+
+}
 }
 
