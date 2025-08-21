@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Customer } from 'src/app/models/customer.model';
 import { CustomerService } from '../../customer/customer.service';
+import { CustomerCreateDto } from 'src/app/models/customer-create-dto';
 @Component({
   selector: 'app-customer-fetcher',
   templateUrl: './customer-fetcher.component.html',
@@ -14,6 +15,31 @@ export class CustomerFetcherComponent implements OnInit {
   isEditMode = false;
   editableCustomer: Customer = {} as Customer;
   editingRowId: string | null = null;
+  isAddCustomerModalOpen = false;
+  addCustomerTabIndex = 0; // 0 = Personal Info, 1 = Contact Info
+
+  openAddCustomerModal() {
+    this.isAddCustomerModalOpen = true;
+    this.addCustomerTabIndex = 0; // always start from "Personal Info"
+
+  }
+
+  closeAddCustomerModal() {
+    this.isAddCustomerModalOpen = false;
+    this.resetNewCustomer();
+  }
+// ✅ For adding a customer
+newCustomer: CustomerCreateDto = {
+  username: '',
+  email: '',
+  firstName: '',
+  lastName: '',
+  phoneNumber: '',
+  alternatePhone: '',
+  dateOfBirth: ''
+};
+
+
   gridOptions = {
     masterDetail: true,  // ✅ This is crucial for the toggle to appear
     columnDefs: [
@@ -32,15 +58,16 @@ export class CustomerFetcherComponent implements OnInit {
       {
         headerName: 'Actions',
         field: 'actions',
+        pinned: 'right' as const, // ✅ keeps it fixed
         cellRenderer: (params: any) => {
           const isEditing = this.editingRowId === params.data.id;
           return `
-            <div style="display: flex; justify-content: center; align-items: center; gap: 6px; top: 10px;">
+           
               ${!isEditing ? `<button class="btn btn-sm btn-primary edit-btn" title="Edit"><i class="bi bi-pencil-square"></i></button>` : ''}
               ${isEditing ? `<button class="btn btn-sm btn-success save-btn" title="Save"><i class="bi bi-check-lg"></i></button>` : ''}
               <button class="btn btn-sm btn-danger delete-btn" title="Delete"><i class="bi bi-trash"></i></button>
               <button class="btn btn-sm btn-info view-btn" title="View"><i class="bi bi-eye"></i></button>
-            </div>
+
           `;
         },
         width: 180
@@ -328,4 +355,45 @@ export class CustomerFetcherComponent implements OnInit {
       }
     }
 
+    // ───────────────────────────────────────────────
+  // Add Customer
+  addCustomer() {
+    console.log('📤 Adding new customer with DTO:', this.newCustomer);
+    this.customerService.addCustomer(this.newCustomer).subscribe({
+      next: (savedCustomer) => {
+        alert('✅ Customer added successfully!');
+        // refresh from API instead of pushing, to keep data consistent
+        this.fetchCustomers();  
+        this.resetNewCustomer();
+        this.closeAddCustomerModal();
+      },
+      error: (err) => {
+        console.error('❌ Failed to add customer:', err);
+        alert('Failed to add customer.');
+      }
+    });
   }
+
+  // ───────────────────────────────────────────────
+  // Reset form for Add Customer Modal
+  resetNewCustomer() {
+    this.newCustomer = {
+      username: '',
+      email: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      alternatePhone: '',
+      dateOfBirth: ''
+    };
+  }
+
+  // ───────────────────────────────────────────────
+  // Open Add Customer Modal
+  openAddCustomer() {
+    this.resetNewCustomer();
+    this.isAddCustomerModalOpen = true;  // open modal
+  }
+
+
+}

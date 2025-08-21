@@ -1,18 +1,37 @@
-<div  class="position-relative">
+<div class="position-relative">
   <div class="p-3">
-    <h2 class="fw-bold text-primary mb-3">List Of Customers</h2>
+    <h2 class="fw-bold text-primary mb-3" style="font-family: 'Poppins', sans-serif;">
+      <i class="fa-solid fa-users me-2"></i> List Of Customers
+    </h2>
 
-    <div class="d-flex justify-content-between mb-2">
-      <input
-        type="text"
-        class="form-control w-50"
-        placeholder="Search by name, email, or phone"
-        (input)="onQuickFilterChanged($event)"
-      />
+    <div class="d-flex justify-content-between mb-2 align-items-center">
+      <!-- Search Box -->
+      <div class="search-container"[class.active]="searchValue.length > 0">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          class="form-control search-input"
+          placeholder="Search by name, email, or phone"
+          [(ngModel)]="searchValue"
+          (input)="onQuickFilterChanged($event)"
+        />
+      </div>
 
-      <button class="btn btn-outline-primary btn-sm" (click)="refreshCustomers()">
-        🔄 Refresh
-      </button>
+      <!-- Action Buttons -->
+      <div>
+        <button 
+          class="btn btn-outline-success btn-sm me-2 icon-btn" 
+          (click)="openAddCustomerModal()">
+          <i class="fa-solid fa-user-plus"></i>
+          <span class="text">Add Customer</span>
+        </button>
+
+
+        <button class="btn btn-outline-primary btn-sm icon-btn" (click)="refreshCustomers()">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span class="text">Refresh</span>
+        </button>
+      </div>
     </div>
 
     <ag-grid-angular
@@ -34,70 +53,64 @@
 
 
     <!-- Profile Modal Overlay -->
-    <div
-      *ngIf="selectedCustomer"
-      class="modal-backdrop-custom d-flex align-items-center justify-content-center"
-    >
-      <div class="card profile-modal shadow border border-info">
-        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-          <strong>Customer Profile</strong>
-          <button class="btn-close" (click)="selectedCustomer = null" aria-label="Close"></button>
+    <div *ngIf="isAddCustomerModalOpen" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+      <div class="card shadow border border-success modal-square">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <strong>Add New Customer</strong>
+          <button class="btn-close" (click)="closeAddCustomerModal()"></button>
         </div>
 
-        <div class="card-body text-center" *ngIf="!isEditMode">
-        <!-- Display profile info -->
-        <img
-          [src]="selectedCustomer?.profilePhoto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
-          class="rounded-circle mb-3"
-          alt="Profile Image"
-          style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #17a2b8;"
-        />
-        <h5>{{ selectedCustomer?.firstName || '-' }} {{ selectedCustomer?.lastName || '-' }}</h5>
-        <p><strong>Phone:</strong> {{ selectedCustomer?.phoneNumber || '-' }}</p>
-        <p><strong>Email:</strong> {{ selectedCustomer?.email || '-' }}</p>
-        <p><strong>City:</strong> {{ selectedCustomer?.profile?.address?.city || '-' }}</p>
-        <p><strong>Status:</strong> {{ selectedCustomer?.accountStatus || '-' }}</p>
-      </div>
+        <div class="card-body overflow-auto">
+          <!-- Tab group with index binding -->
+          <mat-tab-group [(selectedIndex)]="addCustomerTabIndex">
+            <!-- Personal Info Tab -->
+            <mat-tab label="Personal Info">
+              <div class="mb-2">
+                <label>First Name</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.firstName" required />
+              </div>
+              <div class="mb-2">
+                <label>Last Name</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.lastName" required />
+              </div>
+              <div class="mb-2">
+                <label>Date of Birth</label>
+                <input matInput type="date" class="form-control" [(ngModel)]="newCustomer.dateOfBirth" />
+              </div>
+            </mat-tab>
 
-      <div class="card-body text-start" *ngIf="isEditMode">
-        <!-- Editable fields -->
-        <div class="mb-2">
-          <label>First Name</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.profile.firstName" />
+            <!-- Contact Info Tab -->
+            <mat-tab label="Contact Info">
+              <div class="mb-2">
+                <label>Phone</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.phoneNumber" required />
+              </div>
+              <div class="mb-2">
+                <label>Alternate Phone</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.alternatePhone" />
+              </div>
+              <div class="mb-2">
+                <label>Email</label>
+                <input matInput type="email" class="form-control" [(ngModel)]="newCustomer.email" required />
+              </div>
+              <div class="mb-2">
+                <label>Username</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.username" required />
+              </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
-        <div class="mb-2">
-          <label>Last Name</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.profile.lastName" />
-        </div>
-        <div class="mb-2">
-          <label>Phone</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.profile.phoneNumber" />
-        </div>
-        <div class="mb-2">
-          <label>Email</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.profile.email" />
-        </div>
-        <div class="mb-2">
-          <label>City</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.profile.address.city" />
-        </div>
-        <div class="mb-2">
-          <label>Status</label>
-          <input class="form-control" [(ngModel)]="editableCustomer.accountStatus" />
-        </div>
-      </div>
 
-        <div class="card-footer text-center">
-          <button class="btn btn-secondary me-2" *ngIf="isEditMode" (click)="cancelEdit()">Cancel</button>
-          <button class="btn btn-success me-2" *ngIf="isEditMode" (click)="saveEdit()">Save</button>
-          <button class="btn btn-primary me-2" *ngIf="!isEditMode" (click)="startEdit()">Edit</button>
-          <button class="btn btn-danger" (click)="deleteCustomer(selectedCustomer?.id)">Delete</button>
+        <div class="card-footer text-end">
+          <button class="btn btn-secondary me-2" (click)="closeAddCustomerModal()">Cancel</button>
+          <button class="btn btn-success" (click)="addCustomer()">Save</button>
         </div>
       </div>
-
-
     </div>
-    <!-- End of Profile Modal Overlay -->
+
+
+
+    <!-- End of Add Customer Modal -->
 
 
 

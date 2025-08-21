@@ -23,12 +23,16 @@ import { DriverModule } from './features/driver/driver.module';
 import { AdminModule } from './features/admin/admin.module';
 import { SuperAdminModule } from './features/super-admin/super-admin.module';
 import { AgGridModule } from 'ag-grid-angular';
+import { AppCustomerWalletComponent } from './features/wallet-managements/app-customer-wallet/app-customer-wallet.component';
+import { AppDriverWalletComponent } from './features/wallet-managements/app-driver-wallet/app-driver-wallet.component';
+import { AppAdminWalletComponent } from './features/wallet-managements/app-admin-wallet/app-admin-wallet.component';
 @NgModule({
   declarations: [
     AppComponent,
     SplashScreenComponent,
     IosInstallPromptComponent,
     DashboardComponent,
+
   ],
   imports: [
     AgGridModule,
