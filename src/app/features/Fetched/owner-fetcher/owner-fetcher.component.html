@@ -16,7 +16,14 @@
   <i class="bi bi-person-fill-add me-1"></i>
       Owner
     </button>
-    
+<button type="button" class="btn btn-success btn-sm d-flex align-items-center" (click)="onExportCSV()">
+  <i class="bi bi-file-earmark-spreadsheet"></i>
+      Excel
+    </button>  
+    <div *ngIf="isLoading" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+  
   </div>
   <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
        [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" role="alert">

@@ -1,3 +1,4 @@
+
 import { Component, OnInit } from '@angular/core';
 import { OwnerService } from '../../owner/owner.service';
 import { DriverService } from '../../driver/driver.service';
@@ -12,6 +13,7 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
 import { AssignVehicleComponent } from '../../form/assign-vehicle/assign-vehicle.component';
 import { VehicleService } from '../../vehicle/vehicle.service';
 import { VehicleDialogComponent } from '../vehicle-dialog/vehicle-dialog.component';
+
 
 // Interface and constant definitions remain the same...
 interface DriverWithEdit {
@@ -46,6 +48,7 @@ const DRIVER_HEADER_ROW_TYPE = 'driver-header';
 })
 export class OwnerFetcherComponent implements OnInit {
   public modifiedRows: Set<any> = new Set<any>();
+  public isLoading = false;
 
   ownersForGrid: any[] = [];
   gridApi: any;
@@ -69,28 +72,35 @@ export class OwnerFetcherComponent implements OnInit {
     const eGui = document.createElement('div');
     const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
     if (params.data.isDriverRow) {
-  if (params.data.assignedVehicleInfo && params.data.assignedVehicleInfo!="N/A") {
-    // Render Remove Assignment button
-    const removeBtn = document.createElement('button');
-    removeBtn.innerHTML = '<i class="bi bi-escape"></i>';
-    removeBtn.className = 'btn btn-sm btn-danger me-1';
-    removeBtn.title = 'Remove Assignment';
-    removeBtn.addEventListener('click', () => {
-      this.removeVehicleAssignment(params.data);
-    });
-    eGui.appendChild(removeBtn);
-  } else {
-    // Render Assign Vehicle button as before
-    const assignBtn = document.createElement('button');
-    assignBtn.innerHTML = '<i class="bi bi-plugin"></i>';
-    assignBtn.className = 'btn btn-sm btn-primary me-1';
-    assignBtn.title = 'Assign Vehicle';
-    assignBtn.addEventListener('click', () => {
-      this.openAssignVehicleDialog(params.data);
-    });
-    eGui.appendChild(assignBtn);
-  }
-}
+      if (params.data.assignedVehicleInfo && params.data.assignedVehicleInfo != "N/A") {
+        // Render Remove Assignment button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="bi bi-escape"></i>';
+        removeBtn.className = 'btn btn-sm btn-danger me-1';
+        removeBtn.title = 'Remove Assignment';
+        removeBtn.addEventListener('click', () => {
+          this.showConfirmation(
+            `Are you sure you want to remove the vehicle assignment from ${params.data.firstName}?`,
+            () => {
+              // On Yes, show second confirmation
+              this.removeVehicleAssignment(params.data);
+            }
+          );
+        });
+
+        eGui.appendChild(removeBtn);
+      } else {
+        // Render Assign Vehicle button as before
+        const assignBtn = document.createElement('button');
+        assignBtn.innerHTML = '<i class="bi bi-plugin"></i>';
+        assignBtn.className = 'btn btn-sm btn-primary me-1';
+        assignBtn.title = 'Assign Vehicle';
+        assignBtn.addEventListener('click', () => {
+          this.openAssignVehicleDialog(params.data);
+        });
+        eGui.appendChild(assignBtn);
+      }
+    }
 
 
     // Edit/Save button
@@ -315,20 +325,26 @@ export class OwnerFetcherComponent implements OnInit {
     this.fetchOwners();
   }
   removeVehicleAssignment(driverData: any): void {
-  this.driverService.unassignvehicle(driverData.id).subscribe({
-    next: () => {
-      this.showMessage(`Vehicle unassigned from ${driverData.firstName}.`, false);
-      this.refreshDriverData(driverData.parentOwnerId);
-    },
-    error: (err) => {
-      this.showMessage('Failed to unassign vehicle.', true);
-      console.error(err);
-    }
-  });
-}
-onRefreshClick(): void {
-  this.fetchOwners(); 
-}
+    this.isLoading = true;
+
+    this.driverService.unassignvehicle(driverData.id).subscribe({
+      next: () => {
+        this.showMessage(`Vehicle unassigned from ${driverData.firstName}.`, false);
+        this.refreshDriverData(driverData.parentOwnerId);
+        this.isLoading = false;
+
+      },
+      error: (err) => {
+        this.isLoading = false;
+
+        this.showMessage('Failed to unassign vehicle.', true);
+        console.error(err);
+      }
+    });
+  }
+  onRefreshClick(): void {
+    this.fetchOwners();
+  }
 
   openAssignVehicleDialog(driverData: any): void {
     const ownerId = driverData.parentOwnerId;
@@ -346,7 +362,7 @@ onRefreshClick(): void {
             driver: driverData,
             vehicles: vehicles
           },
-          autoFocus: true,  
+          autoFocus: true,
           restoreFocus: true
         });
 
@@ -394,7 +410,7 @@ onRefreshClick(): void {
 
   openVehicleDialog(ownerData: any): void {
     this.dialog.open(VehicleDialogComponent, {
-      width: '800px', 
+      width: '800px',
       data: { ownerId: ownerData.id }
     });
   }
@@ -403,11 +419,13 @@ onRefreshClick(): void {
     console.log('Opening payment dialog for driver:', driverData);
     this.dialog.open(PaymentDialogComponent, {
       width: '800px',
-      data: { driverId: driverData.id } 
+      data: { driverId: driverData.id }
     });
   }
 
   fetchOwners() {
+    this.isLoading = true;
+
     this.ownerService.getAllOwners().subscribe((owners) => {
       this.ownersForGrid = owners.map(owner => ({
         ...owner,
@@ -415,8 +433,12 @@ onRefreshClick(): void {
       }));
       this.updateRowSNo();
       this.gridApi?.setRowData(this.ownersForGrid);
+      this.isLoading = false;
+
       console.log('Fetched Owners:', this.ownersForGrid);
     }, error => {
+      this.isLoading = false;
+
       console.error('Error fetching owners:', error);
       this.showMessage('Failed to load owners.', true);
     });
@@ -502,6 +524,7 @@ onRefreshClick(): void {
       this.gridApi?.setRowData(this.ownersForGrid);
     } else {
       // Expand: Fetch drivers, insert header, then insert drivers
+      this.isLoading = true;
       this.showMessage('Loading drivers...', false);
       this.ownerService.getDriversByOwner(ownerId).subscribe({
         next: (drivers) => {
@@ -509,25 +532,26 @@ onRefreshClick(): void {
           if (ownerIndex !== -1) {
             const driverRows = drivers.map(driver => ({
               ...driver,
-              id: driver.id || driver._id, 
+              id: driver.id || driver._id,
               isDriverRow: true,
               parentOwnerId: ownerId,
               status: driver.status || 'Active'
             }));
 
             const headerRow = {
-              id: `${ownerId}-${DRIVER_HEADER_ROW_TYPE}`, 
+              id: `${ownerId}-${DRIVER_HEADER_ROW_TYPE}`,
               isDriverHeaderRow: true,
               parentOwnerId: ownerId,
-              ownerName: `${ownerData.firstName} ${ownerData.lastName}` 
+              ownerName: `${ownerData.firstName} ${ownerData.lastName}`
             };
 
             this.ownersForGrid.splice(ownerIndex + 1, 0, headerRow, ...driverRows);
             this.expandedOwnerIds.add(ownerId);
             this.updateRowSNo();
             this.gridApi?.setRowData(this.ownersForGrid);
-            this.gridApi?.ensureIndexVisible(ownerIndex + driverRows.length + 1); 
+            this.gridApi?.ensureIndexVisible(ownerIndex + driverRows.length + 1);
             this.showMessage('Drivers loaded.', false);
+            this.isLoading = false;
           }
         },
         error: (error) => {
@@ -594,11 +618,11 @@ onRefreshClick(): void {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      
+
       if (result) {
         const payload = {
           ...result,
-          ownerId: ownerId 
+          ownerId: ownerId
         };
         this.addDriver(payload);
       }
@@ -687,4 +711,9 @@ onRefreshClick(): void {
     this.showCustomConfirm = false;
     this.confirmCallback = null;
   }
+  onExportCSV(): void {
+    this.gridApi.exportDataAsCsv();
+  }
+
+
 }
