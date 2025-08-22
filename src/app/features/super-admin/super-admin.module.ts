@@ -1,3 +1,4 @@
+import { SidebarComponent } from './sidebar/sidebar.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
@@ -6,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
 import { FormsModule } from '@angular/forms';
 import { SuperAdminDashboardComponent } from './dashboard/super-admin-dashboard.component';
-import { SidebarComponent } from './sidebar/sidebar.component';
 import { UserManagementComponent } from './user-management.component';
 import { ApprovalManagementComponent } from './approval-management.component';
 import { VehicleManagementComponent } from './vehicle-management.component';
@@ -73,7 +73,7 @@ const routes: Routes = [
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    AgGridModule,
+  AgGridModule,
     FormsModule,
     MatTreeModule,
     MatIconModule

@@ -1,63 +1,25 @@
+// ...existing code...
+// (Move SidebarComponent to the bottom of the file)
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-sidebar',
-  templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+    selector: 'app-sidebar',
+    template: `
+        <nav class="sidebar">
+            <ul>
+                <li><a routerLink="/super-admin/user-management">User Management</a></li>
+                <li><a routerLink="/super-admin/approval-management">Approval Management</a></li>
+                <li><a routerLink="/super-admin/vehicle-management">Vehicle Management</a></li>
+                <li><a routerLink="/super-admin/consignment-management">Consignment Management</a></li>
+                <li><a routerLink="/super-admin/payment-management">Payment Management</a></li>
+                <li><a routerLink="/super-admin/fare-management">Fare Management</a></li>
+                <li><a routerLink="/super-admin/complaint-management">Complaint Management</a></li>
+                <li><a routerLink="/super-admin/term-management">Term Management</a></li>
+                <li><a routerLink="/super-admin/wallet-management">Wallet Management</a></li>
+                <li><a routerLink="/super-admin/analytics">Analytics</a></li>
+            </ul>
+        </nav>
+    `,
+    styleUrls: ['./sidebar.component.scss']
 })
-export class SidebarComponent {
-  sidebarExpanded = true;
-
-  toggleSidebarWidth() {
-    this.sidebarExpanded = !this.sidebarExpanded;
-  }
-  collapsed = false;
-
-  sections = [
-    {
-      label: 'Management',
-      icon: 'fas fa-cogs',
-      children: [
-        {
-          label: 'User Management',
-          icon: 'fas fa-users',
-          children: [
-            { label: 'Admin Management', icon: 'fas fa-user-shield', route: '/super-admin/admin-management' },
-            { label: 'Customer Management', icon: 'fas fa-user-friends', route: '/super-admin/customer-management' },
-            { label: 'Owner Management', icon: 'fas fa-user-tie', route: '/super-admin/owner-management' },
-            { label: 'Driver Management', icon: 'fas fa-id-badge', route: '/super-admin/driver-management' }
-          ]
-        },
-        { label: 'Approval Management', icon: 'fas fa-user-check', route: '/super-admin/approval-management' },
-        { label: 'Vehicle Management', icon: 'fas fa-truck', route: '/super-admin/vehicle-management' },
-        { label: 'Consignment Management', icon: 'fas fa-box', route: '/super-admin/consignment-management' },
-        { label: 'Payment Management', icon: 'fas fa-credit-card', route: '/super-admin/payment-management' },
-        { label: 'Fare Management', icon: 'fas fa-money-bill-wave', route: '/super-admin/fare-management' },
-        { label: 'Complaint Management', icon: 'fas fa-exclamation-circle', route: '/super-admin/complaint-management' },
-        { label: 'Term Management', icon: 'fas fa-file-contract', route: '/super-admin/term-management' },
-        { label: 'Wallet Management', icon: 'fas fa-wallet', route: '/super-admin/wallet-management' },
-        { label: 'Analytics', icon: 'fas fa-chart-line', route: '/super-admin/analytics' }
-      ]
-    }
-  ];
-
-  managementExpanded = true;
-  userManagementExpanded = true;
-
-  toggleManagement() {
-    this.managementExpanded = !this.managementExpanded;
-  }
-
-  toggleUserManagement() {
-    this.userManagementExpanded = !this.userManagementExpanded;
-  }
-
-  toggleSidebar() {
-    this.collapsed = !this.collapsed;
-    console.log('Sidebar collapsed:', this.collapsed);
-  }
-}
-function toggleSidebarWidth() {
-  throw new Error('Function not implemented.');
-}
-
+export class SidebarComponent {}

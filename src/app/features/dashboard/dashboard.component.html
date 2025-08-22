@@ -1,20 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JR Transport - Return Truck Development & Logistics</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard.component.scss">
-</head>
-<body>
-    <!-- Hero Section -->
+<!-- Main App Header (moved from app.component.html) -->
+<header class="app-header">
+    <div class="header-content">
+        <div class="logo-section">
+            <span class="brand-svg-icon">
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="brandGradient" x1="0" y1="0" x2="38" y2="38" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#00c6ff"/>
+                            <stop offset="1" stop-color="#0072ff"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="19" cy="19" r="19" fill="url(#brandGradient)"/>
+                    <rect x="7" y="16" width="18" height="10" rx="3" fill="#fff"/>
+                    <rect x="25" y="20" width="6" height="6" rx="2" fill="#e3f2fd"/>
+                    <rect x="10" y="19" width="7" height="3" rx="1.5" fill="#1976d2"/>
+                    <circle cx="13" cy="28" r="2" fill="#1976d2"/>
+                    <circle cx="27" cy="28" r="2" fill="#1976d2"/>
+                    <rect x="27.5" y="23.5" width="2" height="1" rx="0.5" fill="#1976d2"/>
+                    <path d="M13 16c0-2 2-4 6-4s6 2 6 4" stroke="#1976d2" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <path d="M11 22c0 1.5 1.5 2.5 3 2.5s3-1 3-2.5" stroke="#1976d2" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+                </svg>
+            </span>
+            <h1 class="app-title enhanced-brand">JR Transport</h1>
+        </div>
+        <div class="main-nav">
+            <button class="nav-btn" routerLink="/home" routerLinkActive="active">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-btn" routerLink="/support" routerLinkActive="active">
+                <i class="fas fa-life-ring"></i> Support
+            </button>
+        </div>
+        <!-- Hamburger Button -->
+        <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+            &#9776; <!-- Unicode for ☰ -->
+        </button>
+        <!-- User Authentication Section -->
+        <div class="auth-section">
+            <div *ngIf="authService.isAuthenticated; else authButtons" class="user-menu">
+                <div class="user-info" (click)="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">{{ getCurrentUserName() }}</span>
+                        <span class="user-role">{{ getCurrentUserRole() }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down" [class.rotated]="showUserMenu"></i>
+                </div>
+                <div class="user-dropdown" [class.show]="showUserMenu">
+                    <button class="dropdown-item" (click)="viewProfile()">
+                        <i class="fas fa-user"></i>
+                        Profile
+                    </button>
+                    <button class="dropdown-item" (click)="viewSettings()">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout" (click)="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+            <ng-template #authButtons>
+                <div class="auth-buttons">
+                    <button class="auth-btn login-btn" (click)="openLoginDialog()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                    <button class="auth-btn signup-btn" (click)="openSignupDialog()">
+                        <i class="fas fa-user-plus"></i>
+                        Sign Up
+                    </button>
+                </div>
+            </ng-template>
+        </div>
+    </div>
+</header>
+
+    
+<!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-bg-pattern"></div>
         <div class="hero-container">
             <div class="hero-content">
-                <h1>Return Truck Development & Logistics</h1>
-                <p>Get the best rates for return trucks across India. Fast, reliable, and cost-effective transportation solutions for your business needs.</p>
+                <h1>Grab Return Trucks & Save on Logistics!</h1>
+                <p>Get the best rates for return trucks across India. Fast, reliable, and cost-effective transportation solutions for your needs.</p>
                 
                 <div class="hero-stats">
                     <div class="stat-item">
@@ -119,7 +192,7 @@
                     <h3>Best Rates</h3>
                     <p>Guaranteed lowest prices in the market. Compare rates from multiple transporters and choose the best deal.</p>
                 </div>
-            </div> -->
+            </div> 
         </div>
     </section>
 
@@ -311,5 +384,3 @@
     </div>
 
     <script src="script.js"></script>
-</body>
-</html>

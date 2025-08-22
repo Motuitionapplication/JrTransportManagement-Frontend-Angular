@@ -1,3 +1,224 @@
+/* Main App Header styles moved from app.component.scss */
+.app-header {
+  position: static;
+  z-index: 1000;
+  background: linear-gradient(90deg, #0d1a3a 0%, #1976d2 100%);
+  color: #fff;
+  padding: 1.2rem 2rem;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.10);
+  border-bottom-left-radius: 1rem;
+  border-bottom-right-radius: 1rem;
+  border: none;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.05rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-svg-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+}
+
+.enhanced-brand {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 1px;
+  margin-left: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.10), 0 1.5px 0 #1976d2;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  display: inline-block;
+}
+
+.main-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-btn {
+  background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+  border: none;
+  color: #fff !important;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.6rem 1.3rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 114, 255, 0.13);
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s, color 0.18s, transform 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  margin: 0 0.2rem;
+}
+
+.nav-btn.active,
+.nav-btn:hover {
+  background: linear-gradient(90deg, #1976d2 0%, #00c6ff 100%);
+  color: #fff !important;
+  box-shadow: 0 6px 18px 0 rgba(0, 114, 255, 0.18), 0 1.5px 0 #fff3;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.nav-btn:active {
+  background: #1565c0;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0, 114, 255, 0.10);
+  transform: scale(0.98);
+}
+
+.auth-section {
+  position: relative;
+  margin-left: auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.auth-btn {
+  background-color: #0055aa;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.auth-btn:hover {
+  background-color: #007bff;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.user-avatar {
+  background: #fff;
+  color: #003366;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+}
+
+.fa-chevron-down {
+  transition: transform 0.3s ease;
+}
+
+.fa-chevron-down.rotated {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #fff;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.user-dropdown.show {
+  display: flex;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item.logout {
+  color: #d9534f;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #ccc;
+  margin: 0.25rem 0;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .app-header .header-content {
+    flex-wrap: nowrap;
+  }
+  .main-nav {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background-color: #003366;
+    margin-top: 1rem;
+  }
+  .main-nav.open {
+    display: flex;
+  }
+  .mobile-menu-toggle {
+    display: block;
+  }
+}
 // Variables
 $primary-color: #3b82f6;
 $primary-dark: #1e3a8a;
@@ -130,7 +351,7 @@ body {
   min-height: 700px;
   width: 100vw;
   @include gradient-bg(rgba(30, 58, 138, 0.8), rgba(6, 182, 212, 0.8));
-  background-image: url('/assets/icons/truck4.png');
+  background-image: url('/assets/icons/bluetruck.jpg');
   background-size: cover;
   background-position: center;
   @include flex-center;
