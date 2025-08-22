@@ -28,9 +28,11 @@ import { AppCustomerWalletComponent } from './features/wallet-managements/app-cu
 import { AppDriverWalletComponent } from './features/wallet-managements/app-driver-wallet/app-driver-wallet.component';
 import { AppAdminWalletComponent } from './features/wallet-managements/app-admin-wallet/app-admin-wallet.component';
 import { DriverFormComponent } from './features/form/driver-form/driver-form.component';
+import { VehicleFormComponent } from './features/form/vehicle-form/vehicle-form.component';
+
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule,ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
@@ -40,6 +42,11 @@ import { PaymentComponent } from './features/payment/payment.component';
 import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
 import { DialogMessageComponent } from './shared/dialog-message/dialog-message.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { VehicleComponent } from './features/vehicle/vehicle.component';
+import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicle-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-vehicle.component';
+
 
 
 @NgModule({
@@ -50,10 +57,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     DashboardComponent,
 
     DriverFormComponent,
+    VehicleFormComponent,
     OwnerFormComponent,
     PaymentComponent,
     PaymentDialogComponent,
     DialogMessageComponent,
+    VehicleComponent,
+    VehicleDialogComponent,
+    AssignVehicleComponent,
   ],
   imports: [
     MatProgressSpinnerModule,
@@ -80,7 +91,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatNativeDateModule,
     MatSelectModule,
     MatInputModule,
-    MatButtonModule
+    MatIconModule,
+    MatButtonModule,
+    FormsModule
 ],
   providers: [
     {

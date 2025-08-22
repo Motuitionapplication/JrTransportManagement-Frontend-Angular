@@ -25,5 +25,15 @@ export class DriverService {
     deleteDriver(driverId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${driverId}`);
     }
+
+    assignVehicle(driverId: string, vehicleId: string) {
+  const requestBody = { vehicleId: vehicleId };
+
+  return this.http.patch(`${this.apiUrl}/${driverId}/assign-vehicle`, requestBody);
+}
+unassignvehicle(driverId : string){
+    return this.http.patch(`${this.apiUrl}/${driverId}/unassign-vehicle`, { driverId });
+
+}
 }
 
