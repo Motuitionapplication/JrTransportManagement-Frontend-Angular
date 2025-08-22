@@ -14,6 +14,7 @@ import { SplashScreenComponent } from './shared/splash-screen/splash-screen.comp
 import { IosInstallPromptComponent } from './shared/ios-install-prompt/ios-install-prompt.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 
+
 // Feature Modules
 import { StudentsModule } from './features/students/students.module';
 import { AuthModule } from './features/auth/auth.module';
@@ -26,6 +27,21 @@ import { AgGridModule } from 'ag-grid-angular';
 import { AppCustomerWalletComponent } from './features/wallet-managements/app-customer-wallet/app-customer-wallet.component';
 import { AppDriverWalletComponent } from './features/wallet-managements/app-driver-wallet/app-driver-wallet.component';
 import { AppAdminWalletComponent } from './features/wallet-managements/app-admin-wallet/app-admin-wallet.component';
+import { DriverFormComponent } from './features/form/driver-form/driver-form.component';
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { OwnerFormComponent } from './features/form/owner-form/owner-form.component';
+import { PaymentComponent } from './features/payment/payment.component';
+import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
+import { DialogMessageComponent } from './shared/dialog-message/dialog-message.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -33,8 +49,14 @@ import { AppAdminWalletComponent } from './features/wallet-managements/app-admin
     IosInstallPromptComponent,
     DashboardComponent,
 
+    DriverFormComponent,
+    OwnerFormComponent,
+    PaymentComponent,
+    PaymentDialogComponent,
+    DialogMessageComponent,
   ],
   imports: [
+    MatProgressSpinnerModule,
     AgGridModule,
     BrowserModule,
     BrowserAnimationsModule,
@@ -47,13 +69,19 @@ import { AppAdminWalletComponent } from './features/wallet-managements/app-admin
     CustomerModule,
     DriverModule,
     AdminModule,
-    
     SuperAdminModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: environment.production,
-      registrationStrategy: 'registerWhenStable:30000'
-    })
-  ],
+        enabled: environment.production,
+        registrationStrategy: 'registerWhenStable:30000'
+    }),
+    MatFormFieldModule,
+    MatDatepickerModule,
+    ReactiveFormsModule,
+    MatNativeDateModule,
+    MatSelectModule,
+    MatInputModule,
+    MatButtonModule
+],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,

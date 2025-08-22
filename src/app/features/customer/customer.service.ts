@@ -46,6 +46,6 @@ export class CustomerService {
 
   // ✅ Add new customer
   addCustomer(dto: CustomerCreateDto): Observable<Customer> {
-    return this.http.post<Customer>(this.apiUrl, dto);
+    return this.http.put<Customer>(this.apiUrl, dto);
   }
 }

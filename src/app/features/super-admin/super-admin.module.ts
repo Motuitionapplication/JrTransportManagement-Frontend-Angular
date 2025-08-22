@@ -31,6 +31,7 @@ import { AppCustomerWalletComponent } from '../wallet-managements/app-customer-w
 import { AppDriverWalletComponent } from '../wallet-managements/app-driver-wallet/app-driver-wallet.component';
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCardModule } from "@angular/material/card";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 const routes: Routes = [
   {
@@ -90,7 +91,8 @@ const routes: Routes = [
     MatIconModule,
     MatTabsModule,
     MatFormFieldModule,
-    MatCardModule
+    MatCardModule,
+    MatProgressSpinnerModule
 ]
 })
 export class SuperAdminModule {}

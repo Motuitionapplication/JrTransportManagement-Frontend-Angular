@@ -1,9 +1,10 @@
 export interface CustomerCreateDto {
-  username: string;
+  userId: number;   // matches backend
   email: string;
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  alternatePhone?: string;  // optional
-  dateOfBirth?: string;     // formatted as 'YYYY-MM-DD'
+  alternatePhone?: string;
+  dateOfBirth: string;  // "YYYY-MM-DD"
+  password: string;     // add password for backend
 }

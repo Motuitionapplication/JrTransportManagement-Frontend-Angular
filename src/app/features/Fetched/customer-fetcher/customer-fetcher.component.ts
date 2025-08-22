@@ -2,6 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { Customer } from 'src/app/models/customer.model';
 import { CustomerService } from '../../customer/customer.service';
 import { CustomerCreateDto } from 'src/app/models/customer-create-dto';
+
+// For Excel export
+import * as XLSX from 'xlsx';
+// For PDF export
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { MatDialog } from '@angular/material/dialog';
+import { DialogMessageComponent } from 'src/app/shared/dialog-message/dialog-message.component';
+
 @Component({
   selector: 'app-customer-fetcher',
   templateUrl: './customer-fetcher.component.html',
@@ -17,6 +26,8 @@ export class CustomerFetcherComponent implements OnInit {
   editingRowId: string | null = null;
   isAddCustomerModalOpen = false;
   addCustomerTabIndex = 0; // 0 = Personal Info, 1 = Contact Info
+  loading = false; // tracks API call state
+  
 
   openAddCustomerModal() {
     this.isAddCustomerModalOpen = true;
@@ -29,15 +40,16 @@ export class CustomerFetcherComponent implements OnInit {
     this.resetNewCustomer();
   }
 // ✅ For adding a customer
-newCustomer: CustomerCreateDto = {
-  username: '',
-  email: '',
-  firstName: '',
-  lastName: '',
-  phoneNumber: '',
-  alternatePhone: '',
-  dateOfBirth: ''
-};
+  newCustomer: CustomerCreateDto = {
+    userId: 0,   // set from selected user dropdown
+    email: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    alternatePhone: '',
+    dateOfBirth: '',
+    password: ''   // ✅ added
+  };
 
 
   gridOptions = {
@@ -136,7 +148,10 @@ newCustomer: CustomerCreateDto = {
     
   }
 
-  constructor(private customerService: CustomerService) {}
+  constructor(private customerService: CustomerService,
+        private dialog: MatDialog   // ✅ Inject dialog
+
+  ) {}
 
   ngOnInit(): void {
     const cachedData = localStorage.getItem('cachedCustomers');
@@ -144,25 +159,27 @@ newCustomer: CustomerCreateDto = {
       this.customers = JSON.parse(cachedData);
       console.log('✅ Loaded customers from localStorage:', this.customers);
     }
-
-    this.fetchCustomers();
   }
 
   fetchCustomers(): void {
     console.log('📡 Fetching customers from API...');
+    this.loading = true; // ✅ start loader
     this.customerService.getAllCustomers().subscribe(
       (data) => {
         this.customers = data;
         localStorage.setItem('cachedCustomers', JSON.stringify(data));
-        console.log(`✅ Customers fetched from cashed (${data.length} records):`, data);
+        console.log(`✅ Customers fetched (${data.length} records):`, data);
+        this.loading = false; // ✅ stop loader
       },
       (error) => {
         console.error('❌ Error fetching customers:', error);
-        alert('Failed to fetch customers. Please try again later.');
+        this.loading = false; // ✅ stop loader
+        this.dialog.open(DialogMessageComponent, {
+          data: { title: 'Error ❌', message: 'Failed to fetch customers. Please try again later.' }
+        });
       }
     );
   }
-
   refreshCustomers(): void {
     this.fetchCustomers();
   }
@@ -334,57 +351,86 @@ newCustomer: CustomerCreateDto = {
       },
       error: (err) => {
         console.error('❌ Failed to update customer via inline edit:', err);
-        alert('Failed to update customer.');
+
+        // Extract specific error reason if available
+        let errorMessage = 'Failed to update customer.';
+        if (err.error && err.error.message) {
+          errorMessage = `Failed to update customer: ${err.error.message}`;
+        } else if (err.status) {
+          errorMessage = `Failed to update customer. Status: ${err.status} - ${err.statusText}`;
+        }
+
+        alert(errorMessage);
       }
     });
+
   }
 
 
-    deleteCustomer(id?: string): void {
-      if (!id) {
-        return alert('Invalid customer ID.');
-      }
+  // ──────────────────────────────
+  deleteCustomer(id?: string): void {
+    if (!id) {
+      this.dialog.open(DialogMessageComponent, {
+        data: { title: 'Error ❌', message: 'Invalid customer ID.' }
+      });
+      return;
+    }
 
-      if (confirm('Are you sure you want to delete this customer?')) {
-        console.log(`🗑️ Deleting customer with ID: ${id}`);
-        this.customerService.deleteCustomer(id).subscribe(() => {
+    if (confirm('Are you sure you want to delete this customer?')) {
+      console.log(`🗑️ Deleting customer with ID: ${id}`);
+      this.customerService.deleteCustomer(id).subscribe({
+        next: () => {
           console.log(`✅ Customer ${id} deleted successfully.`);
           localStorage.removeItem('cachedCustomers');
           this.fetchCustomers();
-        });
-      }
+          this.dialog.open(DialogMessageComponent, {
+            data: { title: 'Deleted 🗑️', message: 'Customer deleted successfully.' }
+          });
+        },
+        error: (err) => {
+          console.error('❌ Failed to delete customer:', err);
+          this.dialog.open(DialogMessageComponent, {
+            data: { title: 'Error ❌', message: 'Failed to delete customer.' }
+          });
+        }
+      });
     }
+  }
 
     // ───────────────────────────────────────────────
   // Add Customer
   addCustomer() {
     console.log('📤 Adding new customer with DTO:', this.newCustomer);
     this.customerService.addCustomer(this.newCustomer).subscribe({
-      next: (savedCustomer) => {
-        alert('✅ Customer added successfully!');
-        // refresh from API instead of pushing, to keep data consistent
-        this.fetchCustomers();  
+      next: () => {
+        this.dialog.open(DialogMessageComponent, {
+          data: { title: 'Success ✅', message: 'Customer added successfully!' }
+        });
+        this.fetchCustomers();
         this.resetNewCustomer();
         this.closeAddCustomerModal();
       },
       error: (err) => {
         console.error('❌ Failed to add customer:', err);
-        alert('Failed to add customer.');
+        this.dialog.open(DialogMessageComponent, {
+          data: { title: 'Error ❌', message: 'Failed to add customer.' }
+        });
       }
     });
   }
 
   // ───────────────────────────────────────────────
   // Reset form for Add Customer Modal
-  resetNewCustomer() {
+ resetNewCustomer(): void {
     this.newCustomer = {
-      username: '',
+      userId: 0,
       email: '',
       firstName: '',
       lastName: '',
       phoneNumber: '',
       alternatePhone: '',
-      dateOfBirth: ''
+      dateOfBirth: '',
+      password: ''   // ✅ reset password
     };
   }
 
@@ -393,6 +439,46 @@ newCustomer: CustomerCreateDto = {
   openAddCustomer() {
     this.resetNewCustomer();
     this.isAddCustomerModalOpen = true;  // open modal
+  }
+
+
+  // ✅ Export to Excel
+  exportToExcel() {
+    const rowData: any[] = [];
+    this.gridApi.forEachNode((node: any) => rowData.push(node.data));
+
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rowData);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+    XLSX.writeFile(wb, 'customers.xlsx');
+  }
+
+  // ✅ Export to PDF
+  exportToPDF() {
+    const doc = new jsPDF();
+    const rowData: any[] = [];
+    this.gridApi.forEachNode((node: any) => rowData.push(node.data));
+
+    // ✅ Fix: Use gridOptions instead of gridApi
+    const colHeaders = this.gridOptions.columnDefs.map((col: any) => col.headerName);
+    const tableRows = rowData.map((row) =>
+      this.gridOptions.columnDefs.map((col: any) => {
+        const field = col.field;
+        return field ? this.deepGet(row, field) : ''; // fetch nested field like profile.address.city
+      })
+    );
+
+    autoTable(doc, {
+      head: [colHeaders],
+      body: tableRows,
+    });
+
+    doc.save('customers.pdf');
+  }
+
+  // ✅ Helper for nested field access (profile.address.city etc.)
+  private deepGet(obj: any, path: string): any {
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
   }
 
 
