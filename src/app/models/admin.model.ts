@@ -1,6 +1,8 @@
 export interface Admin {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phoneNumber: string;
   // Add more fields as needed
 }
