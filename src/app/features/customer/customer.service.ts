@@ -1,8 +1,10 @@
+// src/app/services/customer.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Customer } from '../../models/customer.model';
 import { EnvironmentService } from '../../core/services/environment.service';
+import { CustomerCreateDto } from 'src/app/models/customer-create-dto';
 
 @Injectable({
   providedIn: 'root'
@@ -22,26 +24,28 @@ export class CustomerService {
     return this.http.get<Customer[]>(this.apiUrl);
   }
 
-  // Get customer profile by ID
+  // Get customer by ID
   getCustomerById(customerId: string): Observable<Customer> {
     return this.http.get<Customer>(`${this.apiUrl}/${customerId}`);
   }
 
-  // Get customer profile by user ID (FK)
+  // Get customer by user ID
   getCustomerByUserId(userId: string): Observable<Customer> {
     return this.http.get<Customer>(`${this.apiUrl}/by-user/${userId}`);
   }
 
-  deleteCustomer(customerId: string): Observable<any> {
-  return this.http.delete(`${this.apiUrl}/${customerId}`);
-}
-  // Update customer profile
-  updateCustomer(customer: Customer): Observable<Customer> {
-    return this.http.put<Customer>(`${this.apiUrl}/${customer.id}`, customer);
+  // Delete customer
+  deleteCustomer(customerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${customerId}`);
   }
 
-  // Create new customer profile
-  createCustomer(customer: Customer): Observable<Customer> {
-    return this.http.post<Customer>(this.apiUrl, customer);
+  // ✅ Update customer
+  updateCustomer(customerId: string, updatedCustomer: Customer): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${customerId}`, updatedCustomer);
+  }
+
+  // ✅ Add new customer
+  addCustomer(dto: CustomerCreateDto): Observable<Customer> {
+    return this.http.put<Customer>(this.apiUrl, dto);
   }
 }

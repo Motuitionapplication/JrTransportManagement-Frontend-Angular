@@ -1,65 +1,150 @@
-<div  class="position-relative">
+<div class="position-relative">
   <div class="p-3">
-    <h2 class="fw-bold text-primary mb-3">List Of Customers</h2>
+    <h2 class="fw-bold text-primary mb-3" style="font-family: 'Poppins', sans-serif;">
+      <i class="fa-solid fa-users me-2"></i> List Of Customers
+    </h2>
 
-    <div class="d-flex justify-content-between mb-2">
-      <input
-        type="text"
-        class="form-control w-50"
-        placeholder="Search by name, email, or phone"
-        (input)="onQuickFilterChanged($event)"
-      />
+    <div class="d-flex justify-content-between mb-2 align-items-center">
+      <!-- Search Box -->
+      <div class="search-container" [class.active]="searchValue.length > 0">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          class="form-control search-input"
+          placeholder="Search by name, email, or phone"
+          [(ngModel)]="searchValue"
+          (input)="onQuickFilterChanged($event)"
+        />
+      </div>
 
-      <button class="btn btn-outline-primary btn-sm" (click)="refreshCustomers()">
-        🔄 Refresh
-      </button>
+      <!-- Action Buttons -->
+      <div class="d-flex align-items-center">
+        
+        <!-- Export Dropdown -->
+        <div class="dropdown me-2">
+          <button 
+            class="btn btn-outline-info btn-sm dropdown-toggle icon-btn" 
+            type="button" 
+            id="exportDropdown" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false">
+            <i class="fa-solid fa-download"></i>
+            <span class="text">Export</span>
+          </button>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+              <li>
+                <a class="dropdown-item" (click)="exportToExcel()">
+                  <i class="bi bi-file-earmark-excel me-2 text-success"></i> Export to Excel
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="exportToPDF()">
+                  <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> Export to PDF
+                </a>
+              </li>
+            </ul>
+        </div>
+
+        <!-- Add Customer Button -->
+        <button 
+          class="btn btn-outline-success btn-sm me-2 icon-btn" 
+          (click)="openAddCustomerModal()">
+          <i class="fa-solid fa-user-plus"></i>
+          <span class="text">Add Customer</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button class="btn btn-outline-primary btn-sm icon-btn" (click)="refreshCustomers()">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span class="text">Refresh</span>
+        </button>
+      </div>
     </div>
 
-    <ag-grid-angular
-      class="ag-theme-alpine"
-      style="width: 100%; height: 500px;"
-      [rowData]="customers"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [pagination]="true"
-      [paginationPageSize]="10"
-      (gridReady)="onGridReady($event)">
-    </ag-grid-angular>
+    <!-- 🔄 Loading Overlay -->
+    <div class="loading-overlay" *ngIf="loading">
+      <mat-spinner diameter="60"></mat-spinner>
+    </div>
+
+    <!-- AG Grid -->
+    <div *ngIf="!loading">
+      <ag-grid-angular
+        class="ag-theme-alpine"
+        style="width: 100%; height: 500px;"
+        [rowData]="customers"
+        [columnDefs]="gridOptions.columnDefs"
+        [masterDetail]="true"
+        [detailCellRendererParams]="gridOptions.detailCellRendererParams"
+        [defaultColDef]="gridOptions.defaultColDef"
+        [pagination]="true"
+        [paginationPageSize]="10"
+        (gridReady)="onGridReady($event)"
+        (cellValueChanged)="onCellEdit($event)"
+        [animateRows]="true"
+        [isRowMaster]="gridOptions.isRowMaster">
+      </ag-grid-angular> 
+    </div>
 
     <!-- Profile Modal Overlay -->
-    <div
-      *ngIf="selectedCustomer"
-      class="modal-backdrop-custom d-flex align-items-center justify-content-center"
-    >
-      <div class="card profile-modal shadow border border-info">
-        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-          <strong>Customer Profile</strong>
-          <button class="btn-close" (click)="selectedCustomer = null" aria-label="Close"></button>
+    <div *ngIf="isAddCustomerModalOpen" class="modal-backdrop-custom d-flex align-items-center justify-content-center">
+      <div class="card shadow border border-success modal-square">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+          <strong>Add New Customer</strong>
+          <button class="btn-close" (click)="closeAddCustomerModal()"></button>
         </div>
 
-        <div class="card-body text-center">
-          <img
-            [src]="selectedCustomer?.profilePhoto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
-            class="rounded-circle mb-3"
-            alt="Profile Image"
-            style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #17a2b8;"
-          />
-          <h5>{{ selectedCustomer?.firstName || '-' }} {{ selectedCustomer?.lastName || '-' }}</h5>
-          <p><strong>Phone:</strong> {{ selectedCustomer?.phoneNumber || '-' }}</p>
-          <p><strong>Email:</strong> {{ selectedCustomer?.email || '-' }}</p>
-          <p><strong>City:</strong> {{ selectedCustomer?.address || '-' }}</p>
-          <p><strong>Status:</strong> {{ selectedCustomer?.accountStatus || '-' }}</p>
+        <div class="card-body overflow-auto">
+          <!-- Tab group with index binding -->
+          <mat-tab-group [(selectedIndex)]="addCustomerTabIndex">
+            <!-- Personal Info Tab -->
+            <mat-tab label="Personal Info">
+              <div class="mb-2">
+                <label>First Name</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.firstName" required />
+              </div>
+              <div class="mb-2">
+                <label>Last Name</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.lastName" required />
+              </div>
+              <div class="mb-2">
+                <label>Date of Birth</label>
+                <input matInput type="date" class="form-control" [(ngModel)]="newCustomer.dateOfBirth" />
+              </div>
+            </mat-tab>
+
+            <!-- Contact Info Tab -->
+            <mat-tab label="Contact Info">
+              <div class="mb-2">
+                <label>Phone</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.phoneNumber" required />
+              </div>
+              <div class="mb-2">
+                <label>Alternate Phone</label>
+                <input matInput class="form-control" [(ngModel)]="newCustomer.alternatePhone" />
+              </div>
+              <div class="mb-2">
+                <label>Email</label>
+                <input matInput type="email" class="form-control" [(ngModel)]="newCustomer.email" required />
+              </div>
+              <div class="mb-2">
+                <label>User ID</label>
+                <input matInput type="number" class="form-control" [(ngModel)]="newCustomer.userId" required />
+              </div>
+              <div class="mb-2">
+                <label>Password</label>
+                <input matInput type="password" class="form-control" [(ngModel)]="newCustomer.password" required />
+              </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
 
-        <div class="card-footer text-center">
-          <button class="btn btn-primary me-2" (click)="editCustomer(selectedCustomer)">Edit</button>
-          <button class="btn btn-danger" (click)="deleteCustomer(selectedCustomer)">Delete</button>
+        <div class="card-footer text-end">
+          <button class="btn btn-secondary me-2" (click)="closeAddCustomerModal()">Cancel</button>
+          <button class="btn btn-success" (click)="addCustomer()">Save</button>
         </div>
       </div>
     </div>
-    <!-- End of Profile Modal Overlay -->
-
-
+    <!-- End of Add Customer Modal -->
 
   </div>
 </div>

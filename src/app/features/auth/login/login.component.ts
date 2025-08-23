@@ -71,30 +71,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.login(credentials).subscribe({
           next: (response) => {
             console.log('✅ Login successful:', response);
-            // Role-based redirect (handles ROLE_ prefix)
-            const role = Array.isArray(response?.roles) && response.roles.length > 0 ? response.roles[0] : null;
-            let route = '';
-            switch (role) {
-              case 'ROLE_OWNER':
-                route = '/owner';
-                break;
-              case 'ROLE_CUSTOMER':
-                route = '/customer';
-                break;
-              case 'ROLE_DRIVER':
-                route = '/driver';
-                break;
-              case 'ROLE_ADMIN':
-                route = '/admin';
-                break;
-              case 'ROLE_SUPER_ADMIN':
-                route = '/super-admin';
-                break;
-              default:
-                route = '/unauthorized'; // Fallback for unknown/undefined roles
-            }
-            this.router.navigate([route]);
-            this.dialogRef.close({ success: true, user: response });
+            // Always return a user object with firstName, lastName, username, and roles
+            const user = {
+              firstName: response.firstName,
+              lastName: response.lastName,
+              username: response.username,
+              roles: response.roles,
+              token: response.token
+            };
+            this.dialogRef.close({ success: true, user });
           },
           error: (error) => {
             console.error('❌ Login failed:', error);
