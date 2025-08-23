@@ -19,3 +19,12 @@
 .error-message {
   color: #d9534f;
 }
+.btn-red {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-red:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}

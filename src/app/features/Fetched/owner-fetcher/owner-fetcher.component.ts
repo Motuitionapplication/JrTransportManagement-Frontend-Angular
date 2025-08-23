@@ -13,6 +13,8 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
 import { AssignVehicleComponent } from '../../form/assign-vehicle/assign-vehicle.component';
 import { VehicleService } from '../../vehicle/vehicle.service';
 import { VehicleDialogComponent } from '../vehicle-dialog/vehicle-dialog.component';
+import { ChangeDetectorRef } from '@angular/core';
+
 
 
 // Interface and constant definitions remain the same...
@@ -49,12 +51,18 @@ const DRIVER_HEADER_ROW_TYPE = 'driver-header';
 export class OwnerFetcherComponent implements OnInit {
   public modifiedRows: Set<any> = new Set<any>();
   public isLoading = false;
+  public editingRows: Set<string> = new Set<string>();
+  public originalRowData: Map<string, any> = new Map<string, any>();
+
+
 
   ownersForGrid: any[] = [];
   gridApi: any;
   gridColumnApi: any;
 
   expandedOwnerIds: Set<string> = new Set<string>();
+  public savingRows: Set<string> = new Set<string>();
+
 
   showCustomMessage: boolean = false;
   customMessage: string = '';
@@ -64,63 +72,80 @@ export class OwnerFetcherComponent implements OnInit {
   confirmCallback: (() => void) | null = null;
 
 
-  public actionsCellRenderer = (params: any) => {
-    if (params.data.isDriverHeaderRow) {
-      return '';
+public actionsCellRenderer = (params: any) => {
+  if (params.data.isDriverHeaderRow) {
+    return '';
+  }
+
+  const eGui = document.createElement('div');
+  const isEditing = this.editingRows.has(params.data.id);
+  const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
+
+  if (params.data.isDriverRow) {
+    if (params.data.assignedVehicleInfo && params.data.assignedVehicleInfo != "N/A") {
+      // Render Remove Assignment button
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = '<i class="bi bi-escape"></i>';
+      removeBtn.className = 'btn btn-sm btn-danger me-1';
+      removeBtn.title = 'Remove Assignment';
+      removeBtn.addEventListener('click', () => {
+        this.showConfirmation(
+          `Are you sure you want to remove the vehicle assignment from ${params.data.firstName}?`,
+          () => {
+            this.removeVehicleAssignment(params.data);
+          }
+        );
+      });
+      eGui.appendChild(removeBtn);
+    } else {
+      // Render Assign Vehicle button as before
+      const assignBtn = document.createElement('button');
+      assignBtn.innerHTML = '<i class="bi bi-plugin"></i>';
+      assignBtn.className = 'btn btn-sm btn-primary me-1';
+      assignBtn.title = 'Assign Vehicle';
+      assignBtn.addEventListener('click', () => {
+        this.openAssignVehicleDialog(params.data);
+      });
+      eGui.appendChild(assignBtn);
     }
+  }
 
-    const eGui = document.createElement('div');
-    const isModified = this.modifiedRows.has(params.data) || params.data.isNew;
-    if (params.data.isDriverRow) {
-      if (params.data.assignedVehicleInfo && params.data.assignedVehicleInfo != "N/A") {
-        // Render Remove Assignment button
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '<i class="bi bi-escape"></i>';
-        removeBtn.className = 'btn btn-sm btn-danger me-1';
-        removeBtn.title = 'Remove Assignment';
-        removeBtn.addEventListener('click', () => {
-          this.showConfirmation(
-            `Are you sure you want to remove the vehicle assignment from ${params.data.firstName}?`,
-            () => {
-              // On Yes, show second confirmation
-              this.removeVehicleAssignment(params.data);
-            }
-          );
-        });
-
-        eGui.appendChild(removeBtn);
-      } else {
-        // Render Assign Vehicle button as before
-        const assignBtn = document.createElement('button');
-        assignBtn.innerHTML = '<i class="bi bi-plugin"></i>';
-        assignBtn.className = 'btn btn-sm btn-primary me-1';
-        assignBtn.title = 'Assign Vehicle';
-        assignBtn.addEventListener('click', () => {
-          this.openAssignVehicleDialog(params.data);
-        });
-        eGui.appendChild(assignBtn);
-      }
-    }
-
-
-    // Edit/Save button
-    const editOrSaveBtn = document.createElement('button');
-    editOrSaveBtn.innerHTML = isModified
-      ? '<i class="bi bi-save"></i>'
-      : '<i class="bi bi-pencil-square"></i>';
-    editOrSaveBtn.className = isModified
-      ? 'btn btn-sm btn-success me-1'
-      : 'btn btn-sm btn-primary me-1';
-    editOrSaveBtn.title = isModified ? 'Save' : 'Edit';
-    editOrSaveBtn.addEventListener('click', () => {
-      if (isModified) {
-        this.onSaveRow(params.data);
-      } else {
-        params.api.startEditingCell({ rowIndex: params.rowIndex, colKey: 'firstName' });
-      }
+  // Edit/Save/Cancel buttons logic
+  if (isEditing) {
+    // Show tick (save) button
+    const saveBtn = document.createElement('button');
+    saveBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+    saveBtn.className = 'btn btn-sm btn-success me-1';
+    saveBtn.title = 'Save Changes';
+    saveBtn.addEventListener('click', () => {
+      this.onSaveEditingRow(params.data);
     });
 
-    // Delete button
+    // Show cross (cancel) button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+    cancelBtn.className = 'btn btn-sm btn-danger me-1';
+    cancelBtn.title = 'Cancel Edit';
+    cancelBtn.addEventListener('click', () => {
+      this.onCancelEdit(params.data);
+    });
+
+    eGui.appendChild(saveBtn);
+    eGui.appendChild(cancelBtn);
+  } else {
+    // Show edit button
+    const editBtn = document.createElement('button');
+    editBtn.innerHTML = '<i class="bi bi-pencil-square"></i>';
+    editBtn.className = 'btn btn-sm btn-primary me-1';
+    editBtn.title = 'Edit';
+    editBtn.addEventListener('click', () => {
+      this.onStartEdit(params.data, params.api, params.rowIndex);
+    });
+    eGui.appendChild(editBtn);
+  }
+
+  // Delete button (always visible when not editing)
+  if (!isEditing) {
     const deleteBtn = document.createElement('button');
     deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
     deleteBtn.className = 'btn btn-sm btn-danger me-1';
@@ -144,42 +169,99 @@ export class OwnerFetcherComponent implements OnInit {
         );
       }
     });
-
-    // Payment button only for driver rows
-    if (params.data && params.data.isDriverRow) {
-      const paymentBtn = document.createElement('button');
-      paymentBtn.innerHTML = '<i class="bi bi-cash-coin"></i>';
-      paymentBtn.className = 'btn btn-sm btn-warning me-1';
-      paymentBtn.title = 'View Payments';
-      paymentBtn.addEventListener('click', () => {
-        this.driverrecord(params.data);
-      });
-
-      eGui.appendChild(paymentBtn);
-    }
-    if (params.data && !params.data.isDriverRow) {
-      const vehicleBtn = document.createElement('button');
-      vehicleBtn.innerHTML = '<i class="bi bi-truck"></i>';
-      vehicleBtn.className = 'btn btn-sm btn-info me-1';
-      vehicleBtn.title = 'View Vehicles';
-      vehicleBtn.addEventListener('click', () => {
-        this.openVehicleDialog(params.data);
-      });
-      eGui.appendChild(vehicleBtn);
-    }
-
-    eGui.appendChild(editOrSaveBtn);
     eGui.appendChild(deleteBtn);
+  }
 
-    return eGui;
-  };
+  // Payment button only for driver rows (when not editing)
+  if (params.data && params.data.isDriverRow && !isEditing) {
+    const paymentBtn = document.createElement('button');
+    paymentBtn.innerHTML = '<i class="bi bi-cash-coin"></i>';
+    paymentBtn.className = 'btn btn-sm btn-warning me-1';
+    paymentBtn.title = 'View Payments';
+    paymentBtn.addEventListener('click', () => {
+      this.driverrecord(params.data);
+    });
+    eGui.appendChild(paymentBtn);
+  }
+  
+  if (params.data && !params.data.isDriverRow && !isEditing) {
+    const vehicleBtn = document.createElement('button');
+    vehicleBtn.innerHTML = '<i class="bi bi-truck"></i>';
+    vehicleBtn.className = 'btn btn-sm btn-info me-1';
+    vehicleBtn.title = 'View Vehicles';
+    vehicleBtn.addEventListener('click', () => {
+      this.openVehicleDialog(params.data);
+    });
+    eGui.appendChild(vehicleBtn);
+  }
+
+  return eGui;
+};
+
+
+onStartEdit(rowData: any, api: any, rowIndex: number): void {
+  // Start editing the first editable cell
+  api.startEditingCell({ rowIndex: rowIndex, colKey: 'firstName' });
+}
+
+
+onSaveEditingRow(rowData: any): void {
+  // Check if data actually changed
+  const originalData = this.originalRowData.get(rowData.id);
+  const hasChanges = this.hasDataChanged(originalData, rowData);
+  
+  if (!hasChanges) {
+    // No changes made, just exit edit mode
+    this.exitEditMode(rowData);
+    // this.showMessage('No changes to save', false);
+    return;
+  }
+    this.isLoading = true;
+
+  
+  // Stop editing
+  this.gridApi.stopEditing();
+  
+  // Save the row data
+  this.onSaveRow(rowData);
+}
+
+
+onCancelEdit(rowData: any): void {
+  // Restore original data
+  const originalData = this.originalRowData.get(rowData.id);
+  if (originalData) {
+    Object.keys(originalData).forEach(key => {
+      rowData[key] = originalData[key];
+    });
+  }
+  
+  // Stop editing
+  this.gridApi.stopEditing(true);
+  
+  // Remove from editing sets
+  this.editingRows.delete(rowData.id);
+  this.modifiedRows.delete(rowData);
+  this.originalRowData.delete(rowData.id);
+  
+  // Force complete row refresh by updating the entire grid data
+  const rowIndex = this.ownersForGrid.findIndex(row => row.id === rowData.id);
+  if (rowIndex !== -1) {
+    this.ownersForGrid[rowIndex] = { ...originalData };
+    this.ownersForGrid = [...this.ownersForGrid]; // Create new array reference
+    this.gridApi.setRowData(this.ownersForGrid);
+  }
+  
+  // this.showMessage('Edit cancelled', false);
+}
+
 
 
   columnDefs: ColDef[] = [
     {
       headerName: 'Expand For Driver Info',
       headerClass: 'multiline-header',
-      width: 140,
+      width: 150,
       cellRenderer: (params: any) => {
         if (params.data.isDriverHeaderRow) {
           return ''; // No button for header row
@@ -274,7 +356,7 @@ export class OwnerFetcherComponent implements OnInit {
     { headerName: 'Email', field: 'email', editable: true, resizable: true },
     { headerName: 'Phone', field: 'phoneNumber', editable: true, resizable: true, width: 150 },
 
-    { headerName: 'Status', field: 'status', editable: true, resizable: true, width: 130 },
+    { headerName: 'Status', field: 'status', editable: false, resizable: true, width: 130 },
     {
       headerName: 'Current Vehicle',
       width: 220,
@@ -292,6 +374,7 @@ export class OwnerFetcherComponent implements OnInit {
     },
     {
       headerName: 'Actions',
+        colId: 'Actions',
       cellRenderer: this.actionsCellRenderer,
       width: 250,
       editable: false,
@@ -318,67 +401,90 @@ export class OwnerFetcherComponent implements OnInit {
     private driverService: DriverService,
     private paymentservice: PaymentService,
     private vehicleservice: VehicleService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+      private cdr: ChangeDetectorRef
+
   ) { }
 
   ngOnInit(): void {
     this.fetchOwners();
   }
-  removeVehicleAssignment(driverData: any): void {
-    this.isLoading = true;
-
-    this.driverService.unassignvehicle(driverData.id).subscribe({
-      next: () => {
-        this.showMessage(`Vehicle unassigned from ${driverData.firstName}.`, false);
-        this.refreshDriverData(driverData.parentOwnerId);
-        this.isLoading = false;
-
-      },
-      error: (err) => {
-        this.isLoading = false;
-
-        this.showMessage('Failed to unassign vehicle.', true);
-        console.error(err);
+removeVehicleAssignment(driverData: any): void {
+  this.isLoading = true;
+  
+  this.driverService.unassignvehicle(driverData.id).subscribe({
+    next: () => {
+      // Clear cache for this owner
+      this.ownerService.clearDriversCacheForOwner(driverData.parentOwnerId);
+      
+      this.showMessage(`Vehicle unassigned from ${driverData.firstName}.`, false);
+      
+      // Update local data immediately for instant UI feedback
+      const index = this.ownersForGrid.findIndex(row => row.id === driverData.id && row.isDriverRow);
+      if (index !== -1) {
+        this.ownersForGrid[index] = {
+          ...this.ownersForGrid[index],
+          assignedVehicleInfo: "N/A",
+          status:"AVAILABLE"
+        };
+        this.ownersForGrid = [...this.ownersForGrid];
+        this.gridApi.setRowData(this.ownersForGrid);
+        this.cdr.markForCheck();
       }
-    });
-  }
+      
+      this.isLoading = false;
+    },
+    error: (err) => {
+      this.isLoading = false;
+      this.showMessage('Failed to unassign vehicle.', true);
+      console.error(err);
+    }
+  });
+}
+
+
   onRefreshClick(): void {
     this.fetchOwners();
   }
 
   openAssignVehicleDialog(driverData: any): void {
-    const ownerId = driverData.parentOwnerId;
-    if (!ownerId) {
-      this.showMessage('Could not identify the owner for this driver.', true);
-      return;
-
-    }
-    // 1. Fetch all vehicles for the driver's owner
-    this.vehicleservice.getvehiclesbyOwner(ownerId).subscribe({
-      next: (vehicles) => {
-        const dialogRef = this.dialog.open(AssignVehicleComponent, {
-          width: '500px',
-          data: {
-            driver: driverData,
-            vehicles: vehicles
-          },
-          autoFocus: true,
-          restoreFocus: true
-        });
-
-        dialogRef.afterClosed().subscribe(result => {
-          if (result?.success) {
-            this.showMessage(`Vehicle successfully assigned to ${driverData.firstName}.`, false);
-            this.refreshDriverData(ownerId);
-          }
-        });
-      },
-      error: (err) => {
-        this.showMessage('Failed to fetch vehicle list for assignment.', true);
-        console.error(err);
-      }
-    });
+  const ownerId = driverData.parentOwnerId;
+  if (!ownerId) {
+    this.showMessage('Could not identify the owner for this driver.', true);
+    return;
   }
+
+  this.vehicleservice.getvehiclesbyOwner(ownerId).subscribe({
+    next: (vehicles) => {
+      const dialogRef = this.dialog.open(AssignVehicleComponent, {
+        width: '500px',
+        data: {
+          driver: driverData,
+          vehicles: vehicles
+        },
+        autoFocus: true,
+        restoreFocus: true
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result?.success) {
+          // Clear cache for this owner
+          this.ownerService.clearDriversCacheForOwner(ownerId);
+          
+          this.showMessage(`Vehicle successfully assigned to ${driverData.firstName}.`, false);
+          
+          // Refresh driver data immediately
+          this.refreshDriverData(ownerId);
+        }
+      });
+    },
+    error: (err) => {
+      this.showMessage('Failed to fetch vehicle list for assignment.', true);
+      console.error(err);
+    }
+  });
+}
+
 
   refreshDriverData(ownerId: string): void {
     this.ownerService.getDriversByOwner(ownerId).subscribe({
@@ -562,53 +668,113 @@ export class OwnerFetcherComponent implements OnInit {
     }
   }
 
-  onGridReady(params: any) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
-    params.api.sizeColumnsToFit();
+onGridReady(params: any) {
+  this.gridApi = params.api;
+  this.gridColumnApi = params.columnApi;
+  params.api.sizeColumnsToFit();
 
-    this.gridApi.getRowClass = (params: any) => {
-      if (params.data.isDriverRow) { return 'driver-row-indent'; }
-      if (params.data.isDriverHeaderRow) { return 'driver-header-row'; }
-      return '';
-    };
+  this.gridApi.getRowClass = (params: any) => {
+    if (params.data.isDriverRow) { return 'driver-row-indent'; }
+    if (params.data.isDriverHeaderRow) { return 'driver-header-row'; }
+    return '';
+  };
 
-    this.gridApi.addEventListener('cellValueChanged', (event: any) => {
-      if (!event.data.isNew) {
-        this.modifiedRows.add(event.node.data);
-      }
-      event.api.redrawRows({ rowNodes: [event.node] });
-    });
-  }
-
-  public onSaveRow(rowData: any) {
-    if (rowData.isNew) {
-      this.addDriver(rowData);
-      return;
+  // Listen for when editing starts
+  this.gridApi.addEventListener('cellEditingStarted', (event: any) => {
+    if (!this.editingRows.has(event.data.id)) {
+      this.editingRows.add(event.data.id);
+      // Store original data for comparison and cancellation
+      this.originalRowData.set(event.data.id, { ...event.data });
+      
+      // Refresh the actions column to show save/cancel buttons
+      this.gridApi.refreshCells({
+        rowNodes: [event.node],
+        columns: ['Actions']
+      });
     }
+  });
 
-    console.log('Attempting to update row:', rowData);
-    const updateObservable = rowData.isDriverRow
-      ? this.driverService.updateDriverDetails(rowData.id, rowData)
-      : !rowData.isDriverHeaderRow ? this.ownerService.updateOwnerDetails(rowData.id, rowData) : null;
+  // Listen for cell value changes during editing
+  this.gridApi.addEventListener('cellValueChanged', (event: any) => {
+    // Only track modifications during active editing
+    if (this.editingRows.has(event.data.id)) {
+      this.modifiedRows.add(event.node.data);
+    }
+  });
+}
 
-    if (!updateObservable) return;
+private hasDataChanged(original: any, current: any): boolean {
+  if (!original) return true;
+  
+  // Compare relevant fields (add or remove fields as needed)
+  const fieldsToCompare = ['firstName', 'lastName', 'email', 'phoneNumber', 'status'];
+  
+  return fieldsToCompare.some(field => original[field] !== current[field]);
+}
 
-    updateObservable.subscribe({
-      next: () => {
-        this.showMessage(`${rowData.isDriverRow ? 'Driver' : 'Owner'} updated successfully.`, false);
-        this.modifiedRows.delete(rowData);
-        const rowNode = this.gridApi.getRowNode(rowData.id);
-        if (rowNode) {
-          this.gridApi.redrawRows({ rowNodes: [rowNode] });
-        }
-      },
-      error: (error) => {
-        console.error('Failed to update row:', error);
-        this.showMessage('Failed to save changes.', true);
-      }
-    });
+private exitEditMode(rowData: any): void {
+  // Remove from editing sets
+  this.editingRows.delete(rowData.id);
+  this.modifiedRows.delete(rowData);
+  this.originalRowData.delete(rowData.id);
+  
+  // Force immediate refresh of the row to restore buttons
+  setTimeout(() => {
+    const rowNode = this.gridApi.getRowNode(rowData.id);
+    if (rowNode) {
+      // Use setRowData for more aggressive refresh
+      this.gridApi.setRowData(this.ownersForGrid);
+    }
+  }, 200); // Slightly longer timeout
+}
+
+
+
+
+
+public onSaveRow(rowData: any) {
+  if (rowData.isNew) {
+    this.addDriver(rowData);
+    return;
   }
+
+  console.log('Attempting to update row:', rowData);
+  const updateObservable = rowData.isDriverRow
+    ? this.driverService.updateDriverDetails(rowData.id, rowData)
+    : !rowData.isDriverHeaderRow ? this.ownerService.updateOwnerDetails(rowData.id, rowData) : null;
+
+  if (!updateObservable) {
+    this.isLoading = false; // Hide spinner
+    this.exitEditMode(rowData);
+    return;
+  }
+
+  updateObservable.subscribe({
+    next: () => {
+      // Clear cache if it's a driver update
+      if (rowData.isDriverRow && rowData.parentOwnerId) {
+        this.ownerService.clearDriversCacheForOwner(rowData.parentOwnerId);
+      }
+      
+      this.showMessage(`${rowData.isDriverRow ? 'Driver' : 'Owner'} updated successfully.`, false);
+      
+      // Hide spinner and exit edit mode
+      this.isLoading = false;
+      this.exitEditMode(rowData);
+    },
+    error: (error) => {
+      console.error('Failed to update row:', error);
+      this.showMessage('Failed to save changes.', true);
+      
+      // Hide spinner and exit edit mode even on error
+      this.isLoading = false;
+      this.exitEditMode(rowData);
+    }
+  });
+}
+
+
+
 
   initiateAddDriver(ownerId: string) {
     const dialogRef = this.dialog.open(DriverFormComponent, {
@@ -712,7 +878,9 @@ export class OwnerFetcherComponent implements OnInit {
     this.confirmCallback = null;
   }
   onExportCSV(): void {
-    this.gridApi.exportDataAsCsv();
+    this.gridApi.exportDataAsCsv({
+    fileName: `Owner_Management.csv`
+  });
   }
 
 
