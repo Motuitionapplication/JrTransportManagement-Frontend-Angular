@@ -1,50 +1,55 @@
-  <h1 mat-dialog-title>
+<div mat-dialog-title class="d-flex justify-content-between align-items-center">
+  <h6 class="mb-0 text-truncate" style="max-width: calc(100% - 50px);">
     Assign Vehicle to {{ driver.firstName }} {{ driver.lastName }}
-  </h1>
+  </h6>
+  <button type="button" class="btn btn-danger btn-sm d-flex align-items-center ms-1" (click)="onCancel()">
+    <i class="bi bi-x-square-fill"></i>
+  </button> 
+</div>
 
-  <div mat-dialog-content>
-    <p *ngIf="availableVehicles.length === 0">
-      No unallotted vehicles are available for this owner.
-    </p>
+<div mat-dialog-content>
+  <p *ngIf="availableVehicles.length === 0">
+    No unallotted vehicles are available for this owner.
+  </p>
 
-    <mat-form-field
-      appearance="outline"
-      *ngIf="availableVehicles.length > 0"
-      style="width: 100%;"
-    >
-      <mat-label>Select an Available Vehicle</mat-label>
-      <mat-select [ngModel]="selectedVehicleId" (selectionChange)="onVehicleSelectionChange($event)">
-        <mat-select-trigger>
-          {{ getSelectedVehicleText() }}
-        </mat-select-trigger>
+  <mat-form-field
+    appearance="outline"
+    *ngIf="availableVehicles.length > 0"
+    style="width: 100%;"
+  >
+    <mat-label>Select an Available Vehicle</mat-label>
+ 
+    <mat-select [ngModel]="selectedVehicleId" (selectionChange)="onVehicleSelectionChange($event)">
+      <mat-select-trigger>
+        {{ getSelectedVehicleText() }}
+      </mat-select-trigger>
 
-        <mat-option
-          *ngFor="let vehicle of availableVehicles"
-          [value]="vehicle.id"
-        >
-          {{ vehicle.vehicleNumber }} - ({{ vehicle.manufacturer }}
-          {{ vehicle.model }})
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-option
+        *ngFor="let vehicle of availableVehicles"
+        [value]="vehicle.id"
+      >
+        {{ vehicle.vehicleNumber }} - ({{ vehicle.manufacturer }}
+        {{ vehicle.model }})
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
 
-    <div
-      *ngIf="error"
-      style="color: red; margin-top: 15px; text-align: center;"
-    >
-      {{ error }}
-    </div>
+  <div
+    *ngIf="error"
+    style="color: red; margin-top: 15px; text-align: center;"
+  >
+    {{ error }}
   </div>
+</div>
 
-  <div mat-dialog-actions align="end">
+<div mat-dialog-actions align="end">
   <button mat-raised-button color="primary"
           (click)="onConfirm()"
           [disabled]="isLoading || !selectedVehicleId"
           cdkFocusInitial>
     {{ isLoading ? 'Assigning...' : 'Confirm Assignment' }}
   </button>
-
-  <!-- Existing template content -->
+</div>
 
 <!-- Confirmation dialog -->
 <div *ngIf="showConfirmDialog" class="confirmation-overlay">
@@ -54,5 +59,3 @@
     <button mat-button (click)="onConfirmNo()">No</button>
   </div>
 </div>
-
-  </div>
