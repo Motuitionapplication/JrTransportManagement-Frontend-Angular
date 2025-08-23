@@ -1,25 +1,64 @@
-<div class="dashboard-container">
-  <!-- <app-sidebar></app-sidebar> -->
-  <app-sidebar>
-  <nav class="sidebar-nav">
-    <ul>
-      <li><a href="#">Dashboard</a></li>
-      <li><a href="#">Users</a></li>
-      <li><a href="#">Vehicles</a></li>
-      <!-- Add more links as needed -->
-    </ul>
-  </nav>
-</app-sidebar>
 
-  <div class="dashboard-content">
-    <div class="mb-4">
-      <h2 class="fw-bold text-primary mb-2">Welcome, Super Admin!</h2>
-      <p class="lead">
-        Manage users, approvals, vehicles, consignments, payments, fares, complaints,
-        terms, wallet, and analytics from one place.
-      </p>
-    </div>
 
-    <router-outlet></router-outlet>
-  </div>
+<div class="dashboard-container" style="display: flex; flex-direction: row; min-height: 100vh;">
+	<aside class="sidebar" [class.collapsed]="isSidebarCollapsed" style="order: 0;">
+		<div class="sidebar-header">
+			<span class="user-avatar">{{ userInitials }}</span>
+			<div class="user-info">
+				<span class="user-name">{{ userFullName }}</span>
+				<span class="user-role">{{ userRole }}</span>
+					<button class="signout-btn-header" (click)="signOut()">
+						<span class="sidebar-icon">🚪</span> Sign Out
+					</button>
+			</div>
+			<button class="collapse-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+				<span class="hamburger-icon">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<rect y="4" width="24" height="3" rx="1.5" fill="currentColor"/>
+						<rect y="10.5" width="24" height="3" rx="1.5" fill="currentColor"/>
+						<rect y="17" width="24" height="3" rx="1.5" fill="currentColor"/>
+					</svg>
+				</span>
+			</button>
+		</div>
+		<nav class="sidebar-nav">
+			<ul>
+				<li>
+					<span class="nav-parent" (click)="toggleUserMenu()">
+						User Management
+						<span [class.open]="userMenuOpen">&#9660;</span>
+					</span>
+					<ul class="nav-children" *ngIf="userMenuOpen">
+						<li><a routerLink="admin-management" (click)="hideWelcome()">Admin Management</a></li>
+						<li><a routerLink="driver-management" (click)="hideWelcome()">Driver Management</a></li>
+						<li><a routerLink="owner-management" (click)="hideWelcome()">Owner Management</a></li>
+						<li><a routerLink="customer-management" (click)="hideWelcome()">Customer Management</a></li>
+					</ul>
+				</li>
+				<li><a routerLink="approval-management" (click)="hideWelcome()">Approval Management</a></li>
+				<li><a routerLink="vehicle-management" (click)="hideWelcome()">Vehicle Management</a></li>
+				<li><a routerLink="consignment-management" (click)="hideWelcome()">Consignment Management</a></li>
+				<li><a routerLink="payment-management" (click)="hideWelcome()">Payment Management</a></li>
+				<li><a routerLink="fare-management" (click)="hideWelcome()">Fare Management</a></li>
+				<li><a routerLink="complaint-management" (click)="hideWelcome()">Complaint Management</a></li>
+				<li><a routerLink="term-management" (click)="hideWelcome()">Term Management</a></li>
+				<li><a routerLink="wallet-management" (click)="hideWelcome()">Wallet Management</a></li>
+				<li><a routerLink="analytics" (click)="hideWelcome()">Analytics</a></li>
+				<li class="divider"></li>
+				<li class="sidebar-profile-group">
+					<a (click)="openProfile()"><span class="sidebar-icon">👤</span> Profile</a>
+					<a (click)="openSettings()"><span class="sidebar-icon">⚙️</span> Settings</a>
+					<a (click)="openSupport()"><span class="sidebar-icon">💬</span> Support</a>
+				</li>
+			</ul>
+		</nav>
+	</aside>
+	<main class="dashboard-main" style="flex: 1; order: 1;">
+		<div *ngIf="showWelcome" class="welcome-message">
+			<h2><span class="welcome-icon">🚀</span>Welcome, {{ userFullName }}!</h2>
+			<p>Manage users, vehicles, payments, and more with powerful tools at your fingertips.<br>Get started by choosing a section from the sidebar.</p>
+			<button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
+		</div>
+		<router-outlet *ngIf="!showWelcome"></router-outlet>
+	</main>
 </div>
