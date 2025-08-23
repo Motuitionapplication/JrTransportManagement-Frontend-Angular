@@ -9,6 +9,22 @@ import { AdminService } from 'src/app/admin/admin.service';
   styleUrls: ['./admin-fetcher.component.scss']
 })
 export class AdminFetcherComponent implements OnInit {
+  isEditing(admin: Admin): boolean {
+    return this.editingAdminId === String(admin.id);
+  }
+  ngOnInit(): void {
+    const cachedData = localStorage.getItem('cachedAdmins');
+    if (cachedData) {
+      this.admins = JSON.parse(cachedData);
+      console.log('✅ Loaded admins from localStorage:', this.admins);
+    } else {
+      console.log('ℹ️ No cached data found in localStorage.');
+    }
+    this.fetchAdmins();
+  }
+  constructor(private adminService: AdminService) {}
+  editingAdminId: string | null = null;
+  editAdminData: any = {};
   exportAdminsToExcel(): void {
     const exportData = this.admins.map((admin: any) => ({
       'First Name': admin.firstName,
@@ -37,56 +53,13 @@ export class AdminFetcherComponent implements OnInit {
   showConfirmPassword: boolean = false;
   showCurrentPassword: boolean = false;
 
-  columnDefs = [
-    { headerName: 'First Name', field: 'firstName', editable: true, valueGetter: (params: any) => params.data.firstName || '-' },
-    { headerName: 'Last Name', field: 'lastName', editable: true, valueGetter: (params: any) => params.data.lastName || '-' },
-    { headerName: 'Email', field: 'email', editable: true, valueGetter: (params: any) => params.data.email || '-' },
-    { headerName: 'Phone Number', field: 'phoneNumber', editable: true, valueGetter: (params: any) => params.data.phoneNumber || '-' },
-    {
-      headerName: 'Actions',
-      pinned: 'right' as const,
-      cellRenderer: (params: any) => {
-        return `
-          <button type="button" class="btn btn-sm btn-primary edit-btn me-1" title="Edit">
-            <i class="bi bi-pencil-square"></i>
-          </button>
-          <button type="button" class="btn btn-sm btn-danger delete-btn me-1" title="Delete">
-            <i class="bi bi-trash"></i>
-          </button>
-          <button type="button" class="btn btn-sm btn-warning change-password-btn" title="Change Password">
-            <i class="bi bi-key"></i>
-          </button>
-        `;
-      },
-      width: 220
-    }
-  ];
-
-  defaultColDef = {
-    sortable: true,
-    filter: true,
-    resizable: true,
-    editable: true
-  };
-
-  constructor(private adminService: AdminService) {}
-
-  ngOnInit(): void {
-    const cachedData = localStorage.getItem('cachedAdmins');
-    if (cachedData) {
-      this.admins = JSON.parse(cachedData);
-      console.log('✅ Loaded admins from localStorage:', this.admins);
-    } else {
-      console.log('ℹ️ No cached data found in localStorage.');
-    }
-    this.fetchAdmins();
-  }
+  // Removed AG Grid columnDefs and cellRenderer logic
 
   fetchAdmins(): void {
     console.log('📡 Fetching admins from API...');
     this.adminService.getAllAdmins().subscribe(
       (data) => {
-        this.admins = data;
+        this.admins = data.map((admin: any) => ({ ...admin }));
         localStorage.setItem('cachedAdmins', JSON.stringify(data));
         console.log(`✅ Admins fetched from API (${data.length} records):`, data);
       },
@@ -111,44 +84,36 @@ export class AdminFetcherComponent implements OnInit {
     }
   }
 
-  onGridReady(params: any): void {
-    this.gridApi = params.api;
-    console.log('✅ AG Grid is ready. Total rows loaded:', this.admins.length);
-    this.gridApi.addEventListener('cellEditingStopped', (event: any) => {
-      const admin = event.data;
-      if (!admin) return;
-      // Only send id, firstName, lastName, email, phoneNumber fields
-      const updatedAdmin = {
-        id: admin.id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        email: admin.email,
-        phoneNumber: admin.phoneNumber
-      };
-      this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
-        () => {
-          this.fetchAdmins();
-        },
-        (error: any) => {
-          alert('Failed to update admin.');
-          console.error(error);
-        }
-      );
-    });
-    this.gridApi.addEventListener('cellClicked', (event: any) => {
-      const admin = event.data;
-      if (!admin) return;
-      const target = event.event.target;
-      // Use closest to reliably detect button clicks, even if icon is clicked
-      if (target.closest('.edit-btn')) {
-        // Start editing the first editable cell (firstName) in the clicked row
-        this.gridApi.startEditingCell({ rowIndex: event.rowIndex, colKey: 'firstName' });
-      } else if (target.closest('.delete-btn')) {
-        this.deleteAdmin(admin.id);
-      } else if (target.closest('.change-password-btn')) {
-        this.openChangePasswordModal(admin);
+
+  startEditAdmin(admin: Admin): void {
+    this.editingAdminId = String(admin.id);
+    this.editAdminData = { ...admin };
+  }
+
+  saveEditAdmin(admin: Admin): void {
+    const updatedAdmin = {
+      id: admin.id,
+      firstName: this.editAdminData.firstName,
+      lastName: this.editAdminData.lastName,
+      email: this.editAdminData.email,
+      phoneNumber: this.editAdminData.phoneNumber
+    };
+    this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
+      () => {
+        this.editingAdminId = null;
+        this.editAdminData = {};
+        this.fetchAdmins();
+      },
+      (error: any) => {
+        alert('Failed to update admin.');
+        console.error(error);
       }
-    });
+    );
+  }
+
+  cancelEditAdmin(): void {
+    this.editingAdminId = null;
+    this.editAdminData = {};
   }
 
   editAdmin(admin: Admin): void {
@@ -189,12 +154,6 @@ export class AdminFetcherComponent implements OnInit {
   openAddAdminDialog(): void {
   this.showAddAdminModal = true;
   this.newAdmin = { firstName: '', lastName: '', username: '', email: '', password: '', phoneNumber: '' };
-    // Clear search bar value when opening modal
-    const searchInput = document.querySelector<HTMLInputElement>('#searchInput');
-    if (searchInput) {
-      searchInput.value = '';
-      this.onQuickFilterChanged({ target: { value: '' } });
-    }
   }
 
   closeAddAdminDialog(): void {
@@ -231,12 +190,7 @@ export class AdminFetcherComponent implements OnInit {
 
   // Fetch current password from backend when opening change password modal
   openChangePasswordModal(admin: Admin): void {
-    // Clear search bar value when opening modal
-    const searchInput = document.querySelector<HTMLInputElement>('#searchInput');
-    if (searchInput) {
-      searchInput.value = '';
-      this.onQuickFilterChanged({ target: { value: '' } });
-    }
+  // No search bar reset needed
     this.selectedAdminForPassword = admin;
     this.currentPassword = '';
     this.newPassword = '';
