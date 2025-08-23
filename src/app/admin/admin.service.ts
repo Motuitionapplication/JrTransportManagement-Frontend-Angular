@@ -36,4 +36,19 @@ export class AdminService {
   editAdmin(id: number, admin: Admin): Observable<any> {
     return this.http.put(`${this.apiUrl}/edit/${id}`, admin);
   }
+
+  // Delete admin
+  deleteAdmin(id: string | number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/delete/${id}`);
+  }
+
+  // Change admin password
+  changeAdminPassword(id: string | number, newPassword: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/change-password/${id}`, { password: newPassword });
+  }
+
+  // Fetch current password
+  getAdminPassword(id: string | number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/password/${id}`);
+  }
 }

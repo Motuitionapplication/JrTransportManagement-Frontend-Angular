@@ -3,15 +3,23 @@
 
   <div class="d-flex justify-content-between mb-2">
     <input
+      #searchInput
       type="text"
       class="form-control w-50"
       placeholder="Search by name or email"
       (input)="onQuickFilterChanged($event)"
     />
-
-    <button class="btn btn-outline-primary btn-sm" (click)="refreshAdmins()">
-      🔄 Refresh
-    </button>
+    <div class="d-flex">
+      <button class="btn btn-outline-success btn-sm me-2" (click)="exportAdminsToExcel()">
+        📤 Export as Excel
+      </button>
+      <button class="btn btn-outline-primary btn-sm me-2" (click)="openAddAdminDialog()">
+        ➕ Add Admin
+      </button>
+      <button class="btn btn-outline-primary btn-sm" (click)="refreshAdmins()">
+        🔄 Refresh
+      </button>
+    </div>
   </div>
 
   <ag-grid-angular
@@ -24,4 +32,84 @@
     [paginationPageSize]="10"
     (gridReady)="onGridReady($event)">
   </ag-grid-angular>
+
+  <div *ngIf="showAddAdminModal" class="modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.2); z-index: 1050; display: flex; align-items: flex-start; justify-content: center;">
+  <div class="modal-dialog" style="max-width: 400px; width: 100%; margin-top: 180px;">
+  <div class="modal-content p-2" style="border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); background: #fff;">
+        <h5 class="modal-title mb-3">Add New Admin</h5>
+  <div class="mb-1">
+    <label class="form-label">First Name</label>
+    <input type="text" class="form-control" [(ngModel)]="newAdmin.firstName" placeholder="Enter first name" />
+  </div>
+  <div class="mb-1">
+    <label class="form-label">Last Name</label>
+    <input type="text" class="form-control" [(ngModel)]="newAdmin.lastName" placeholder="Enter last name" />
+  </div>
+  <div class="mb-1">
+    <label class="form-label">Username</label>
+    <input type="text" class="form-control" [(ngModel)]="newAdmin.username" placeholder="Enter username" />
+  </div>
+  <div class="mb-1">
+    <label class="form-label">Email</label>
+    <input type="email" class="form-control" [(ngModel)]="newAdmin.email" placeholder="Enter email" />
+  </div>
+  <div class="mb-1">
+    <label class="form-label">Phone Number</label>
+    <input type="text" class="form-control" [(ngModel)]="newAdmin.phoneNumber" placeholder="Enter phone number" />
+  </div>
+  <div class="mb-1 position-relative">
+    <label class="form-label">Password</label>
+    <div style="position: relative;">
+      <input [type]="showAddAdminPassword ? 'text' : 'password'" class="form-control pe-5" [(ngModel)]="newAdmin.password" placeholder="Enter password" />
+      <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor:pointer;" (click)="showAddAdminPassword = !showAddAdminPassword">
+        <i class="bi" [ngClass]="showAddAdminPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+      </span>
+    </div>
+  </div>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-outline-secondary me-2" (click)="closeAddAdminDialog()">Cancel</button>
+          <button class="btn btn-primary" (click)="submitAddAdmin()">Add Admin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showChangePasswordModal" class="modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.2); z-index: 1050; display: flex; align-items: flex-start; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 280px; width: 100%; margin-top: 180px;">
+      <div class="modal-content p-3" style="border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); background: #fff;">
+        <h5 class="modal-title mb-3">Change Password</h5>
+        <div class="mb-2 position-relative">
+          <label class="form-label">Current Password</label>
+          <div style="position: relative;">
+            <input [type]="showCurrentPassword ? 'text' : 'password'" class="form-control pe-5" [(ngModel)]="currentPassword" placeholder="Current password" (keydown)="$event.stopPropagation()" />
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor:pointer;" (click)="showCurrentPassword = !showCurrentPassword">
+              <i class="bi" [ngClass]="showCurrentPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </span>
+          </div>
+        </div>
+        <div class="mb-2 position-relative">
+          <label class="form-label">New Password</label>
+          <div style="position: relative;">
+            <input [type]="showNewPassword ? 'text' : 'password'" class="form-control pe-5" [(ngModel)]="newPassword" placeholder="Enter new password" (keydown)="$event.stopPropagation()" />
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor:pointer;" (click)="showNewPassword = !showNewPassword">
+              <i class="bi" [ngClass]="showNewPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </span>
+          </div>
+        </div>
+        <div class="mb-3 position-relative">
+          <label class="form-label">Confirm Password</label>
+          <div style="position: relative;">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control pe-5" [(ngModel)]="confirmPassword" placeholder="Confirm new password" (keydown)="$event.stopPropagation()" />
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor:pointer;" (click)="showConfirmPassword = !showConfirmPassword">
+              <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </span>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-outline-secondary me-2" (click)="closeChangePasswordModal()">Cancel</button>
+          <button class="btn btn-primary" (click)="submitChangePassword()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
