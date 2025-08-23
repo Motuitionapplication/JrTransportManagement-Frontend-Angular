@@ -24,6 +24,9 @@ import { DriverModule } from './features/driver/driver.module';
 import { AdminModule } from './features/admin/admin.module';
 import { SuperAdminModule } from './features/super-admin/super-admin.module';
 import { AgGridModule } from 'ag-grid-angular';
+import { AppCustomerWalletComponent } from './features/wallet-managements/app-customer-wallet/app-customer-wallet.component';
+import { AppDriverWalletComponent } from './features/wallet-managements/app-driver-wallet/app-driver-wallet.component';
+import { AppAdminWalletComponent } from './features/wallet-managements/app-admin-wallet/app-admin-wallet.component';
 import { DriverFormComponent } from './features/form/driver-form/driver-form.component';
 import { VehicleFormComponent } from './features/form/vehicle-form/vehicle-form.component';
 
@@ -37,6 +40,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { OwnerFormComponent } from './features/form/owner-form/owner-form.component';
 import { PaymentComponent } from './features/payment/payment.component';
 import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
+import { DialogMessageComponent } from './shared/dialog-message/dialog-message.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { VehicleComponent } from './features/vehicle/vehicle.component';
 import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicle-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
@@ -50,16 +55,19 @@ import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-ve
     SplashScreenComponent,
     IosInstallPromptComponent,
     DashboardComponent,
+
     DriverFormComponent,
     VehicleFormComponent,
     OwnerFormComponent,
     PaymentComponent,
     PaymentDialogComponent,
+    DialogMessageComponent,
     VehicleComponent,
     VehicleDialogComponent,
     AssignVehicleComponent,
   ],
   imports: [
+    MatProgressSpinnerModule,
     AgGridModule,
     BrowserModule,
     BrowserAnimationsModule,

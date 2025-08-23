@@ -1,0 +1,109 @@
+.wallet-management-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.wallet-management-container h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #2c3e50;
+  text-align: center;
+  letter-spacing: 0.5px;
+  border-inline: 2px solid #007bff;
+}
+
+/* Angular Material Tabs Styling */
+::ng-deep .mat-tab-group {
+  background: #f9fafc;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+::ng-deep .mat-tab-labels {
+  justify-content: center;
+  border-bottom: 2px solid #e5eaf0;
+}
+
+::ng-deep .mat-tab-label {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 12px 24px;
+  color: #6c757d;
+  transition: all 0.3s ease-in-out;
+}
+
+::ng-deep .mat-tab-label:hover {
+  color: #007bff;
+}
+
+::ng-deep .mat-tab-label.mat-tab-label-active {
+  color: #007bff;
+  font-weight: 600;
+  border-bottom: 3px solid #007bff;
+}
+
+/* Content inside each tab */
+/* Wallet Card Section */
+.wallet-section {
+  margin-top: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #ffffff, #f8f9fb);
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+}
+
+.wallet-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Wallet Heading */
+.wallet-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Balance Text */
+.wallet-section p {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #007bff;
+  margin-bottom: 20px;
+}
+
+/* Different colors for each wallet */
+.customer-wallet h3 {
+  color: #28a745; /* green */
+}
+.driver-wallet h3 {
+  color: #ff9800; /* orange */
+}
+.admin-wallet h3 {
+  color: #007bff; /* blue */
+}
+
+/* Buttons */
+.wallet-section button {
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-transform: none;
+  margin: 5px;
+  transition: background 0.3s ease;
+}
+
+.wallet-section button:hover {
+  opacity: 0.9;
+}
