@@ -21,7 +21,7 @@ body {
 /* Sidebar Styles */
 .sidebar {
     width: 280px;
-    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+    background: #42a5f5; // Medium-light sky blue
     color: white;
     position: fixed;
     height: 100vh;
@@ -319,111 +319,68 @@ body {
 }
 
 .welcome-section {
-    position: relative;
-    background: linear-gradient(135deg, rgba(59,130,246,0.18) 0%, rgba(14,165,233,0.13) 100%), rgba(255,255,255,0.85);
-    border-radius: 1.5rem;
-    padding: 3.5rem 2rem 3rem 2rem;
-    text-align: center;
-    box-shadow: 0 6px 32px 0 rgba(14,165,233,0.18), 0 2px 8px 0 rgba(0,0,0,0.08);
-    border: 2px solid rgba(14,165,233,0.18);
-    max-width: 100%;
-    margin: 2.5rem auto 2.5rem auto;
-    backdrop-filter: blur(8px);
-    overflow: visible;
-    transition: box-shadow 0.3s;
-    animation: blueGlow 6s ease-in-out infinite alternate;
-    min-height: 90%;
-}
-
-@keyframes blueGlow {
-    0% { box-shadow: 0 6px 32px 0 rgba(14,165,233,0.18), 0 2px 8px 0 rgba(0,0,0,0.08); }
-    100% { box-shadow: 0 12px 48px 0 rgba(14,165,233,0.28), 0 4px 16px 0 rgba(0,0,0,0.12); }
-}
-
-
-@keyframes gradientGlow {
-    0% { box-shadow: 0 12px 48px 0 rgba(124,58,237,0.18), 0 2px 8px 0 rgba(0,0,0,0.08); }
-    100% { box-shadow: 0 24px 64px 0 rgba(124,58,237,0.28), 0 4px 16px 0 rgba(0,0,0,0.12); }
+  max-width: 800px;
+  min-width: 400px;
+  min-height: 400px;
+  margin: 5rem auto;
+  padding: 4rem 3rem 3rem 3rem;
+  border-radius: 2rem;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(11, 92, 130, 0.12);
+  text-align: center;
+  border: 1px solid #e0e7ef;
 }
 
 .super-admin-badge {
-    position: absolute;
-    top: -32px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-    color: #fff;
-    padding: 0.5rem 1.5rem 0.5rem 1.5rem;
-    border-radius: 2rem;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    box-shadow: 0 2px 12px 0 rgba(14,165,233,0.18);
-    border: 2px solid #2563eb;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    animation: badgeFloat 3s ease-in-out infinite alternate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #e0f2fe;
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 1rem;
+  padding: 0.4rem 1.2rem;
+  margin-bottom: 1.2rem;
 }
-
-@keyframes badgeFloat {
-    0% { transform: translateX(-50%) translateY(0); }
-    100% { transform: translateX(-50%) translateY(-10px); }
-}
-
 
 .welcome-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #0ea5e9;
-    margin-bottom: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    text-shadow: 0 2px 8px rgba(14,165,233,0.08);
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #0ea5e9;
+  margin-bottom: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
 }
 
 .welcome-icon {
-    font-size: 2.5rem;
-    filter: drop-shadow(0 2px 8px #0ea5e944);
-    animation: iconPulse 2.5s infinite alternate;
-}
-
-@keyframes iconPulse {
-    0% { transform: scale(1) rotate(-5deg); }
-    100% { transform: scale(1.08) rotate(5deg); }
+  font-size: 1.7rem;
 }
 
 .welcome-text {
-    font-size: 1.1rem;
-    color: #2563eb;
-    margin-bottom: 2rem;
-    line-height: 1.7;
-    font-weight: 500;
-    text-shadow: 0 1px 8px #0ea5e911;
+  font-size: 1.08rem;
+  color: #334155;
+  margin-bottom: 2rem;
+  line-height: 1.6;
 }
 
 .cta-btn {
-    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-    color: #fff;
-    border: none;
-    padding: 0.9rem 2.2rem;
-    border-radius: 1rem;
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.18);
-    text-shadow: 0 1px 8px #0ea5e922;
+  background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%);
+  color: #fff;
+  border: none;
+  padding: 0.85rem 2.2rem;
+  border-radius: 0.8rem;
+  font-weight: 600;
+  font-size: 1.08rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(14,165,233,0.10);
 
-    &:hover {
-        transform: translateY(-2px) scale(1.03);
-        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.28);
-        background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
-    }
+  &:hover {
+    background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%);
+  }
 }
 
 .content-area {
