@@ -1,6 +1,4 @@
-
-
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -14,14 +12,19 @@ import { SignupComponent } from '../../auth/signup/signup.component';
     styleUrls: ['./super-admin-dashboard.component.scss']
 })
 export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
+    // Sidebar state
     isSidebarCollapsed = false;
+    isMobileMenuOpen = false;
+    
+    // Menu state
     userMenuOpen = false;
     showWelcome = true;
+    
+    // User information
     userFullName = '';
     userInitials = '';
     userRole = 'User';
     isLoggedIn = false;
-
 
     private routerSub: Subscription | undefined;
 
@@ -45,54 +48,124 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Update user information from localStorage or default values
+     */
     updateUserInfo(): void {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        this.userFullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.username || 'Super Admin');
+        this.userFullName = user.firstName && user.lastName ? 
+            `${user.firstName} ${user.lastName}` : 
+            (user.username || 'Super Admin');
         this.userInitials = this.getInitials(this.userFullName);
-        this.userRole = (user.roles && user.roles.length > 0) ? user.roles[0] : 'Super Admin';
+        this.userRole = (user.roles && user.roles.length > 0) ? 
+            user.roles[0] : 'Super Admin';
         this.isLoggedIn = !!localStorage.getItem('token');
     }
 
+    /**
+     * Generate user initials from full name
+     */
     getInitials(name: string): string {
         if (!name) return '';
         return name.split(' ').map(n => n[0]).join('').toUpperCase();
     }
 
+    /**
+     * Toggle sidebar collapse state
+     */
     toggleSidebar(): void {
         this.isSidebarCollapsed = !this.isSidebarCollapsed;
     }
 
+    /**
+     * Toggle user management submenu
+     */
     toggleUserMenu(): void {
         this.userMenuOpen = !this.userMenuOpen;
     }
 
+    /**
+     * Toggle mobile menu
+     */
+    toggleMobileMenu(): void {
+        this.isMobileMenuOpen = !this.isMobileMenuOpen;
+        
+        // Prevent body scroll when mobile menu is open
+        if (this.isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    /**
+     * Close mobile menu
+     */
+    closeMobileMenu(): void {
+        this.isMobileMenuOpen = false;
+        document.body.style.overflow = '';
+    }
+
+    /**
+     * Hide welcome message and show main content
+     */
     hideWelcome(): void {
         this.showWelcome = false;
+        
+        // Close mobile menu if open
+        if (this.isMobileMenuOpen) {
+            this.closeMobileMenu();
+        }
     }
 
-
+    /**
+     * Handle user sign out
+     */
     signOut(): void {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        this.isLoggedIn = false;
-        this.router.navigate(['/dashboard']);
+        if (confirm('Are you sure you want to sign out?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            this.isLoggedIn = false;
+            this.userFullName = '';
+            this.userInitials = '';
+            this.userRole = '';
+            this.showWelcome = false;
+            // Navigate to a neutral route, then open login dialog
+            this.router.navigate(['/']).then(() => {
+                setTimeout(() => {
+                    this.openLoginDialog();
+                }, 200);
+            });
+        }
     }
 
+    /**
+     * Open user profile (placeholder)
+     */
     openProfile(): void {
         // TODO: Implement profile dialog or navigation
         alert('Profile page coming soon!');
     }
 
+    /**
+     * Open settings (placeholder)
+     */
     openSettings(): void {
         // TODO: Implement settings dialog or navigation
         alert('Settings page coming soon!');
     }
 
+    /**
+     * Open support (placeholder)
+     */
     openSupport(): void {
         // TODO: Implement support dialog or navigation
         alert('Support page coming soon!');
     }
 
+    /**
+     * Open login dialog
+     */
     openLoginDialog(): void {
         const dialogRef = this.dialog.open(LoginComponent, {
             width: '400px',
@@ -122,9 +195,12 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
                     localStorage.setItem('user', JSON.stringify(user));
                 }
                 this.isLoggedIn = true;
+                
                 // Check user role and redirect if super admin
                 if (user && Array.isArray(user.roles) && user.roles.includes('ROLE_SUPER_ADMIN')) {
-                    this.userFullName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.username || 'Super Admin');
+                    this.userFullName = user.firstName && user.lastName ? 
+                        `${user.firstName} ${user.lastName}` : 
+                        (user.username || 'Super Admin');
                     this.userInitials = this.getInitials(this.userFullName);
                     this.userRole = 'Super Admin';
                     this.showWelcome = true;
@@ -136,6 +212,9 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
         });
     }
 
+    /**
+     * Open signup dialog
+     */
     openSignupDialog(): void {
         const dialogRef = this.dialog.open(SignupComponent, {
             width: '400px',
@@ -163,5 +242,34 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
                 this.openLoginDialog();
             }
         });
+    }
+
+    /**
+     * Handle window resize events
+     */
+    @HostListener('window:resize', ['$event'])
+    onResize(event: any): void {
+        // Close mobile menu on desktop resize
+        if (event.target.innerWidth > 768) {
+            this.closeMobileMenu();
+        }
+    }
+
+    /**
+     * Simulate user login (utility method for testing)
+     */
+    loginUser(userData: any): void {
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('token', userData.token || 'mock-token');
+        this.updateUserInfo();
+        this.isLoggedIn = true;
+        this.showWelcome = true;
+    }
+
+    /**
+     * Handle navigation link clicks
+     */
+    onNavLinkClick(): void {
+        this.hideWelcome();
     }
 }

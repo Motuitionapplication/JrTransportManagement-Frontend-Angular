@@ -1,64 +1,130 @@
+<div class="mobile-overlay" [class.active]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+<button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect y="4" width="24" height="3" rx="1.5" fill="currentColor"/>
+        <rect y="10.5" width="24" height="3" rx="1.5" fill="currentColor"/>
+        <rect y="17" width="24" height="3" rx="1.5" fill="currentColor"/>
+    </svg>
+</button>
 
+<div class="dashboard-container">
+    <aside class="sidebar" [class.collapsed]="isSidebarCollapsed" [class.mobile-open]="isMobileMenuOpen">
+        <div class="sidebar-header">
+            <div class="user-section">
+                <div class="user-avatar">{{ userInitials }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ userFullName }}</div>
+                    <div class="user-role">{{ userRole }}</div>
+                </div>
+            </div>
+            <button class="collapse-btn" (click)="toggleSidebar()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
 
-<div class="dashboard-container" style="display: flex; flex-direction: row; min-height: 100vh;">
-	<aside class="sidebar" [class.collapsed]="isSidebarCollapsed" style="order: 0;">
-		<div class="sidebar-header">
-			<span class="user-avatar">{{ userInitials }}</span>
-			<div class="user-info">
-				<span class="user-name">{{ userFullName }}</span>
-				<span class="user-role">{{ userRole }}</span>
-					<button class="signout-btn-header" (click)="signOut()">
-						<span class="sidebar-icon">🚪</span> Sign Out
-					</button>
-			</div>
-			<button class="collapse-btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
-				<span class="hamburger-icon">
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<rect y="4" width="24" height="3" rx="1.5" fill="currentColor"/>
-						<rect y="10.5" width="24" height="3" rx="1.5" fill="currentColor"/>
-						<rect y="17" width="24" height="3" rx="1.5" fill="currentColor"/>
-					</svg>
-				</span>
-			</button>
-		</div>
-		<nav class="sidebar-nav">
-			<ul>
-				<li>
-					<span class="nav-parent" (click)="toggleUserMenu()">
-						User Management
-						<span [class.open]="userMenuOpen">&#9660;</span>
-					</span>
-					<ul class="nav-children" *ngIf="userMenuOpen">
-						<li><a routerLink="admin-management" (click)="hideWelcome()">Admin Management</a></li>
-						<li><a routerLink="driver-management" (click)="hideWelcome()">Driver Management</a></li>
-						<li><a routerLink="owner-management" (click)="hideWelcome()">Owner Management</a></li>
-						<li><a routerLink="customer-management" (click)="hideWelcome()">Customer Management</a></li>
-					</ul>
-				</li>
-				<li><a routerLink="approval-management" (click)="hideWelcome()">Approval Management</a></li>
-				<li><a routerLink="vehicle-management" (click)="hideWelcome()">Vehicle Management</a></li>
-				<li><a routerLink="consignment-management" (click)="hideWelcome()">Consignment Management</a></li>
-				<li><a routerLink="payment-management" (click)="hideWelcome()">Payment Management</a></li>
-				<li><a routerLink="fare-management" (click)="hideWelcome()">Fare Management</a></li>
-				<li><a routerLink="complaint-management" (click)="hideWelcome()">Complaint Management</a></li>
-				<li><a routerLink="term-management" (click)="hideWelcome()">Term Management</a></li>
-				<li><a routerLink="wallet-management" (click)="hideWelcome()">Wallet Management</a></li>
-				<li><a routerLink="analytics" (click)="hideWelcome()">Analytics</a></li>
-				<li class="divider"></li>
-				<li class="sidebar-profile-group">
-					<a (click)="openProfile()"><span class="sidebar-icon">👤</span> Profile</a>
-					<a (click)="openSettings()"><span class="sidebar-icon">⚙️</span> Settings</a>
-					<a (click)="openSupport()"><span class="sidebar-icon">💬</span> Support</a>
-				</li>
-			</ul>
-		</nav>
-	</aside>
-	<main class="dashboard-main" style="flex: 1; order: 1;">
-		<div *ngIf="showWelcome" class="welcome-message">
-			<h2><span class="welcome-icon">🚀</span>Welcome, {{ userFullName }}!</h2>
-			<p>Manage users, vehicles, payments, and more with powerful tools at your fingertips.<br>Get started by choosing a section from the sidebar.</p>
-			<button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
-		</div>
-		<router-outlet *ngIf="!showWelcome"></router-outlet>
-	</main>
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <div class="nav-parent" [class.expanded]="userMenuOpen" (click)="toggleUserMenu()">
+                        <div class="nav-parent-content">
+                            <span class="nav-icon"></span>
+                            <span class="nav-text">User Management</span>
+                        </div>
+                        <span class="nav-arrow">▼</span>
+                    </div>
+                    <ul class="nav-children" [class.expanded]="userMenuOpen">
+                        <li><a routerLink="admin-management" class="nav-link" (click)="hideWelcome()">Admin Management</a></li>
+                        <li><a routerLink="owner-management" class="nav-link" (click)="hideWelcome()">Owner Management</a></li>
+                        <li><a routerLink="customer-management" class="nav-link" (click)="hideWelcome()">Customer Management</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="approval-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Approval Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="vehicle-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Vehicle Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="consignment-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Consignment Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="payment-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Payment Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="fare-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Fare Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="complaint-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Complaint Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="term-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Term Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="wallet-management" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Wallet Management</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="analytics" class="nav-link" (click)="hideWelcome()">
+                        <span class="nav-icon"></span>
+                        <span class="nav-text">Analytics</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+    <!-- signout-section moved to the end of the sidebar -->
+
+        <div class="signout-section">
+            <button class="signout-btn" (click)="signOut()">
+                <span>🚪</span>
+                <span class="signout-text">Sign Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+        <div class="welcome-section" *ngIf="showWelcome">
+            <!-- <div class="super-admin-badge">
+                <span style="font-size:1.5em;">🛡️</span> Super Admin
+            </div> -->
+            <h1 class="welcome-title">
+                <span class="welcome-icon"></span>
+                <span>Welcome, Super Admin!</span>
+            </h1>
+            <p class="welcome-text">
+                You have full access to manage users, vehicles, payments, analytics, and system settings.<br>
+                Use the sidebar to get started.
+            </p>
+            <button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
+        </div>
+        
+        <div class="content-area" *ngIf="!showWelcome">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
 </div>
