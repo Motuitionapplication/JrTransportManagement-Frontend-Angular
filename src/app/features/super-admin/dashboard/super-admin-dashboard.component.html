@@ -107,12 +107,12 @@
         </div>
     </aside>
 
-    <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
-        <div class="welcome-section" *ngIf="showWelcome">
+    <!-- <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+        <div class="welcome-section" *ngIf="showWelcome"> -->
             <!-- <div class="super-admin-badge">
                 <span style="font-size:1.5em;">🛡️</span> Super Admin
             </div> -->
-            <h1 class="welcome-title">
+            <!-- <h1 class="welcome-title">
                 <span class="welcome-icon"></span>
                 <span>Welcome, Super Admin!</span>
             </h1>
@@ -126,5 +126,18 @@
         <div class="content-area" *ngIf="!showWelcome">
             <router-outlet></router-outlet>
         </div>
-    </main>
+    <!-- </main> -->
+
+<div class="welcome-section">
+  <h1 class="welcome-title">
+    <span class="welcome-icon">🛡️</span>
+    <span>Welcome, Super Admin!</span>
+  </h1>
+  <p class="welcome-text">
+    You have full access to manage users, vehicles, payments, analytics, and system settings.<br>
+    Use the sidebar to get started.
+  </p>
+  <button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
 </div>
+
+</div> 
