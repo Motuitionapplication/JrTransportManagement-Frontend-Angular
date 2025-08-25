@@ -22,7 +22,26 @@
   // Prevent any scrolling during initialization
   scroll-behavior: auto !important;
 }
+.container-fluid {
+  padding: 0;
+  margin: 0;
+  max-width: 400px;
+  max-height: 90vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
+  /* ✅ Add these lines to center */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  scroll-behavior: auto !important;
+
+
+}
 // Card Styling - Better scroll accommodation
 .card {
   border: none !important;
@@ -37,7 +56,7 @@
   scroll-behavior: auto !important;
   
   .card-header {
-    background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;
+    background: #3b82f6;
     border: none;
     padding: 0.75rem 1rem 0.5rem !important;
     flex-shrink: 0 !important;
