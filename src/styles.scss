@@ -644,16 +644,15 @@ body, html {
 
 // JR Transport Color Variables
 :root {
-  --jr-blue-primary: #1976d2;
-  --jr-blue-secondary: #2196f3;
-  --jr-blue-light: #e3f2fd;
-  --jr-red-primary: #f44336;
-  --jr-red-secondary: #ff5252;
-  --jr-red-light: #ffebee;
-  --jr-gradient: linear-gradient(135deg, #1976d2 0%, #f44336 100%);
-  --jr-gradient-reverse: linear-gradient(135deg, #f44336 0%, #1976d2 100%);
+  --jr-blue-primary: #3b82f6;
+  --jr-blue-secondary: #3b82f6;
+  --jr-blue-light: #e3f2fd; /* you can change this too if you want a lighter shade of #3b82f6 */
+  --jr-red-primary: #3b82f6;
+  --jr-red-secondary: #3b82f6;
+  --jr-red-light: #ffebee; /* keep or adjust as needed */
+  --jr-gradient: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  --jr-gradient-reverse: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
 }
-
 // JR Transport App Icon Styling
 .app-icon {
   font-size: 2rem;
