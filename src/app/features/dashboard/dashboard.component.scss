@@ -345,156 +345,155 @@ body {
 }
 
 // Hero Section
+
 .hero-section {
   position: relative;
   height: 100vh;
   min-height: 700px;
-  width: 100vw;
-  @include gradient-bg(rgba(30, 58, 138, 0.8), rgba(6, 182, 212, 0.8));
-  background-image: url('/assets/icons/bluetruck.jpg');
-  background-size: cover;
-  background-position: center;
-  @include flex-center;
+  background: linear-gradient(
+      135deg,
+      rgba(30, 58, 138, 0.8) 0%,
+      rgba(59, 130, 246, 0.8) 50%,
+      rgba(6, 182, 212, 0.8) 100%
+    ),
+    url("https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=2340&q=80")
+      center/cover no-repeat;
+  display: flex;
+  align-items: center;
   overflow: hidden;
-  margin: 0;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+}
 
-  .hero-bg-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
+.hero-bg-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
+  opacity: 0.3;
+}
+
+.hero-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 4rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-content h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.hero-content p {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+  max-width: 500px;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  margin-top: 3rem;
+}
+
+.stat-item {
+  text-align: center;
+  color: white;
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    display: block;
   }
 
-  .hero-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 4rem;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-content {
-    h1 {
-      font-size: 3.5rem;
-      font-weight: 900;
-      color: $white;
-      margin-bottom: 1.5rem;
-      line-height: 1.2;
-    }
-
-    p {
-      font-size: 1.3rem;
-      color: rgba(255, 255, 255, 0.9);
-      margin-bottom: 2rem;
-      max-width: 500px;
-    }
-  }
-
-  .hero-stats {
-    display: flex;
-    gap: 3rem;
-    margin-top: 3rem;
-
-    .stat-item {
-      text-align: center;
-      color: $white;
-
-      .stat-number {
-        font-size: 2.5rem;
-        font-weight: 800;
-        display: block;
-      }
-
-      .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.8;
-      }
-    }
+  .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
   }
 }
 
-// Booking Form
+/* Booking Form */
 .booking-form {
-  background: $white;
+  background: white;
   border-radius: 20px;
   padding: 2.5rem;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 2;
+}
 
-  .form-header {
-    text-align: center;
-    margin-bottom: 2rem;
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
 
-    h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: $dark-color;
-      margin-bottom: 0.5rem;
-    }
-
-    p {
-      color: $medium-gray;
-      font-size: 0.9rem;
-    }
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
   }
 
-  .form-group {
-    margin-bottom: 1.5rem;
+  p {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+}
 
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: $text-dark;
-      font-size: 0.9rem;
-    }
+.form-group {
+  margin-bottom: 1.5rem;
 
-    input,
-    select {
-      width: 100%;
-      padding: 1rem;
-      border: 2px solid $border-gray;
-      border-radius: 10px;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      background: #f9fafb;
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+  }
 
-      &:focus {
-        outline: none;
-        border-color: $primary-color;
-        background: $white;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
+  input,
+  select {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
   }
 }
 
-// Buttons
 .btn-primary {
   width: 100%;
   padding: 1.2rem;
-  @include gradient-bg($primary-dark, $primary-color);
-  color: $white;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: white;
   border: none;
   border-radius: 10px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  @include flex-center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 
   &:hover {
@@ -503,42 +502,51 @@ body {
   }
 }
 
-.btn-primary-cta {
-  padding: 1rem 2.5rem;
-  @include gradient-bg($primary-dark, $primary-color);
-  color: $white;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
+/* 📱 Mobile Responsive */
+@media (max-width: 768px) {
+  .hero-section {
+    height: auto;
+    min-height: auto;
+    padding: 4rem 1rem;
+  }
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+  .hero-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+
+  .hero-content p {
+    margin: 0 auto;
+  }
+
+  .hero-stats {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .booking-form {
+    max-width: 100%;
   }
 }
 
-.btn-secondary {
-  padding: 1rem 2.5rem;
-  background: transparent;
-  color: $white;
-  border: 2px solid $white;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 1.8rem;
+  }
 
-  &:hover {
-    background: $white;
-    color: $dark-color;
-    transform: translateY(-2px);
+  .hero-content p {
+    font-size: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .booking-form {
+    padding: 1.2rem;
+    margin: 0 auto;
   }
 }
 
@@ -759,32 +767,110 @@ body {
 }
 
 // CTA Section
+// .cta-section {
+//   @include section-padding;
+//   background: $dark-color;
+//   text-align: center;
+//   @extend .full-width-section;
+
+//   h2 {
+//     font-size: 2.5rem;
+//     font-weight: 800;
+//     color: $white;
+//     margin-bottom: 1rem;
+//   }
+
+//   p {
+//     font-size: 1.2rem;
+//     color: #d1d5db;
+//     margin-bottom: 3rem;
+//   }
+
+//   .cta-buttons {
+//     display: flex;
+//     gap: 1.5rem;
+//     justify-content: center;
+//     flex-wrap: wrap;
+//   }
+// }
 .cta-section {
-  @include section-padding;
-  background: $dark-color;
+  padding: 6rem 0;
+  background: #1f2937;
   text-align: center;
-  @extend .full-width-section;
-
-  h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: $white;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    font-size: 1.2rem;
-    color: #d1d5db;
-    margin-bottom: 3rem;
-  }
-
-  .cta-buttons {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
 }
+
+.cta-section h2 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 1rem;
+}
+
+.cta-section p {
+  font-size: 1.2rem;
+  color: #d1d5db;
+  margin-bottom: 3rem;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* 🔹 Primary CTA Button */
+.btn-primary-cta {
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-primary-cta:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 15px 25px rgba(59, 130, 246, 0.6);
+}
+
+.btn-primary-cta:active {
+  transform: scale(0.97);
+}
+
+/* 🔹 Secondary CTA Button (Glassmorphism) */
+.btn-secondary {
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #fff;
+  transform: translateY(-3px) scale(1.03);
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
 
 // Footer
 .footer {
