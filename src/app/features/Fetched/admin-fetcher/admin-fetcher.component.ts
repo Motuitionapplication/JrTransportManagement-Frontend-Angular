@@ -9,6 +9,81 @@ import { AdminService } from 'src/app/admin/admin.service';
   styleUrls: ['./admin-fetcher.component.scss']
 })
 export class AdminFetcherComponent implements OnInit {
+  columnDefs = [
+    { headerName: 'First Name', field: 'firstName', editable: true },
+    { headerName: 'Last Name', field: 'lastName', editable: true },
+    { headerName: 'Email', field: 'email', editable: true },
+    { headerName: 'Phone Number', field: 'phoneNumber', editable: true },
+    {
+      headerName: 'Actions',
+      cellRenderer: () => {
+        return `
+          <button type="button" class="btn btn-sm btn-primary edit-btn me-1" title="Edit">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-danger delete-btn me-1" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-warning change-password-btn" title="Change Password">
+            <i class="bi bi-key"></i>
+          </button>
+        `;
+      },
+      width: 180
+    }
+  ];
+
+  defaultColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true,
+    editable: true
+  };
+
+  onGridReady(params: any): void {
+    this.gridApi = params.api;
+    this.gridApi.addEventListener('cellClicked', (event: any) => {
+      const admin = event.data;
+      if (!admin) return;
+      const target = event.event.target;
+      if (target.closest('.edit-btn')) {
+        this.startEditAdmin(admin);
+      } else if (target.closest('.delete-btn')) {
+        this.deleteAdmin(admin.id);
+      } else if (target.closest('.change-password-btn')) {
+        this.openChangePasswordModal(admin);
+      }
+    });
+  }
+  // Pagination properties
+  currentPage: number = 1;
+  pageSize: number = 10;
+  get totalPages(): number {
+    return Math.ceil(this.admins.length / this.pageSize) || 1;
+  }
+
+  get paginatedAdmins(): Admin[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.admins.slice(start, start + this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
   isEditing(admin: Admin): boolean {
     return this.editingAdminId === String(admin.id);
   }
