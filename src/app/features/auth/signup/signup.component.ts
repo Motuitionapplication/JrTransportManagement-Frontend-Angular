@@ -443,7 +443,6 @@ export class SignupComponent implements OnInit, OnDestroy, AfterViewInit {
         error: (error: any) => {
           console.error('❌ Signup failed:', error);
           this.isLoading = false;
-          
           // Handle different types of errors
           if (error.status === 0) {
             // Network error or CORS issue

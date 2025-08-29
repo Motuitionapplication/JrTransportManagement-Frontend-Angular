@@ -1,12 +1,13 @@
+import { SidebarComponent } from './sidebar/sidebar.component';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
 import { FormsModule } from '@angular/forms';
 import { SuperAdminDashboardComponent } from './dashboard/super-admin-dashboard.component';
-import { SidebarComponent } from './sidebar/sidebar.component';
 import { UserManagementComponent } from './user-management.component';
 import { ApprovalManagementComponent } from './approval-management.component';
 import { VehicleManagementComponent } from './vehicle-management.component';
@@ -24,7 +25,14 @@ import { AdminManagementComponent } from './admin-management.component';
 import { CustomerFetcherComponent } from '../Fetched/customer-fetcher/customer-fetcher.component';
 import { AdminFetcherComponent } from '../Fetched/admin-fetcher/admin-fetcher.component';
 import { OwnerFetcherComponent } from '../Fetched/owner-fetcher/owner-fetcher.component';
-
+import { WalletManagementsComponent } from '../wallet-managements/wallet-managements.component';
+import { AppAdminWalletComponent } from '../wallet-managements/app-admin-wallet/app-admin-wallet.component';
+import { AppCustomerWalletComponent } from '../wallet-managements/app-customer-wallet/app-customer-wallet.component';
+import { AppDriverWalletComponent } from '../wallet-managements/app-driver-wallet/app-driver-wallet.component';
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatCardModule } from "@angular/material/card";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatSelectModule } from '@angular/material/select';
 const routes: Routes = [
   {
     path: '',
@@ -68,15 +76,25 @@ const routes: Routes = [
     AnalyticsComponent,
     CustomerFetcherComponent,
     AdminFetcherComponent,
-    OwnerFetcherComponent
+    OwnerFetcherComponent,
+    WalletManagementsComponent,
+    AppCustomerWalletComponent,
+    AppDriverWalletComponent,
+    AppAdminWalletComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    AgGridModule,
+  AgGridModule,
     FormsModule,
     MatTreeModule,
-    MatIconModule
+    MatIconModule,
+    MatTabsModule,
+    MatFormFieldModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    MatFormFieldModule
   ]
 })
 export class SuperAdminModule {}

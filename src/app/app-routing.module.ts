@@ -4,6 +4,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { UnauthorizedComponent } from './features/unauthorized/unauthorized.component';
 
 const routes: Routes = [
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
   
   // Authentication routes

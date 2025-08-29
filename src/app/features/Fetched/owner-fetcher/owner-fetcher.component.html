@@ -1,13 +1,36 @@
 <div class="p-3">
   <h2 class="fw-bold text-primary mb-3">Owner Management</h2>
-  <input type="text" class="form-control mb-3" placeholder="Search owners..." (input)="onQuickFilterChanged($event)" />
 
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <input 
+      type="text" 
+      class="form-control" 
+      style="max-width: 1000px;" 
+      placeholder="Search owners..." 
+      (input)="onQuickFilterChanged($event)" 
+    />
+    <button class="btn btn-outline-primary" (click)="onRefreshClick()">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+   <button type="button" class="btn btn-warning btn-sm d-flex align-items-center" (click)="initiateAddOwner()">
+  <i class="bi bi-person-fill-add me-1"></i>
+      Owner
+    </button>
+<button type="button" class="btn btn-success btn-sm d-flex align-items-center" (click)="onExportCSV()">
+  <i class="bi bi-file-earmark-spreadsheet"></i>
+      Excel
+    </button>  
+    <div *ngIf="isLoading" class="spinner-overlay">
+  <div class="spinner"></div>
+</div>
+  
+  </div>
   <div *ngIf="showCustomMessage" class="alert alert-dismissible fade show"
        [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" role="alert">
     {{ customMessage }}
     <button type="button" class="btn-close" (click)="showCustomMessage = false" aria-label="Close"></button>
   </div>
-
+  
   <div *ngIf="showCustomConfirm" class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -26,15 +49,16 @@
     </div>
   </div>
 
-  <ag-grid-angular class="ag-theme-quartz" style="width: 100%; height: 600px;"
+  <ag-grid-angular 
+    class="ag-theme-quartz" 
+    style="width: 100%; height: 600px;"
     [rowData]="ownersForGrid"
     [columnDefs]="columnDefs"
     [headerHeight]="48"
     [rowHeight]="45"
     [defaultColDef]="defaultColDef"
     [rowClassRules]="{ 'driver-header-row': 'data.isDriverHeaderRow' }"
+    [editType]="'fullRow'"  (gridReady)="onGridReady($event)"
     (gridReady)="onGridReady($event)">
-    
   </ag-grid-angular>
-
 </div>
