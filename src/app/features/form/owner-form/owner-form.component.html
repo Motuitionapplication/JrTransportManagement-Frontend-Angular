@@ -8,24 +8,51 @@
       <mat-form-field appearance="outline">
         <mat-label>First Name</mat-label>
         <input matInput formControlName="firstName" required>
+        <mat-error *ngIf="ownerForm.get('firstName')?.hasError('required')">
+          First name is required
+        </mat-error>
       </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>Last Name</mat-label>
         <input matInput formControlName="lastName" required>
+        <mat-error *ngIf="ownerForm.get('lastName')?.hasError('required')">
+          Last name is required
+        </mat-error>
       </mat-form-field>
     </div>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" required>
+      <mat-error *ngIf="ownerForm.get('email')?.hasError('required')">
+        Email is required
+      </mat-error>
+      <mat-error *ngIf="ownerForm.get('email')?.hasError('email')">
+        Please enter a valid email address
+      </mat-error>
     </mat-form-field>
     <div class="form-row">
+
       <mat-form-field appearance="outline">
         <mat-label>Phone Number</mat-label>
-        <input matInput formControlName="phoneNumber" required>
+        <span matPrefix>+91 &nbsp;</span>
+        <input matInput formControlName="phoneNumber" required placeholder="9876543210" type="tel" maxlength="10">
+        <mat-error *ngIf="ownerForm.get('phoneNumber')?.hasError('required')">
+          Phone number is required
+        </mat-error>
+        <mat-error *ngIf="ownerForm.get('phoneNumber')?.hasError('pattern')">
+          Must be exactly 10 digits
+        </mat-error>
       </mat-form-field>
+
       <mat-form-field appearance="outline">
         <mat-label>Password</mat-label>
         <input matInput formControlName="password" type="password" required>
+        <mat-error *ngIf="ownerForm.get('password')?.hasError('required')">
+          Password is required
+        </mat-error>
+        <mat-error *ngIf="ownerForm.get('password')?.hasError('minlength')">
+          Password must be at least 6 characters long
+        </mat-error>
       </mat-form-field>
     </div>
 
@@ -34,25 +61,45 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Street</mat-label>
         <input matInput formControlName="street" required>
+        <mat-error *ngIf="ownerForm.get('address.street')?.hasError('required')">
+          Street is required
+        </mat-error>
       </mat-form-field>
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>City</mat-label>
           <input matInput formControlName="city" required>
+          <mat-error *ngIf="ownerForm.get('address.city')?.hasError('required')">
+            City is required
+          </mat-error>
         </mat-form-field>
         <mat-form-field appearance="outline">
           <mat-label>State</mat-label>
           <input matInput formControlName="state" required>
+          <mat-error *ngIf="ownerForm.get('address.state')?.hasError('required')">
+            State is required
+          </mat-error>
         </mat-form-field>
       </div>
       <div class="form-row">
+        
         <mat-form-field appearance="outline">
           <mat-label>Pincode</mat-label>
-          <input matInput formControlName="pincode" required>
+          <input matInput formControlName="pincode" required type="text" maxlength="6">
+          <mat-error *ngIf="ownerForm.get('address.pincode')?.hasError('required')">
+            Pincode is required
+          </mat-error>
+          <mat-error *ngIf="ownerForm.get('address.pincode')?.hasError('pattern')">
+            Must be exactly 6 digits
+          </mat-error>
         </mat-form-field>
+        
         <mat-form-field appearance="outline">
           <mat-label>Country</mat-label>
           <input matInput formControlName="country" required>
+          <mat-error *ngIf="ownerForm.get('address.country')?.hasError('required')">
+            Country is required
+          </mat-error>
         </mat-form-field>
       </div>
     </div>

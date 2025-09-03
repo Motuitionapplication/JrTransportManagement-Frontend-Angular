@@ -20,7 +20,15 @@
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Phone Number</mat-label>
-      <input matInput formControlName="phoneNumber" required>
+      <input matInput formControlName="phoneNumber" required placeholder="+91XXXXXXXXXX">
+      <!-- Error message for required field -->
+      <mat-error *ngIf="driverForm.get('phoneNumber')?.hasError('required')">
+        Phone number is required.
+      </mat-error>
+      <!-- Error message for incorrect pattern -->
+      <mat-error *ngIf="driverForm.get('phoneNumber')?.hasError('pattern')">
+        Please enter a valid 10-digit number starting with +91.
+      </mat-error>
     </mat-form-field>
     
     <div class="form-row">
@@ -34,6 +42,8 @@
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
+      <!-- === MODIFIED SECTION END === -->
+
     </div>
 
     <div class="form-row">
@@ -54,3 +64,4 @@
   <button mat-stroked-button (click)="onCancel()">Cancel</button>
   <button mat-flat-button color="primary" (click)="onSave()" [disabled]="!driverForm.valid">Save Driver</button>
 </div>
+

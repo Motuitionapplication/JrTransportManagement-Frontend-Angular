@@ -84,10 +84,6 @@
   line-height: 1.5;
 }
 
-/* Styling for owner-fetcher.component.scss */
-
-// Use ::ng-deep to pierce view encapsulation for AG-Grid elements
-// This allows styles defined here to affect elements rendered outside this component's direct DOM.
 
 ::ng-deep .ag-theme-quartz {
   // Base responsive font size
