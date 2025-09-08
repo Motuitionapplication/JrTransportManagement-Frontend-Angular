@@ -71,28 +71,53 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.login(credentials).subscribe({
           next: (response) => {
             console.log('✅ Login successful:', response);
-            // Always return a user object with firstName, lastName, username, and roles
-            const user = {
-              firstName: response.firstName,
-              lastName: response.lastName,
-              username: response.username,
-              roles: response.roles,
-              token: response.token
-            };
-            this.dialogRef.close({ success: true, user });
+            
+            // --- START OF ADDED REDIRECTION LOGIC ---
+            if (response.roles && response.roles.length > 0) {
+              const userRole = response.roles[0]; // Get the primary role
+
+              // Save token and role to localStorage
+              localStorage.setItem('token', response.token);
+              localStorage.setItem('role', userRole);
+
+              // Close the dialog before navigating
+              this.dialogRef.close({ success: true, user: response });
+
+              // Redirect based on the role
+              switch (userRole) {
+                case 'ROLE_OWNER':
+                  this.router.navigate(['/owner']);
+                  break;
+                case 'ROLE_DRIVER':
+                  this.router.navigate(['/driver']);
+                  break;
+                case 'ROLE_CUSTOMER':
+                  this.router.navigate(['/customer']);
+                  break;
+                case 'ROLE_ADMIN':
+                  this.router.navigate(['/admin']);
+                  break;
+                case 'ROLE_SUPER_ADMIN':
+                  this.router.navigate(['/super-admin']);
+                  break;
+                default:
+                  this.router.navigate(['/']); // Navigate to a default page
+              }
+            } else {
+              console.error('Login successful, but no role received.');
+              this.isLoading = false;
+              this.errorMessage = 'Login succeeded but user has no assigned role.';
+            }
+            // --- END OF ADDED REDIRECTION LOGIC ---
           },
           error: (error) => {
+            // ... existing error handling ...
             console.error('❌ Login failed:', error);
             this.isLoading = false;
             if (error.status === 401) {
-              this.errorMessage = 'Invalid username or password. Please try again.';
-              if (!this.errorMessage.includes('Admin')) {
-                this.errorMessage += ' If this is your first time, you can create an admin account for testing.';
-              }
-            } else if (error.status === 0) {
-              this.errorMessage = 'Unable to connect to server. Please check if the Spring Boot backend is running on localhost:8080.';
+              this.errorMessage = 'Invalid username or password.';
             } else {
-              this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+              this.errorMessage = 'An unexpected error occurred.';
             }
           }
         })
