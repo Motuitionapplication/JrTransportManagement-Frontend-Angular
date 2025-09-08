@@ -1,0 +1,30 @@
+<!-- top-bar -->
+<header class="topbar">
+  <!-- Center: App Logo/Title -->
+  <div class="topbar-center">
+    <h2 class="app-title">JR Transport</h2>
+  </div>
+
+  <!-- Right Side: Icons -->
+  <div class="topbar-right">
+    <!-- Notifications -->
+    <button class="icon-btn" title="Notifications">
+      <i class="fas fa-bell"></i>
+      <span class="badge">3</span> <!-- dynamic count -->
+    </button>
+
+    <!-- User Menu -->
+    <div class="user-menu" (click)="toggleMenu()">
+      <i class="fas fa-user-circle user-avatar"></i>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+
+    <!-- Dropdown -->
+    <div class="dropdown" *ngIf="showMenu">
+      <button (click)="signOut()">
+        <i class="fas fa-sign-out-alt"></i> Sign Out
+      </button>
+    </div>
+  </div>
+</header>
+
