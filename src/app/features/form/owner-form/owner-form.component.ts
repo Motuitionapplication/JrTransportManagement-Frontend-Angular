@@ -21,7 +21,13 @@ export class OwnerFormComponent implements OnInit {
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', Validators.required],
+      
+      // --- UPDATED PHONE VALIDATION ---
+      phoneNumber: ['', [
+        Validators.required,
+        Validators.pattern("^[0-9]{10}$") // Ensures exactly 10 digits
+      ]],
+
       password: ['', [Validators.required, Validators.minLength(6)]],
 
       // --- Required Address Information ---
@@ -29,7 +35,13 @@ export class OwnerFormComponent implements OnInit {
         street: ['', Validators.required],
         city: ['', Validators.required],
         state: ['', Validators.required],
-        pincode: ['', Validators.required],
+
+        // --- UPDATED PINCODE VALIDATION ---
+        pincode: ['', [
+          Validators.required,
+          Validators.pattern("^[0-9]{6}$") // Ensures exactly 6 digits
+        ]],
+
         country: ['India', Validators.required]
       }),
 
@@ -47,7 +59,6 @@ export class OwnerFormComponent implements OnInit {
     if (this.ownerForm.valid) {
       this.dialogRef.close(this.ownerForm.value);
     } else {
-      // This helps show validation errors to the user if they try to save an incomplete form
       this.ownerForm.markAllAsTouched();
     }
   }

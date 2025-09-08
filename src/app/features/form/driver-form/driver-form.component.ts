@@ -22,7 +22,11 @@ export class DriverFormComponent implements OnInit {
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phoneNumber: ['', Validators.required],
+      
+      // --- MODIFIED LINE ---
+      // Added a pattern validator for the Indian phone number format (+91 followed by 10 digits)
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^\+91[0-9]{10}$/)]],
+      
       status: ['AVAILABLE', Validators.required],
 
       // New required fields from the backend
@@ -38,15 +42,14 @@ export class DriverFormComponent implements OnInit {
     this.dialogRef.close();
   }
 
+  onSave(): void {
+    // Ensure the form is valid before proceeding
+    if (this.driverForm.valid) {
+      // 1. Get the raw form values (this includes password, email, etc.)
+      const formValue = this.driverForm.value;
 
-onSave(): void {
-  // Ensure the form is valid before proceeding
-  if (this.driverForm.valid) {
-    // 1. Get the raw form values (this includes password, email, etc.)
-    const formValue = this.driverForm.value;
-
-    // 2. Pass the complete object when closing the dialog
-    this.dialogRef.close(formValue);
+      // 2. Pass the complete object when closing the dialog
+      this.dialogRef.close(formValue);
+    }
   }
-}
 }

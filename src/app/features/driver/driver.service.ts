@@ -3,6 +3,9 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { EnvironmentService } from 'src/app/core/services/environment.service';
 import { DriverDTO } from 'src/app/models/driver.dto';
+import { OwnerService } from '../owner/owner.service';
+import { tap } from 'rxjs/operators';
+import { Driver } from 'src/app/models/driver.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,27 +16,38 @@ export class DriverService {
 
   constructor(
     private http: HttpClient,
-    private envService: EnvironmentService
+    private envService: EnvironmentService,
+    private ownerService: OwnerService
   ) {
     this.apiUrl = `${this.envService.getApiUrl()}/transport/drivers`;
   }
 
   updateDriverDetails(driverId: string, driverDTO: DriverDTO): Observable<DriverDTO> {
-  return this.http.put<DriverDTO>(`${this.apiUrl}/${driverId}`, driverDTO);
-}
+    return this.http.put<DriverDTO>(`${this.apiUrl}/${driverId}`, driverDTO);
+  }
 
-    deleteDriver(driverId: string): Observable<void> {
+  deleteDriver(driverId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${driverId}`);
-    }
+  }
 
-    assignVehicle(driverId: string, vehicleId: string) {
-  const requestBody = { vehicleId: vehicleId };
+  deactivateDriver(driverId: string, ownerId: string): Observable<Driver> {
+    return this.http.patch<Driver>(`${this.apiUrl}/${driverId}/deactivate`, {}).pipe(
+      // --- NEW: Tap into the successful response to update the cache ---
+      tap((updatedDriver) => {
+        // Use the public method from OwnerService to update its internal cache
+        this.ownerService.updateDriverInCache(ownerId, updatedDriver);
+      })
+    );
+  }
 
-  return this.http.patch(`${this.apiUrl}/${driverId}/assign-vehicle`, requestBody);
-}
-unassignvehicle(driverId : string){
+  assignVehicle(driverId: string, vehicleId: string) {
+    const requestBody = { vehicleId: vehicleId };
+
+    return this.http.patch(`${this.apiUrl}/${driverId}/assign-vehicle`, requestBody);
+  }
+  unassignvehicle(driverId: string) {
     return this.http.patch(`${this.apiUrl}/${driverId}/unassign-vehicle`, { driverId });
 
-}
+  }
 }
 

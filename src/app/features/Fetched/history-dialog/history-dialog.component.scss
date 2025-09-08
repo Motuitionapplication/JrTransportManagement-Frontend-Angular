@@ -1,0 +1,39 @@
+// Header with title on left and buttons on right
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px; // Match mat-dialog-title padding
+  margin-bottom: 10px;
+
+  // Make title bold
+  h1 {
+    font-weight: 600;
+  }
+}
+
+// Container for Loading/Error/No Data messages
+.dialog-state-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+  font-size: 1.1em;
+  color: #666;
+}
+
+// Specific style for error messages
+.error-message {
+  color: #d9534f; // Bootstrap danger red
+}
+
+// Custom styling for the red "Close" button
+.btn-red {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.btn-red:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}

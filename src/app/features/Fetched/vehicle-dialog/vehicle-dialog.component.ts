@@ -4,6 +4,7 @@ import { Vehicle, VehicleService } from '../../vehicle/vehicle.service'; // Adju
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 // Corrected the relative path to go up to 'features' then down to 'form'
 import { VehicleFormComponent } from '../../form/vehicle-form/vehicle-form.component'; 
+import { HistoryDialogComponent } from '../history-dialog/history-dialog.component';
 
 @Component({
   selector: 'app-vehicle-dialog',
@@ -100,6 +101,13 @@ export class VehicleDialogComponent implements OnInit {
         // Add the new vehicle to the grid without a full reload
         this.gridApi.applyTransaction({ add: [result] });
       }
+    });
+  }
+
+  openhistory():void{
+  const dialogRef = this.dialog.open(HistoryDialogComponent, {
+      width: '700px',
+      data: { ownerId: this.ownerId } // Pass the ownerId to the form
     });
   }
 

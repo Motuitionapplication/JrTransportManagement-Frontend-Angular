@@ -1,53 +1,86 @@
+<!-- Main page container -->
 <div class="container-fluid p-3">
-  <div class="row">
-    <div class="col-12">
-      <h2 class="fw-bold text-primary mb-3">Owner Management</h2>
-    </div>
-  </div>
 
-  <!-- Top Controls Section -->
-  <div class="row mb-3">
-    <div class="col-12 col-lg-8 col-xl-6 mb-2 mb-lg-0">
-      <input 
-        type="text" 
-        class="form-control" 
-        placeholder="Search owners..." 
-        (input)="onQuickFilterChanged($event)" 
-      />
-    </div>
-    <div class="col-12 col-lg-4 col-xl-6">
-      <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center flex-shrink-0" (click)="onRefreshClick()">
-          <i class="bi bi-arrow-clockwise me-1"></i>
-          <span class="d-none d-sm-inline">Refresh</span>
-        </button>
-        <button type="button" class="btn btn-warning btn-sm d-flex align-items-center flex-shrink-0" (click)="initiateAddOwner()">
-          <i class="bi bi-person-fill-add me-1"></i>
-          <span class="d-none d-sm-inline">Owner</span>
-        </button>
-        <button type="button" class="btn btn-success btn-sm d-flex align-items-center flex-shrink-0" (click)="onExportCSV()">
-          <i class="bi bi-file-earmark-spreadsheet me-1"></i>
-          <span class="d-none d-sm-inline">Excel</span>
-        </button>
+  <!-- This card acts as the single white box for all content -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <!-- 1. Heading -->
+      <h2 class="fw-bold text-primary mb-3">
+        <i class="bi bi-person-rolodex me-2"></i>Owner Management
+      </h2>
+
+      <!-- 2. Controls Bar (Search and Buttons) -->
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        
+        <!-- Search Box -->
+        <div class="search-container">
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            style="width: 250px;"
+            placeholder="Search owners..."
+            [(ngModel)]="searchValue"
+            (input)="onQuickFilterChanged($event)" 
+          />
+        </div>
+
+        <!-- Action Buttons Group -->
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <!-- Add Owner Button -->
+          <button type="button" class="btn btn-warning btn-sm d-flex align-items-center flex-shrink-0" (click)="initiateAddOwner()">
+            <i class="bi bi-person-fill-add me-1"></i>
+            <span>Owner</span>
+          </button>
+
+          <!-- Export Button -->
+          <button type="button" class="btn btn-success btn-sm d-flex align-items-center flex-shrink-0" (click)="onExportCSV()">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+            <span>Excel</span>
+          </button>
+        </div>
       </div>
+
+      <!-- 3. Data Grid -->
+      <div class="position-relative">
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoading" class="spinner-overlay">
+          <div class="spinner"></div>
+        </div>
+
+        <!-- The Grid -->
+        <div style="width: 100%; height: 600px;">
+          <ag-grid-angular 
+            class="ag-theme-quartz" 
+            style="width: 100%; height: 100%;"
+            [rowData]="ownersForGrid"
+            [columnDefs]="columnDefs"
+            [headerHeight]="48"
+            [rowHeight]="45"
+            [defaultColDef]="defaultColDef"
+            [pagination]="true"
+            [paginationPageSize]="15"
+            [editType]="'fullRow'"
+            (gridReady)="onGridReady($event)"
+            [rowClassRules]="rowClassRules">
+          </ag-grid-angular>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="isLoading" class="spinner-overlay">
-    <div class="spinner"></div>
-  </div>
+  <!-- --- START OF THE FIX --- -->
+  <!-- Alerts and Modals must be present in the HTML to be displayed -->
 
   <!-- Alert Messages -->
-  <div class="row" *ngIf="showCustomMessage">
-    <div class="col-12">
+  <div *ngIf="showCustomMessage" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1100">
       <div class="alert alert-dismissible fade show"
            [ngClass]="{'alert-success': !customMessageIsError, 'alert-danger': customMessageIsError}" 
            role="alert">
         {{ customMessage }}
         <button type="button" class="btn-close" (click)="showCustomMessage = false" aria-label="Close"></button>
       </div>
-    </div>
   </div>
   
   <!-- Confirmation Modal -->
@@ -68,24 +101,7 @@
       </div>
     </div>
   </div>
+  <!-- --- END OF THE FIX --- -->
 
-  <!-- Data Grid -->
-  <div class="row">
-    <div class="col-12">
-      <div class="table-responsive">
-        <ag-grid-angular 
-          class="ag-theme-quartz" 
-          style="width: 100%; height: 600px; min-width: 800px;"
-          [rowData]="ownersForGrid"
-          [columnDefs]="columnDefs"
-          [headerHeight]="48"
-          [rowHeight]="45"
-          [defaultColDef]="defaultColDef"
-          [rowClassRules]="{ 'driver-header-row': 'data.isDriverHeaderRow' }"
-          [editType]="'fullRow'"
-          (gridReady)="onGridReady($event)">
-        </ag-grid-angular>
-      </div>
-    </div>
-  </div>
 </div>
+
