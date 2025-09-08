@@ -6,6 +6,16 @@ import { EnvironmentService } from 'src/app/core/services/environment.service';
 import { Driver } from 'src/app/models/driver.model';
 import { VehicleOwner } from 'src/app/models/owner.model';
 
+interface AssignmentHistoryDto {
+  vehicleNumber: string;
+  vehicleModel: string;
+  driverFirstName: string;
+  driverLastName: string;
+  driverPhoneNumber: string;
+  assignmentStartDate: string;
+  assignmentEndDate: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -113,5 +123,9 @@ export class OwnerService {
     return this.http.post(`${this.apiUrl}`, owner).pipe(
       tap(() => this.clearOwnersCache())
     );
+  }
+   getAssignmentHistoryForOwner(ownerId: string): Observable<AssignmentHistoryDto[]> {
+    const url = `${this.apiUrl}/${ownerId}/assignment-history`;
+    return this.http.get<AssignmentHistoryDto[]>(url);
   }
 }
