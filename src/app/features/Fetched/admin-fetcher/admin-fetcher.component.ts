@@ -9,6 +9,10 @@ import { AdminService } from 'src/app/admin/admin.service';
   styleUrls: ['./admin-fetcher.component.scss']
 })
 export class AdminFetcherComponent implements OnInit {
+  // ...existing code...
+  toggleAddAdminPassword(): void {
+    this.showAddAdminPassword = !this.showAddAdminPassword;
+  }
   columnDefs = [
     { headerName: 'First Name', field: 'firstName', editable: true },
     { headerName: 'Last Name', field: 'lastName', editable: true },
@@ -49,7 +53,7 @@ export class AdminFetcherComponent implements OnInit {
       if (target.closest('.edit-btn')) {
         this.startEditAdmin(admin);
       } else if (target.closest('.delete-btn')) {
-        this.deleteAdmin(admin.id);
+        this.requestDeleteAdmin(admin);
       } else if (target.closest('.change-password-btn')) {
         this.openChangePasswordModal(admin);
       }
@@ -62,9 +66,22 @@ export class AdminFetcherComponent implements OnInit {
     return Math.ceil(this.admins.length / this.pageSize) || 1;
   }
 
+  get filteredAdmins(): Admin[] {
+    if (!this.searchValue.trim()) {
+      return this.admins;
+    }
+    const value = this.searchValue.trim().toLowerCase();
+    return this.admins.filter(admin =>
+      admin.firstName.toLowerCase().includes(value) ||
+      admin.lastName.toLowerCase().includes(value) ||
+      admin.email.toLowerCase().includes(value) ||
+      admin.phoneNumber.toLowerCase().includes(value)
+    );
+  }
+
   get paginatedAdmins(): Admin[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.admins.slice(start, start + this.pageSize);
+    return this.filteredAdmins.slice(start, start + this.pageSize);
   }
 
   goToPage(page: number): void {
@@ -135,8 +152,10 @@ export class AdminFetcherComponent implements OnInit {
     this.adminService.getAllAdmins().subscribe(
       (data) => {
         this.admins = data.map((admin: any) => ({ ...admin }));
-        localStorage.setItem('cachedAdmins', JSON.stringify(data));
-        console.log(`✅ Admins fetched from API (${data.length} records):`, data);
+        // Sort admins alphabetically by first name
+        this.admins.sort((a, b) => a.firstName.localeCompare(b.firstName));
+        localStorage.setItem('cachedAdmins', JSON.stringify(this.admins));
+        console.log(`✅ Admins fetched from API (${this.admins.length} records):`, this.admins);
       },
       (error) => {
         console.error('❌ Error fetching admins:', error);
@@ -153,10 +172,8 @@ export class AdminFetcherComponent implements OnInit {
   onQuickFilterChanged(event: any): void {
     const value = event.target.value;
     this.searchValue = value;
+    this.currentPage = 1;
     console.log('🔍 Quick filter changed:', value);
-    if (this.gridApi) {
-      this.gridApi.setQuickFilter(value);
-    }
   }
 
 
@@ -166,21 +183,29 @@ export class AdminFetcherComponent implements OnInit {
   }
 
   saveEditAdmin(admin: Admin): void {
+    // Phone number validation: input is only 10 digits, prefix +91 for validation and saving
+    const phoneDigits = this.editAdminData.phoneNumber;
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phoneDigits)) {
+      this.showToastMessage('Phone number must be exactly 10 digits.');
+      return;
+    }
     const updatedAdmin = {
       id: admin.id,
       firstName: this.editAdminData.firstName,
       lastName: this.editAdminData.lastName,
       email: this.editAdminData.email,
-      phoneNumber: this.editAdminData.phoneNumber
+      phoneNumber: '+91' + phoneDigits
     };
     this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
       () => {
         this.editingAdminId = null;
         this.editAdminData = {};
+        this.showToastMessage('Admin updated successfully!');
         this.fetchAdmins();
       },
       (error: any) => {
-        alert('Failed to update admin.');
+        this.showToastMessage('Failed to update admin.');
         console.error(error);
       }
     );
@@ -200,64 +225,101 @@ export class AdminFetcherComponent implements OnInit {
       const updatedAdmin = { ...admin, firstName: newFirstName, lastName: newLastName, email: newEmail };
       this.adminService.editAdmin(Number(admin.id), updatedAdmin).subscribe(
         () => {
-          alert('Admin updated successfully!');
+          this.showToastMessage('Admin updated successfully!');
           this.fetchAdmins();
         },
         (error) => {
-          alert('Failed to update admin.');
+          this.showToastMessage('Failed to update admin.');
           console.error(error);
         }
       );
     }
   }
 
-  deleteAdmin(id: string | number): void {
-    if (confirm('Are you sure you want to delete this admin?')) {
-      this.adminService.deleteAdmin(id).subscribe(
-        () => {
-          alert('Admin deleted successfully!');
-          this.fetchAdmins();
-        },
-        (error) => {
-          alert('Failed to delete admin.');
-          console.error(error);
-        }
-      );
-    }
+  showDeleteConfirmModal: boolean = false;
+  adminToDelete: Admin | null = null;
+  toastMessage: string = '';
+  showToast: boolean = false;
+
+  requestDeleteAdmin(admin: Admin): void {
+    this.adminToDelete = admin;
+    this.showDeleteConfirmModal = true;
+  }
+
+  confirmDeleteAdmin(): void {
+    if (!this.adminToDelete) return;
+    this.adminService.deleteAdmin(this.adminToDelete.id).subscribe(
+      () => {
+        this.showDeleteConfirmModal = false;
+        this.adminToDelete = null;
+        this.showToastMessage('Admin deleted successfully!');
+        this.fetchAdmins();
+      },
+      (error) => {
+        this.showDeleteConfirmModal = false;
+        this.adminToDelete = null;
+        this.showToastMessage('Failed to delete admin.');
+        console.error(error);
+      }
+    );
+  }
+
+  cancelDeleteAdmin(): void {
+    this.showDeleteConfirmModal = false;
+    this.adminToDelete = null;
+  }
+
+  showToastMessage(message: string): void {
+    this.toastMessage = message;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 2500);
   }
 
   openAddAdminDialog(): void {
   this.showAddAdminModal = true;
-  this.newAdmin = { firstName: '', lastName: '', username: '', email: '', password: '', phoneNumber: '' };
+  this.showAddAdminPassword = false;
+  this.newAdmin = { firstName: '', lastName: '', username: '', email: '', password: '', phoneNumber: '+91' };
+  this.newAdmin.password = '';
   }
 
   closeAddAdminDialog(): void {
   this.showAddAdminModal = false;
+  this.showAddAdminPassword = false;
   this.newAdmin = { firstName: '', lastName: '', username: '', email: '', password: '', phoneNumber: '' };
   }
 
   submitAddAdmin(): void {
     const { username, email, password, phoneNumber, firstName, lastName } = this.newAdmin;
     if (!username || !email || !password || !phoneNumber || !firstName || !lastName) {
-      alert('All fields are required!');
+      this.showToastMessage('All fields are required!');
+      return;
+    }
+    // Phone number validation: input is only 10 digits, prefix +91 for validation and saving
+    const phoneDigits = phoneNumber;
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phoneDigits)) {
+      this.showToastMessage('Phone number must be exactly 10 digits.');
       return;
     }
     const adminToAdd: any = {
       username,
       email,
       password,
-      phoneNumber,
+      phoneNumber: '+91' + phoneDigits,
       firstName,
       lastName
     };
     this.adminService.addAdmin(adminToAdd).subscribe(
       () => {
-        alert('Admin added successfully!');
+        this.showToastMessage('Admin added successfully!');
         this.fetchAdmins();
+        // After fetchAdmins, admins will be sorted alphabetically
         this.closeAddAdminDialog();
       },
       (error) => {
-        alert('Failed to add admin.');
+        this.showToastMessage('Failed to add admin.');
         console.error(error);
       }
     );
@@ -293,21 +355,21 @@ export class AdminFetcherComponent implements OnInit {
 
   submitChangePassword(): void {
     if (!this.newPassword || !this.confirmPassword) {
-      alert('Please enter new password and confirm password.');
+      this.showToastMessage('Please enter new password and confirm password.');
       return;
     }
     if (this.newPassword !== this.confirmPassword) {
-      alert('New password and confirm password do not match.');
+      this.showToastMessage('New password and confirm password do not match.');
       return;
     }
     if (!this.selectedAdminForPassword) return;
     this.adminService.changeAdminPassword(this.selectedAdminForPassword.id, this.newPassword).subscribe(
       () => {
-        alert('Password updated successfully!');
+        this.showToastMessage('Password updated successfully!');
         this.closeChangePasswordModal();
       },
       (error: any) => {
-        alert('Failed to update password.');
+        this.showToastMessage('Failed to update password.');
         console.error(error);
       }
     );
