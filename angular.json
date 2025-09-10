@@ -48,6 +48,14 @@
             ],
             "serviceWorker": true,
             "ngswConfigPath": "ngsw-config.json"
+            ,"allowedCommonJsDependencies": [
+              "canvg",
+              "core-js",
+              "raf",
+              "rgbcolor",
+              "jspdf",
+              "html2canvas"
+            ]
           },
           "configurations": {
             "production": {
