@@ -1,23 +1,380 @@
-<div class="admin-container">
-  <h2 class="admin-title">Welcome, Administrator!</h2>
-  <h3 class="admin-subtitle">Admin Dashboard</h3>
-  <div class="admin-welcome">
-    <p>
-      Manage users, oversee system operations, and configure platform settings from this central hub.
-    </p>
-  </div>
-  <div class="admin-actions">
-    <button mat-raised-button color="primary">User Management</button>
-    <button mat-raised-button color="accent">System Settings</button>
-    <button mat-raised-button color="warn">Reports & Analytics</button>
-  </div>
-  <div class="admin-info">
-    <h3>System Overview</h3>
-    <ul>
-      <li>Total Users: 156</li>
-      <li>Active Sessions: 23</li>
-      <li>System Status: Online</li>
-      <li>Database Health: Good</li>
-    </ul>
+<!-- admin-dashboard.component.html -->
+<div class="dashboard-container">
+  <!-- Top Navigation Bar -->
+  <nav class="top-navbar">
+    <div class="navbar-content">
+      <div class="logo-section">
+        <button class="menu-toggle" (click)="toggleSidebar()">
+          <span class="menu-icon"></span>
+          <span class="menu-icon"></span>
+          <span class="menu-icon"></span>
+        </button>
+        <h2 class="brand-name">JR Transport</h2>
+      </div>
+      
+      <div class="navbar-actions">
+        <div class="search-bar">
+          <input type="text" placeholder="Search bookings, vehicles..." class="search-input">
+          <button class="search-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="notifications">
+          <button class="notification-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notification-badge">3</span>
+          </button>
+        </div>
+        
+        <div class="user-profile">
+          <div class="user-avatar">
+            <span>JD</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">John Doe</span>
+            <span class="user-role">Customer</span>
+          </div>
+          <button class="dropdown-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <div class="main-content-wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+      <nav class="sidebar-nav">
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#" class="nav-link active" (click)="setActiveSection('dashboard')">
+              <span class="nav-text">Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('booking')">
+              <span class="nav-text">Bookings</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('history')">
+              <span class="nav-text">Drivers</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('tracking')">
+              <span class="nav-text">Customers</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('goods')">
+              <span class="nav-text">Trucks</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('wallet')">
+              <span class="nav-text">Wallet Management</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('payment')">
+              <span class="nav-text">Reports</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('profile')">
+              <span class="nav-text">Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('reviews')">
+              <span class="nav-text">Reviews</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" (click)="setActiveSection('support')">
+              <span class="nav-text">Support</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button class="logout-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span class="nav-text">Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-content">
+      <!-- Welcome Message -->
+      <div class="welcome-card" style="max-width:500px;margin:2rem auto 2rem auto;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:16px;background:#fff;padding:2rem;text-align:center;">
+        <div class="welcome-message" style="font-size:1.3rem;font-weight:500;color:#2563eb;">
+          Welcome, valued customer! We're glad to have you at JR Transport.
+        </div>
+      </div>
+      <!-- Dashboard Overview Section -->
+      <section class="content-section" *ngIf="activeSection === 'dashboard'">
+        <div class="section-header">
+          <h1 class="section-title">Dashboard Overview</h1>
+          <p class="section-subtitle">Welcome back! Here's your transport activity summary</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue-bg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">24</h3>
+              <p class="stat-label">Total Bookings</p>
+              <span class="stat-change positive">+12% from last month</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon green-bg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">3</h3>
+              <p class="stat-label">Active Transports</p>
+              <span class="stat-change">In progress</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple-bg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">₹45,280</h3>
+              <p class="stat-label">Total Spent</p>
+              <span class="stat-change negative">-5% from last month</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon orange-bg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">4.8</h3>
+              <p class="stat-label">Average Rating</p>
+              <span class="stat-change">21 Reviews</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-section">
+          <h2 class="subsection-title">Recent Activity</h2>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M5 12l5 5L20 7"></path>
+                </svg>
+              </div>
+              <div class="activity-details">
+                <h4>Booking #TRN2024001 Completed</h4>
+                <p>Delhi to Mumbai - 2 Ton Truck</p>
+                <span class="activity-time">2 hours ago</span>
+              </div>
+              <div class="activity-status completed">Delivered</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M12 2v10l4 2"></path>
+                </svg>
+              </div>
+              <div class="activity-details">
+                <h4>Vehicle Departed - #TRN2024002</h4>
+                <p>Bangalore to Chennai - 5 Ton Truck</p>
+                <span class="activity-time">5 hours ago</span>
+              </div>
+              <div class="activity-status in-transit">In Transit</div>
+            </div>
+
+            <div class="activity-item">
+              <div class="activity-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+              </div>
+              <div class="activity-details">
+                <h4>New Booking Created</h4>
+                <p>Pune to Goa - 1 Ton Truck</p>
+                <span class="activity-time">1 day ago</span>
+              </div>
+              <div class="activity-status pending">Pending</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h2 class="subsection-title">Quick Actions</h2>
+          <div class="action-grid">
+            <button class="action-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Book New Transport</span>
+            </button>
+            
+            <button class="action-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>Track Vehicle</span>
+            </button>
+            
+            <button class="action-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+              </svg>
+              <span>Add to Wallet</span>
+            </button>
+            
+            <button class="action-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Upload Consignment</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Booking Form Section -->
+      <section class="content-section" *ngIf="activeSection === 'booking'">
+        <div class="section-header">
+          <h1 class="section-title">Book New Transport</h1>
+          <p class="section-subtitle">Fill in the details to book your transport</p>
+        </div>
+
+        <div class="booking-form-container">
+          <form class="booking-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="pickup">Pickup Location</label>
+                <input type="text" id="pickup" class="form-control" placeholder="Enter pickup address">
+              </div>
+              <div class="form-group">
+                <label for="dropoff">Drop-off Location</label>
+                <input type="text" id="dropoff" class="form-control" placeholder="Enter drop-off address">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="date">Pickup Date</label>
+                <input type="date" id="date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="time">Pickup Time</label>
+                <input type="time" id="time" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="truckType">Truck Type</label>
+                <select id="truckType" class="form-control">
+                  <option>Select truck type</option>
+                  <option>1 Ton - Small Truck</option>
+                  <option>2 Ton - Medium Truck</option>
+                  <option>5 Ton - Large Truck</option>
+                  <option>10 Ton - Extra Large Truck</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="goodsType">Goods Type</label>
+                <select id="goodsType" class="form-control">
+                  <option>Select goods type</option>
+                  <option>Electronics</option>
+                  <option>Furniture</option>
+                  <option>Food Items</option>
+                  <option>Industrial Goods</option>
+                  <option>Others</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="specialRequests">Special Instructions</label>
+              <textarea id="specialRequests" class="form-control" rows="3" placeholder="Any special handling instructions..."></textarea>
+            </div>
+
+            <div class="cost-estimator">
+              <h3>Estimated Cost</h3>
+              <div class="cost-breakdown">
+                <div class="cost-item">
+                  <span>Base Fare</span>
+                  <span>₹2,500</span>
+                </div>
+                <div class="cost-item">
+                  <span>Distance Charges</span>
+                  <span>₹1,200</span>
+                </div>
+                <div class="cost-item">
+                  <span>GST (18%)</span>
+                  <span>₹666</span>
+                </div>
+                <div class="cost-item total">
+                  <span>Total Amount</span>
+                  <span>₹4,366</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-primary">Confirm Booking</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Other sections can be added similarly -->
+    </main>
   </div>
 </div>
