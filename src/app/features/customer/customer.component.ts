@@ -9,7 +9,15 @@ import { Customer } from '../../models/customer.model';
   styleUrls: ['./customer.component.scss']
 })
 export class CustomerComponent implements OnInit {
+toggleSidebar() {
+throw new Error('Method not implemented.');
+}
+setActiveSection(arg0: string) {
+throw new Error('Method not implemented.');
+}
   customer?: Customer;
+sidebarCollapsed: any;
+activeSection: any;
 
   constructor(private customerService: CustomerService) { }
 
