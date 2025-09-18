@@ -333,7 +333,7 @@ body {
     padding: 2rem;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 100vh;
-    padding-top: 80px; // Prevent overlap with sticky topbar
+    padding-top: 180px; // Prevent overlap with sticky topbar
 
     &.sidebar-collapsed {
         margin-left: 0;
