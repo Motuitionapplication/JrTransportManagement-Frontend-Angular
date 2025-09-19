@@ -22,6 +22,7 @@
   gap: 1rem;
 }
 
+<<<<<<< HEAD
 .logo-section {
   display: flex;
   align-items: center;
@@ -33,6 +34,47 @@
   align-items: center;
   justify-content: center;
   margin-right: 0.5rem;
+=======
+/* Welcome Section */
+.welcome-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
+  border: 1px solid #e3f2fd;
+}
+
+.welcome-content {
+  .main-title {
+    font-size: 2.5rem;
+    color: #1565c0;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    
+    i {
+      color: #f44336;
+      margin-right: 1rem;
+      text-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+    }
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: #1976d2;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .description {
+    color: #757575;
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+>>>>>>> main
 }
 
 .enhanced-brand {
@@ -766,6 +808,7 @@ body {
   }
 }
 
+<<<<<<< HEAD
 // CTA Section
 // .cta-section {
 //   @include section-padding;
@@ -810,6 +853,19 @@ body {
   font-size: 1.2rem;
   color: #d1d5db;
   margin-bottom: 3rem;
+=======
+/* JR Transport Card Specific Colors */
+.vehicle-card .card-icon {
+  background: linear-gradient(135deg, #1976d2, #1565c0);
+}
+
+.driver-card .card-icon {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.route-card .card-icon {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+>>>>>>> main
 }
 
 .cta-buttons {

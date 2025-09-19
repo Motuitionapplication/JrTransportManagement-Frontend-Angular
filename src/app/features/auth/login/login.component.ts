@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 import { LoginRequest } from '../../../models/auth.model';
@@ -21,8 +20,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private dialogRef: MatDialogRef<LoginComponent>,
-    private router: Router
+    private dialogRef: MatDialogRef<LoginComponent>
   ) {
     this.loginForm = this.createLoginForm();
   }
@@ -71,6 +69,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.login(credentials).subscribe({
           next: (response) => {
             console.log('✅ Login successful:', response);
+<<<<<<< HEAD
             
             // --- START OF ADDED REDIRECTION LOGIC ---
             if (response.roles && response.roles.length > 0) {
@@ -109,13 +108,27 @@ export class LoginComponent implements OnInit, OnDestroy {
               this.errorMessage = 'Login succeeded but user has no assigned role.';
             }
             // --- END OF ADDED REDIRECTION LOGIC ---
+=======
+            this.dialogRef.close({ success: true, user: response });
+>>>>>>> main
           },
           error: (error) => {
             // ... existing error handling ...
             console.error('❌ Login failed:', error);
             this.isLoading = false;
+            
             if (error.status === 401) {
+<<<<<<< HEAD
               this.errorMessage = 'Invalid username or password.';
+=======
+              this.errorMessage = 'Invalid username or password. Please try again.';
+              // Show admin creation option for testing
+              if (!this.errorMessage.includes('Admin')) {
+                this.errorMessage += ' If this is your first time, you can create an admin account for testing.';
+              }
+            } else if (error.status === 0) {
+              this.errorMessage = 'Unable to connect to server. Please check if the Spring Boot backend is running on localhost:8080.';
+>>>>>>> main
             } else {
               this.errorMessage = 'An unexpected error occurred.';
             }
@@ -127,10 +140,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     this.dialogRef.close({ success: false });
-  }
-
-  switchToSignup(): void {
-    this.dialogRef.close({ action: 'switch-to-signup' });
   }
 
   // Quick login methods for testing

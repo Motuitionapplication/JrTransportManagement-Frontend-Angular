@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- Main App Header (moved from app.component.html) -->
 <header class="app-header">
     <div class="header-content">
@@ -76,6 +77,44 @@
                     </button>
                 </div>
             </ng-template>
+=======
+<div class="dashboard-container">
+  <!-- Welcome Header -->
+  <div class="welcome-section">
+    <div class="welcome-content">
+      <h1 class="main-title">
+        <i class="fas fa-truck"></i>
+        Welcome to JR Transport Management
+      </h1>
+      <p class="subtitle">Comprehensive Transport Management System</p>
+      <p class="description">
+        Manage vehicles, drivers, routes, fleet tracking, and customer service with our integrated transport management system.
+      </p>
+    </div>
+  </div>
+
+  <!-- Management Cards -->
+  <div class="management-grid">
+    <!-- Vehicle Management Card -->
+    <div class="management-card vehicle-card" (click)="navigateToVehicleManagement()">
+      <div class="card-icon">
+        <i class="fas fa-truck"></i>
+      </div>
+      <div class="card-content">
+        <h3 class="card-title">Vehicle Management</h3>
+        <p class="card-description">
+          Register vehicles, manage documentation, track maintenance schedules, and monitor vehicle status.
+        </p>
+        <div class="card-stats">
+          <span class="stat-item">
+            <i class="fas fa-plus-circle"></i>
+            Register Vehicles
+          </span>
+          <span class="stat-item">
+            <i class="fas fa-wrench"></i>
+            Maintenance
+          </span>
+>>>>>>> main
         </div>
     </div>
 </header>

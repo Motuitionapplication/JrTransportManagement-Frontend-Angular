@@ -1,6 +1,4 @@
 import { NgModule, isDevMode } from '@angular/core';
-import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { AuthInterceptor } from './core/auth.interceptor';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
@@ -9,7 +7,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { environment } from '../environments/environment';
 import { SplashScreenComponent } from './shared/splash-screen/splash-screen.component';
 import { IosInstallPromptComponent } from './shared/ios-install-prompt/ios-install-prompt.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -18,6 +15,7 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 // Feature Modules
 import { StudentsModule } from './features/students/students.module';
 import { AuthModule } from './features/auth/auth.module';
+<<<<<<< HEAD
 import { OwnerModule } from './features/owner/owner.module';
 import { CustomerModule } from './features/customer/customer.module';
 import { DriverModule } from './features/driver/driver.module';
@@ -49,6 +47,8 @@ import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-ve
 import { HistoryDialogComponent } from './features/Fetched/history-dialog/history-dialog.component';
 
 
+=======
+>>>>>>> main
 
 @NgModule({
   declarations: [
@@ -78,12 +78,8 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     AppRoutingModule,
     StudentsModule,
     AuthModule,
-    OwnerModule,
-    CustomerModule,
-    DriverModule,
-    AdminModule,
-    SuperAdminModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
+<<<<<<< HEAD
         enabled: environment.production,
         registrationStrategy: 'registerWhenStable:30000'
     }),
@@ -104,6 +100,15 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
       multi: true
     }
   ],
+=======
+      enabled: !isDevMode(),
+      // Register the ServiceWorker as soon as the application is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:30000'
+    })
+  ],
+  providers: [],
+>>>>>>> main
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }

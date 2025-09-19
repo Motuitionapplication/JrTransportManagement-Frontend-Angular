@@ -7,9 +7,10 @@
   --bs-secondary: #1167f2;
   --bs-secondary-rgb: 255, 152, 0;
 
-// Main Container - iOS Safe Area Compatible - STABLE VERSION
+// Main Container - iOS Safe Area Compatible
 .container-fluid {
   padding: 0;
+<<<<<<< HEAD
   margin: 0 auto;
   max-width: 420px;
   width: 100vw;
@@ -45,6 +46,44 @@
     @supports (-webkit-touch-callout: none) {
       height: 100vh;
     }
+=======
+  margin: 0;
+  max-width: 400px;
+  max-height: 90vh;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  // Prevent any scrolling during initialization
+  scroll-behavior: auto !important;
+  
+  // iOS specific fixes
+  @supports (-webkit-touch-callout: none) {
+    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);
+    margin-top: env(safe-area-inset-top, 5px);
+    margin-bottom: env(safe-area-inset-bottom, 5px);
+  }
+}
+
+// Card Styling - Compact with proper scrolling
+.card {
+  border: none !important;
+  box-shadow: 0 10px 25px rgba(25, 118, 210, 0.15) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 90vh;
+  height: auto;
+  overflow: hidden;
+  
+  // Prevent any unwanted scrolling during loading
+  scroll-behavior: auto !important;
+  
+  // iOS specific card fixes
+  @supports (-webkit-touch-callout: none) {
+    max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
+  }
+>>>>>>> main
   
   .card-header {
     position: sticky !important;

@@ -5,6 +5,7 @@
       <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="max-height: 90vh; display: flex; flex-direction: column;">
 
         <!-- Header - Fixed at top -->
+<<<<<<< HEAD
         <!-- Stylish Easy Booking Button (visible only during initial loading, not after submit) -->
         <div *ngIf="isLoading && !errorMessage && !successMessage" class="d-flex justify-content-center align-items-center my-3">
           <button class="btn btn-warning btn-lg rounded-pill shadow-lg px-5 py-2 fw-bold animate__animated animate__pulse animate__infinite" style="font-size: 1.25rem; letter-spacing: 1px;">
@@ -12,6 +13,8 @@
             Easy Booking
           </button>
         </div>
+=======
+>>>>>>> main
         <div class="card-header bg-gradient text-white text-center position-relative p-2 flex-shrink-0" style="background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;">
           <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" (click)="onCancel()" aria-label="Close"></button>
           <div class="d-flex flex-column align-items-center">
@@ -22,6 +25,7 @@
         </div>
 
         <!-- Body - Scrollable content -->
+<<<<<<< HEAD
         <div class="card-body p-3 flex-grow-1" #scrollContainer style="max-height: 70vh; overflow-y: scroll; scrollbar-width: thin;">
           <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
             <!-- Select Role Dropdown at Top -->
@@ -42,6 +46,10 @@
                 <i class="fas fa-chevron-down" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #ff9800; pointer-events: none;"></i>
               </div>
             </div>
+=======
+        <div class="card-body p-3 flex-grow-1 overflow-auto" #scrollContainer>>
+          <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+>>>>>>> main
 
             <!-- Error Alert with retry option -->
             <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center" role="alert">
@@ -57,6 +65,7 @@
               </button>
             </div>
 
+<<<<<<< HEAD
             <!-- Admin/Super Admin Registration Fields -->
             <ng-container *ngIf="signupForm.value.role === 'admin' || signupForm.value.role === 'super_admin'">
               <!-- Username -->
@@ -214,13 +223,107 @@
                 <input id="firstName" class="form-control" formControlName="firstName" placeholder="First Name"
                   (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('firstName')">
                 <small *ngIf="isFieldInvalid('firstName')" class="text-danger">{{ getFieldError('firstName') }}</small>
+=======
+            <!-- First Name -->
+            <div class="mb-2">
+              <input id="firstName" 
+                     class="form-control" 
+                     formControlName="firstName" 
+                     placeholder="First Name"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('firstName')">
+              <small *ngIf="isFieldInvalid('firstName')" class="text-danger">{{ getFieldError('firstName') }}</small>
+            </div>
+
+            <!-- Last Name -->
+            <div class="mb-2">
+              <input id="lastName" 
+                     class="form-control" 
+                     formControlName="lastName" 
+                     placeholder="Last Name"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('lastName')">
+              <small *ngIf="isFieldInvalid('lastName')" class="text-danger">{{ getFieldError('lastName') }}</small>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-2">
+              <input id="email" 
+                     class="form-control" 
+                     [class.is-invalid]="isFieldInvalid('email')"
+                     [class.is-valid]="!isFieldInvalid('email') && signupForm.get('email')?.touched && signupForm.get('email')?.value"
+                     formControlName="email" 
+                     placeholder="Email Address"
+                     (focus)="onFieldFocus('email')"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('email')">
+              <small *ngIf="isFieldInvalid('email')" class="text-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('email') }}
+              </small>
+            </div>
+
+            <!-- Username -->
+            <div class="mb-2">
+              <input id="username" 
+                     class="form-control" 
+                     [class.is-invalid]="isFieldInvalid('username')"
+                     [class.is-valid]="!isFieldInvalid('username') && signupForm.get('username')?.touched && signupForm.get('username')?.value"
+                     formControlName="username" 
+                     placeholder="Username"
+                     (focus)="onFieldFocus('username')"
+                     (keydown)="onFieldEnterKey($event)"
+                     (blur)="onFieldBlur('username')">
+              <small *ngIf="isFieldInvalid('username')" class="text-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i>{{ getFieldError('username') }}
+              </small>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="mb-2">
+              <input id="phoneNumber" 
+                     class="form-control" 
+                     formControlName="phoneNumber" 
+                     placeholder="Phone Number (optional)"
+                     (focus)="onFieldFocus('phoneNumber')"
+                     (keydown)="onFieldEnterKey($event)">
+              <small *ngIf="isFieldInvalid('phoneNumber')" class="text-danger">{{ getFieldError('phoneNumber') }}</small>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-2">
+              <div class="input-group">
+                <input [type]="hidePassword ? 'password' : 'text'" 
+                       id="password" 
+                       class="form-control" 
+                       formControlName="password" 
+                       placeholder="Password"
+                       (keydown)="onFieldEnterKey($event)"
+                       (blur)="onFieldBlur('password')"
+                       (focus)="onFieldFocus('password')">
+                <button class="btn btn-outline-secondary" type="button" (click)="hidePassword = !hidePassword">
+                  <i class="fas" [class.fa-eye]="hidePassword" [class.fa-eye-slash]="!hidePassword"></i>
+                </button>
+>>>>>>> main
               </div>
-              <!-- Last Name -->
-              <div class="mb-2">
-                <input id="lastName" class="form-control" formControlName="lastName" placeholder="Last Name"
-                  (keydown)="onFieldEnterKey($event)" (blur)="onFieldBlur('lastName')">
-                <small *ngIf="isFieldInvalid('lastName')" class="text-danger">{{ getFieldError('lastName') }}</small>
+              <small *ngIf="isFieldInvalid('password')" class="text-danger">{{ getFieldError('password') }}</small>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-2">
+              <div class="input-group">
+                <input [type]="hideConfirmPassword ? 'password' : 'text'" 
+                       id="confirmPassword" 
+                       class="form-control" 
+                       formControlName="confirmPassword" 
+                       placeholder="Confirm Password"
+                       (keydown)="onLastFieldEnterKey($event)"
+                       (blur)="onFieldBlur('confirmPassword')"
+                       (focus)="onFieldFocus('confirmPassword')">
+                <button class="btn btn-outline-secondary" type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+                  <i class="fas" [class.fa-eye]="hideConfirmPassword" [class.fa-eye-slash]="!hideConfirmPassword"></i>
+                </button>
               </div>
+<<<<<<< HEAD
               <!-- Email -->
               <div class="mb-2">
                 <input id="email" class="form-control" [class.is-invalid]="isFieldInvalid('email')"
@@ -325,12 +428,33 @@
                 <small *ngIf="isFieldInvalid('confirmPassword')" class="text-danger">{{ getFieldError('confirmPassword') }}</small>
               </div>
             </ng-container>
+=======
+              <small *ngIf="isFieldInvalid('confirmPassword')" class="text-danger">{{ getFieldError('confirmPassword') }}</small>
+            </div>
+
+            <!-- Role -->
+            <div class="mb-2">
+              <select class="form-select" 
+                      id="role" 
+                      formControlName="role"
+                      (keydown)="onFieldEnterKey($event)"
+                      (focus)="onFieldFocus('role')">
+                <option value="" disabled selected>Select Role</option>
+                <option *ngFor="let option of roleOptions" [value]="option.value">{{ option.label }}</option>
+              </select>
+              <small *ngIf="isFieldInvalid('role')" class="text-danger">{{ getFieldError('role') }}</small>
+            </div>
+>>>>>>> main
 
             <!-- Terms -->
             <div class="form-check mb-3">
-              <input class="form-check-input" type="checkbox" id="agreeTerms" formControlName="agreeTerms"
-                (keydown)="onLastFieldEnterKey($event)" (focus)="onFieldFocus('agreeTerms')"
-                style="border-color: #dc3545; border-width: 2px; background-color: transparent;">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     id="agreeTerms" 
+                     formControlName="agreeTerms"
+                     (keydown)="onLastFieldEnterKey($event)"
+                     (focus)="onFieldFocus('agreeTerms')"
+                     style="border-color: #dc3545; border-width: 2px; background-color: transparent;">
               <label class="form-check-label fw-semibold" for="agreeTerms" style="color: #8b4513;">
                 I agree to the Terms and Conditions
               </label>
@@ -339,19 +463,19 @@
             </div>
 
           </form>
-        </div>
 
-        <!-- Footer - Fixed at bottom -->
-        <div class="card-footer bg-primary bg-opacity-10 text-center border-0 py-4 flex-shrink-0">
-          
           <!-- Success Message at Bottom -->
           <div *ngIf="successMessage" 
                id="successMessage"
-               class="alert alert-success d-flex align-items-center justify-content-center mb-3" 
+               class="alert alert-success d-flex align-items-center mt-3" 
                role="alert">
             <i class="fas fa-check-circle me-2"></i>
             <div>{{ successMessage }}</div>
           </div>
+        </div>
+
+        <!-- Footer - Fixed at bottom -->
+        <div class="card-footer bg-primary bg-opacity-10 text-center border-0 py-4 flex-shrink-0">
           
           <!-- Submit Button -->
           <button #submitButton class="btn btn-primary btn-sm px-4 py-2 mb-3 rounded-pill fw-semibold" type="submit" [disabled]="signupForm.invalid || isLoading" form="signupForm">
