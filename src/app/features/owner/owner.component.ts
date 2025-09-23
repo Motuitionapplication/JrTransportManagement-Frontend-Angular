@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { OwnerService } from './owner.service';
+import { User } from 'src/app/models/auth.model';
 
 @Component({
   selector: 'app-owner',
@@ -25,12 +27,27 @@ throw new Error('Method not implemented.');
   ];
 sidebarCollapsed: any;
 activeSection: any;
+user: User | null = null;
 
-  constructor() { }
+  constructor(private ownerService: OwnerService) { }
 
   ngOnInit(): void {
     console.log('Owner component initialized');
+        this.ownerService.getUser().subscribe({
+      next: (data) => {
+        this.user = data;
+      },
+      error: (err) => {
+        console.error('Error fetching user:', err);
+      }
+    });
   }
+getUserInitials(): string {
+  if (!this.user) return '';
+  const first = this.user.firstName ? this.user.firstName.charAt(0).toUpperCase() : '';
+  const last = this.user.lastName ? this.user.lastName.charAt(0).toUpperCase() : '';
+  return first + last;
+}
 
   // Navigation methods
   manageVehicles(): void {
