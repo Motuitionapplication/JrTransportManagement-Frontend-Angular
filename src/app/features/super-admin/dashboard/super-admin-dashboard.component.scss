@@ -1,3 +1,24 @@
+/* Topbar Styles */
+.topbar {
+    height: 80px;
+    background: linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #e0e7ef;
+    display: flex;
+    align-items: center;
+    margin-left: 0;
+    justify-content: space-between;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
+    transition: none;
+    
+}
+
+.sidebar.collapsed ~ .right-container .topbar {
+    margin-left: 0;
+}
+    // box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+   
 // Dashboard SCSS Styles
 * {
     margin: 0;
@@ -312,23 +333,23 @@ body {
     padding: 2rem;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 100vh;
+    padding-top: 180px; // Prevent overlap with sticky topbar
 
     &.sidebar-collapsed {
-        margin-left: 70px;
+        margin-left: 0;
     }
 }
 
 .welcome-section {
-    max-width: 1100px;
     width: 100%;
     min-height: 500px;
-    margin: 5rem auto;
-    padding: 6rem 4rem 5rem 4rem;
-    border-radius: 2.5rem;
-    background: #fff;
-    box-shadow: 0 12px 48px 0 rgba(14,165,233,0.12), 0 2px 8px 0 rgba(0,0,0,0.08);
+    margin: 0;
+    padding: 3rem 0;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
     text-align: center;
-    border: 1px solid #e0e7ef;
     box-sizing: border-box;
 }
 

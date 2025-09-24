@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { ViewChild, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,6 +13,25 @@ import { SignupComponent } from '../../auth/signup/signup.component';
     styleUrls: ['./super-admin-dashboard.component.scss']
 })
 export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
+    @ViewChild('profileInput') profileInput!: ElementRef<HTMLInputElement>;
+    profileImageUrl: string | null = null;
+    triggerProfileUpload(): void {
+        if (this.profileInput) {
+            this.profileInput.nativeElement.click();
+        }
+    }
+
+    onProfileImageChange(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                this.profileImageUrl = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
     // Sidebar state
     isSidebarCollapsed = false;
     isMobileMenuOpen = false;
@@ -19,6 +39,7 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
     // Menu state
     userMenuOpen = false;
     showWelcome = true;
+        showMenu = false;
     
     // User information
     userFullName = '';
@@ -272,4 +293,11 @@ export class SuperAdminDashboardComponent implements OnInit, OnDestroy {
     onNavLinkClick(): void {
         this.hideWelcome();
     }
+
+        /**
+         * Toggle user dropdown menu (for template)
+         */
+        toggleMenu(): void {
+            this.showMenu = !this.showMenu;
+        }
 }
