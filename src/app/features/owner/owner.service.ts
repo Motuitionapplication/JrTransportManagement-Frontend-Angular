@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -32,20 +32,32 @@ export class OwnerService {
     this.apiUrl = `${this.envService.getApiUrl()}/vehicle-owners`;
   }
 
-  // --- NEW: Public method to update a single driver in the cache ---
+  // ------------------- USER (AUTH) METHODS -------------------
   /**
-   * Updates a specific driver's data within the driversCache.
-   * This should be called by other services after a successful update/deactivation.
-   * @param ownerId The ID of the owner whose driver list needs updating.
-   * @param updatedDriver The driver object with the updated data.
+   * Get the currently logged-in user.
+   * Requires backend endpoint like /api/auth/me that works with JWT.
    */
+  getUser(): Observable<any> {
+    const token = localStorage.getItem('token'); // adjust if you store elsewhere
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    // Prefer /me instead of /signin
+    return this.http.get<any>(
+      `${this.envService.getApiUrl()}/auth/me`,
+      { headers }
+    );
+  }
+
+  // ------------------- DRIVER METHODS -------------------
   public updateDriverInCache(ownerId: string, updatedDriver: Driver): void {
     if (this.driversCache.has(ownerId)) {
       console.log(`Updating driver ${updatedDriver.id} in cache for owner ${ownerId}.`);
       const drivers = this.driversCache.get(ownerId)!;
       const index = drivers.findIndex(d => d.id === updatedDriver.id);
       if (index !== -1) {
-        drivers[index] = updatedDriver; // Replace the old driver object with the new one
+        drivers[index] = updatedDriver;
         this.driversCache.set(ownerId, drivers);
       }
     }
@@ -59,7 +71,6 @@ export class OwnerService {
     const url = `${this.apiUrl}/${ownerId}/drivers`;
 
     return this.http.post<Driver>(url, driverPayload).pipe(
-      // --- MODIFIED: Now updates the cache directly instead of just clearing it ---
       tap((savedDriver) => {
         if (this.driversCache.has(ownerId)) {
           console.log(`Adding new driver to cache for owner ${ownerId}.`);
@@ -71,14 +82,27 @@ export class OwnerService {
     );
   }
 
-  // --- All other methods from your service remain the same ---
-  // (getAllOwners, clearOwnersCache, deleteOwner, updateOwnerDetails, getDriversByOwner, etc.)
+  getDriversByOwner(ownerId: string): Observable<any[]> {
+    if (this.driversCache.has(ownerId)) {
+      return of(this.driversCache.get(ownerId)!);
+    }
+    return this.http.get<any[]>(`${this.apiUrl}/${ownerId}/drivers`).pipe(
+      tap(drivers => this.driversCache.set(ownerId, drivers))
+    );
+  }
 
+  public clearDriversCacheForOwner(ownerId: string): void {
+    if (this.driversCache.has(ownerId)) {
+      this.driversCache.delete(ownerId);
+    }
+  }
+
+  // ------------------- OWNER METHODS -------------------
   getAllOwners(): Observable<VehicleOwner[]> {
     if (this.ownersCache) {
       return of(this.ownersCache);
     }
-    return this.http.get<any[]>(this.apiUrl).pipe(
+    return this.http.get<VehicleOwner[]>(this.apiUrl).pipe(
       tap(owners => {
         this.ownersCache = owners;
       })
@@ -87,6 +111,12 @@ export class OwnerService {
 
   public clearOwnersCache(): void {
     this.ownersCache = null;
+  }
+
+  createOwner(owner: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}`, owner).pipe(
+      tap(() => this.clearOwnersCache())
+    );
   }
 
   deleteOwner(id: string): Observable<any> {
@@ -104,27 +134,8 @@ export class OwnerService {
     );
   }
 
-  getDriversByOwner(ownerId: string): Observable<any[]> {
-    if (this.driversCache.has(ownerId)) {
-      return of(this.driversCache.get(ownerId)!);
-    }
-    return this.http.get<any[]>(`${this.apiUrl}/${ownerId}/drivers`).pipe(
-      tap(drivers => this.driversCache.set(ownerId, drivers))
-    );
-  }
-  
-  public clearDriversCacheForOwner(ownerId: string): void {
-    if (this.driversCache.has(ownerId)) {
-      this.driversCache.delete(ownerId);
-    }
-  }
-
-  createowner(owner: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}`, owner).pipe(
-      tap(() => this.clearOwnersCache())
-    );
-  }
-   getAssignmentHistoryForOwner(ownerId: string): Observable<AssignmentHistoryDto[]> {
+  // ------------------- ASSIGNMENT HISTORY -------------------
+  getAssignmentHistoryForOwner(ownerId: string): Observable<AssignmentHistoryDto[]> {
     const url = `${this.apiUrl}/${ownerId}/assignment-history`;
     return this.http.get<AssignmentHistoryDto[]>(url);
   }
