@@ -13,7 +13,8 @@ import { MatListModule } from '@angular/material/list';
 
 // Components
 import { OwnerComponent } from './owner.component';
-import { OwnerDashboardComponent } from './components/dashboard/owner-dashboard.component';
+import { Dashboard1Component } from './components/dashboard1/dashboard1.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 const routes: Routes = [
   {
@@ -21,21 +22,8 @@ const routes: Routes = [
     component: OwnerComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: OwnerDashboardComponent },
-      { path: 'vehicles', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'drivers', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'bookings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'payments', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'wallet', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'earnings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'service-center', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'documents', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'notifications', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'profile', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'support', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reviews', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reports', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'business', component: OwnerDashboardComponent } // Temporary placeholder
+      { path: 'dashboard', component: Dashboard1Component },
+
     ]
   }
 ];
@@ -43,7 +31,8 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     OwnerComponent,
-    OwnerDashboardComponent
+    Dashboard1Component,
+    SidebarComponent
   ],
   imports: [
     CommonModule,
