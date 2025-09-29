@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin',
@@ -12,8 +13,11 @@ export class AdminComponent implements OnInit {
   
   // Active section state
   activeSection: string = 'dashboard';
+  
+  // User dropdown state
+  showUserDropdown: boolean = false;
 
-  constructor() { }
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     console.log('Admin component initialized');
@@ -223,5 +227,40 @@ export class AdminComponent implements OnInit {
   handleProfileDropdown(): void {
     console.log('Profile dropdown clicked');
     // Show user menu dropdown
+  }
+
+  /**
+   * Toggle user dropdown menu
+   */
+  toggleUserDropdown(): void {
+    this.showUserDropdown = !this.showUserDropdown;
+  }
+
+  /**
+   * Close dropdown when clicking outside
+   */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const userProfile = document.querySelector('.user-profile');
+    
+    if (!userProfile?.contains(target)) {
+      this.showUserDropdown = false;
+    }
+  }
+
+  /**
+   * Handle user logout - redirect to dashboard
+   */
+  logout(): void {
+    console.log('User logging out...');
+    this.showUserDropdown = false;
+    
+    // Clear user session/token if needed
+    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('userSession');
+    
+    // Navigate to dashboard page
+    this.router.navigate(['/dashboard']);
   }
 }
