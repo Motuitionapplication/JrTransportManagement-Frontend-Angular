@@ -3,7 +3,14 @@ import { RouterModule, Routes } from '@angular/router';
 import { CustomerComponent } from './customer.component';
 
 const routes: Routes = [
-  { path: '', component: CustomerComponent }
+  {
+    path: '',
+    component: CustomerComponent,
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: CustomerComponent }
+    ]
+  }
 ];
 
 @NgModule({

@@ -31,7 +31,9 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [DriverComponent],
+  declarations: [
+    DriverComponent
+  ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
@@ -43,6 +45,9 @@ const routes: Routes = [
     MatToolbarModule,
     MatSidenavModule,
     MatListModule
+  ],
+  exports: [
+    DriverComponent
   ]
 })
-export class DriverModule {}
+export class DriverModule { }
