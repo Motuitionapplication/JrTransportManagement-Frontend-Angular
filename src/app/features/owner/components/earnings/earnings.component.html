@@ -1,0 +1,330 @@
+<div class="earnings-container">
+  <div class="header-section">
+    <h2 class="page-title">Earnings Dashboard</h2>
+    <div class="actions">
+      <button class="btn btn-outline-primary" (click)="downloadTaxStatement()">
+        <i class="fas fa-file-alt"></i>
+        Tax Statement
+      </button>
+      <button class="btn btn-outline-primary" (click)="exportEarningsReport()">
+        <i class="fas fa-download"></i>
+        Export Report
+      </button>
+      <button class="btn btn-primary" (click)="optimizeEarnings()">
+        <i class="fas fa-chart-line"></i>
+        Optimize Earnings
+      </button>
+    </div>
+  </div>
+
+  <!-- Period Selector -->
+  <div class="period-selector">
+    <button 
+      class="period-btn" 
+      [class.active]="selectedPeriod === 'daily'"
+      (click)="setPeriod('daily')">
+      Today
+    </button>
+    <button 
+      class="period-btn" 
+      [class.active]="selectedPeriod === 'weekly'"
+      (click)="setPeriod('weekly')">
+      This Week
+    </button>
+    <button 
+      class="period-btn" 
+      [class.active]="selectedPeriod === 'monthly'"
+      (click)="setPeriod('monthly')">
+      This Month
+    </button>
+    <button 
+      class="period-btn" 
+      [class.active]="selectedPeriod === 'yearly'"
+      (click)="setPeriod('yearly')">
+      This Year
+    </button>
+  </div>
+
+  <!-- Overview Cards -->
+  <div class="overview-grid">
+    <div class="earnings-card primary">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="card-title">Gross Earnings</div>
+          <div class="card-icon">
+            <i class="fas fa-coins"></i>
+          </div>
+        </div>
+        <div class="card-value">{{ formatCurrency(currentPeriodData.gross) }}</div>
+        <div class="card-subtitle">From {{ currentPeriodData.trips }} trips</div>
+      </div>
+    </div>
+
+    <div class="earnings-card commission">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="card-title">Platform Commission</div>
+          <div class="card-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+        </div>
+        <div class="card-value">{{ formatCurrency(currentPeriodData.commission) }}</div>
+        <div class="card-subtitle">{{ ((currentPeriodData.commission / currentPeriodData.gross) * 100).toFixed(1) }}% of gross</div>
+      </div>
+    </div>
+
+    <div class="earnings-card net">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="card-title">Net Earnings</div>
+          <div class="card-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+        </div>
+        <div class="card-value">{{ formatCurrency(currentPeriodData.net) }}</div>
+        <div class="card-subtitle">After all deductions</div>
+      </div>
+    </div>
+
+    <div class="earnings-card average">
+      <div class="card-content">
+        <div class="card-header">
+          <div class="card-title">Average per Trip</div>
+          <div class="card-icon">
+            <i class="fas fa-calculator"></i>
+          </div>
+        </div>
+        <div class="card-value">{{ formatCurrency(currentPeriodData.avgPerTrip) }}</div>
+        <div class="card-subtitle">Per trip average</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Analytics Section -->
+  <div class="analytics-section">
+    <!-- Monthly Earnings Trend -->
+    <div class="analytics-card">
+      <div class="card-header">
+        <h3>Monthly Earnings Trend</h3>
+        <button class="btn-sm btn-outline-primary" (click)="viewEarningsTrends()">
+          View Details
+        </button>
+      </div>
+      <div class="chart-container">
+        <!-- Simplified Bar Chart -->
+        <div class="earnings-chart">
+          <div class="chart-bars">
+            <div class="chart-bar" *ngFor="let month of monthlyEarnings.slice(-6)">
+              <div class="bar-container">
+                <div 
+                  class="bar gross-bar" 
+                  [style.height.%]="((month.gross || 0) / 250000) * 100">
+                </div>
+                <div 
+                  class="bar net-bar" 
+                  [style.height.%]="((month.net || 0) / 250000) * 100">
+                </div>
+              </div>
+              <div class="bar-label">{{ month.month.split(' ')[0] }}</div>
+              <div class="bar-value">{{ formatCurrency(month.net) }}</div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <span class="legend-color gross"></span>
+              Gross Earnings
+            </div>
+            <div class="legend-item">
+              <span class="legend-color net"></span>
+              Net Earnings
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Earnings Breakdown -->
+    <div class="analytics-card">
+      <div class="card-header">
+        <h3>Earnings Breakdown</h3>
+      </div>
+      <div class="breakdown-grid">
+        <div class="breakdown-category">
+          <div class="category-header">
+            <h4>By Distance</h4>
+          </div>
+          <div class="breakdown-items">
+            <div class="breakdown-item">
+              <div class="item-info">
+                <span class="item-label">Short Distance (&lt;20km)</span>
+                <span class="item-trips">{{ earningsBreakdown.shortDistance.trips }} trips</span>
+              </div>
+              <div class="item-value">{{ formatCurrency(earningsBreakdown.shortDistance.earnings) }}</div>
+              <div class="item-percentage">{{ earningsBreakdown.shortDistance.percentage }}%</div>
+            </div>
+
+            <div class="breakdown-item">
+              <div class="item-info">
+                <span class="item-label">Medium Distance (20-50km)</span>
+                <span class="item-trips">{{ earningsBreakdown.mediumDistance.trips }} trips</span>
+              </div>
+              <div class="item-value">{{ formatCurrency(earningsBreakdown.mediumDistance.earnings) }}</div>
+              <div class="item-percentage">{{ earningsBreakdown.mediumDistance.percentage }}%</div>
+            </div>
+
+            <div class="breakdown-item">
+              <div class="item-info">
+                <span class="item-label">Long Distance (>50km)</span>
+                <span class="item-trips">{{ earningsBreakdown.longDistance.trips }} trips</span>
+              </div>
+              <div class="item-value">{{ formatCurrency(earningsBreakdown.longDistance.earnings) }}</div>
+              <div class="item-percentage">{{ earningsBreakdown.longDistance.percentage }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="breakdown-category">
+          <div class="category-header">
+            <h4>By Time Period</h4>
+          </div>
+          <div class="breakdown-items">
+            <div class="breakdown-item">
+              <div class="item-info">
+                <span class="item-label">Peak Hours</span>
+                <span class="item-trips">{{ earningsBreakdown.peak.trips }} trips</span>
+              </div>
+              <div class="item-value">{{ formatCurrency(earningsBreakdown.peak.earnings) }}</div>
+              <div class="item-percentage">{{ earningsBreakdown.peak.percentage }}%</div>
+            </div>
+
+            <div class="breakdown-item">
+              <div class="item-info">
+                <span class="item-label">Off-Peak Hours</span>
+                <span class="item-trips">{{ earningsBreakdown.offPeak.trips }} trips</span>
+              </div>
+              <div class="item-value">{{ formatCurrency(earningsBreakdown.offPeak.earnings) }}</div>
+              <div class="item-percentage">{{ earningsBreakdown.offPeak.percentage }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vehicle Performance Section -->
+  <div class="vehicle-performance-section">
+    <div class="section-header">
+      <h3>Vehicle Performance</h3>
+      <div class="performance-summary">
+        <div class="summary-item">
+          <span class="summary-label">Top Performer:</span>
+          <span class="summary-value">{{ topPerformingVehicle.vehiclePlate }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Average per Trip:</span>
+          <span class="summary-value">{{ formatCurrency(averageEarningsPerTrip) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="vehicles-grid">
+      <div class="vehicle-card" *ngFor="let vehicle of vehicleEarnings">
+        <div class="vehicle-header">
+          <div class="vehicle-info">
+            <div class="vehicle-plate">{{ vehicle.vehiclePlate }}</div>
+            <div class="driver-name">{{ vehicle.driverName }}</div>
+          </div>
+          <div class="performance-badge" 
+               [style.background-color]="getPerformanceColor(vehicle.profitMargin, 70)">
+            {{ vehicle.profitMargin.toFixed(1) }}% Margin
+          </div>
+        </div>
+
+        <div class="vehicle-stats">
+          <div class="stat-row">
+            <div class="stat-item">
+              <div class="stat-label">Gross Earnings</div>
+              <div class="stat-value">{{ formatCurrency(vehicle.monthlyGross) }}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Net Earnings</div>
+              <div class="stat-value net">{{ formatCurrency(vehicle.monthlyNet) }}</div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <div class="stat-item">
+              <div class="stat-label">Total Trips</div>
+              <div class="stat-value">{{ vehicle.monthlyTrips }}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Avg per Trip</div>
+              <div class="stat-value">{{ formatCurrency(vehicle.avgEarningsPerTrip) }}</div>
+            </div>
+          </div>
+
+          <div class="expense-breakdown">
+            <div class="expense-item">
+              <span class="expense-label">Fuel:</span>
+              <span class="expense-value">{{ formatCurrency(vehicle.fuelCost) }}</span>
+            </div>
+            <div class="expense-item">
+              <span class="expense-label">Maintenance:</span>
+              <span class="expense-value">{{ formatCurrency(vehicle.maintenanceCost) }}</span>
+            </div>
+            <div class="expense-item">
+              <span class="expense-label">Commission:</span>
+              <span class="expense-value">{{ formatCurrency(vehicle.monthlyCommission) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vehicle-actions">
+          <button 
+            class="btn btn-outline-primary btn-sm" 
+            (click)="viewVehicleDetails(vehicle.vehicleId)">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Analysis -->
+  <div class="expense-analysis-section">
+    <div class="analytics-card">
+      <div class="card-header">
+        <h3>Expense Analysis</h3>
+        <div class="total-expenses">
+          Total: {{ formatCurrency(totalExpenses) }}
+        </div>
+      </div>
+      
+      <div class="expense-chart">
+        <div class="expense-items">
+          <div class="expense-category" *ngFor="let expense of expenseCategories">
+            <div class="category-info">
+              <div class="category-header">
+                <span 
+                  class="category-indicator" 
+                  [style.background-color]="getExpenseCategoryColor(expense.category)">
+                </span>
+                <span class="category-name">{{ expense.category }}</span>
+                <span class="category-percentage">{{ expense.percentage }}%</span>
+              </div>
+              <div class="category-amount">{{ formatCurrency(expense.amount) }}</div>
+            </div>
+            
+            <div class="category-bar">
+              <div 
+                class="bar-fill" 
+                [style.width.%]="expense.percentage"
+                [style.background-color]="getExpenseCategoryColor(expense.category)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

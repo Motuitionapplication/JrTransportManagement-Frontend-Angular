@@ -1,0 +1,965 @@
+.analytics-container {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a202c;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+
+      .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        border: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &.btn-outline-primary {
+          border: 2px solid #6366f1;
+          color: #6366f1;
+          background: white;
+
+          &:hover {
+            background: #6366f1;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+          }
+        }
+
+        &.btn-primary {
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: white;
+          border: none;
+
+          &:hover {
+            background: linear-gradient(135deg, #5b21b6, #7c3aed);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+          }
+        }
+      }
+    }
+  }
+
+  // Period Selector
+  .period-selector {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    padding: 6px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+
+    .period-btn {
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+
+      &:hover {
+        background: #f1f5f9;
+        color: #334155;
+      }
+
+      &.active {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+    }
+  }
+
+  // Tab Navigation
+  .tab-navigation {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    padding: 6px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0;
+    overflow-x: auto;
+
+    .tab-btn {
+      padding: 16px 20px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      min-width: fit-content;
+
+      i {
+        font-size: 16px;
+      }
+
+      &:hover {
+        background: #f1f5f9;
+        color: #334155;
+      }
+
+      &.active {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+    }
+  }
+
+  // Tab Content
+  .tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  // KPI Grid
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+
+    .kpi-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid #f1f5f9;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      }
+
+      &.revenue::before {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      &.trips::before {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+
+      &.satisfaction::before {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
+
+      &.efficiency::before {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      }
+
+      .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+
+        .kpi-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .kpi-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f1f5f9;
+          color: #6366f1;
+          font-size: 18px;
+        }
+      }
+
+      .kpi-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 12px;
+        line-height: 1;
+      }
+
+      .kpi-trend {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+
+        i {
+          font-size: 12px;
+        }
+
+        .trend-up {
+          color: #10b981;
+        }
+
+        .trend-down {
+          color: #ef4444;
+        }
+
+        span {
+          color: #64748b;
+        }
+      }
+    }
+  }
+
+  // Performance Overview
+  .performance-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+
+    .performance-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid #f1f5f9;
+
+      h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0 0 24px 0;
+      }
+
+      // Metrics List
+      .metrics-list {
+        .metric-item {
+          margin-bottom: 20px;
+
+          .metric-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+
+            .metric-label {
+              font-size: 14px;
+              font-weight: 500;
+              color: #64748b;
+            }
+
+            .metric-value {
+              font-size: 16px;
+              font-weight: 600;
+              color: #1a202c;
+            }
+          }
+
+          .metric-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .bar-fill {
+              height: 100%;
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+          }
+        }
+      }
+
+      // Financial Summary
+      .financial-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+
+        .summary-item {
+          text-align: center;
+          padding: 16px;
+          border-radius: 12px;
+          background: #f8fafc;
+
+          &.gross {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+          }
+
+          &.expenses {
+            background: linear-gradient(135deg, #fed7d7, #fbb6ce);
+          }
+
+          &.profit {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+          }
+
+          .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+          }
+
+          .summary-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+
+        .profit-margin {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 16px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+
+          .margin-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 8px;
+          }
+
+          .margin-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #8b5cf6;
+          }
+        }
+      }
+    }
+  }
+
+  // Analytics Grid
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    align-items: start;
+
+    .analytics-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid #f1f5f9;
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+
+      h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0 0 24px 0;
+      }
+
+      // Peak Hours Chart
+      .peak-hours-chart {
+        .hour-bar {
+          display: grid;
+          grid-template-columns: 1fr 2fr 100px;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 16px;
+          padding: 12px;
+          border-radius: 8px;
+          transition: background 0.2s ease;
+
+          &:hover {
+            background: #f8fafc;
+          }
+
+          .hour-info {
+            display: flex;
+            flex-direction: column;
+
+            .hour-label {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .hour-trips {
+              font-size: 12px;
+              color: #64748b;
+            }
+          }
+
+          .hour-bar-container {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .hour-bar-fill {
+              height: 100%;
+              background: linear-gradient(135deg, #6366f1, #8b5cf6);
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+          }
+
+          .hour-revenue {
+            text-align: right;
+            font-weight: 600;
+            color: #10b981;
+            font-size: 14px;
+          }
+        }
+      }
+
+      // Routes List
+      .routes-list {
+        .route-item {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px;
+          border-radius: 12px;
+          margin-bottom: 12px;
+          border: 1px solid #f1f5f9;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+          }
+
+          .route-rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+          }
+
+          .route-details {
+            flex: 1;
+
+            .route-name {
+              font-weight: 600;
+              color: #1a202c;
+              margin-bottom: 4px;
+            }
+
+            .route-stats {
+              display: flex;
+              gap: 16px;
+
+              .stat {
+                font-size: 12px;
+                color: #64748b;
+              }
+            }
+          }
+
+          .route-revenue {
+            font-weight: 600;
+            color: #10b981;
+          }
+        }
+      }
+
+      // Distance Chart
+      .distance-chart {
+        .distance-segment {
+          margin-bottom: 20px;
+
+          .segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+
+            .segment-range {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .segment-percentage {
+              font-weight: 600;
+              color: #6366f1;
+            }
+          }
+
+          .segment-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+
+            .segment-fill {
+              height: 100%;
+              background: linear-gradient(135deg, #6366f1, #8b5cf6);
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+          }
+
+          .segment-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #64748b;
+          }
+        }
+      }
+
+      // Demographics Chart
+      .demographics-chart {
+        .demo-item {
+          margin-bottom: 24px;
+          padding: 16px;
+          border-radius: 12px;
+          background: #f8fafc;
+
+          .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+
+            .demo-type {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .demo-percentage {
+              font-weight: 600;
+              color: #6366f1;
+            }
+          }
+
+          .demo-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+
+            .demo-stat {
+              text-align: center;
+
+              .stat-label {
+                display: block;
+                font-size: 12px;
+                color: #64748b;
+                margin-bottom: 4px;
+              }
+
+              .stat-value {
+                font-weight: 600;
+                color: #1a202c;
+              }
+            }
+          }
+        }
+      }
+
+      // Loyalty Segments
+      .loyalty-segments {
+        .loyalty-item {
+          margin-bottom: 20px;
+
+          .loyalty-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+
+            .loyalty-segment {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .loyalty-count {
+              font-size: 12px;
+              color: #64748b;
+            }
+          }
+
+          .loyalty-revenue {
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 8px;
+          }
+
+          .loyalty-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .loyalty-fill {
+              height: 100%;
+              background: linear-gradient(135deg, #10b981, #059669);
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+          }
+        }
+      }
+
+      // Satisfaction Chart
+      .satisfaction-chart {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+
+        .satisfaction-item {
+          text-align: center;
+          padding: 16px;
+          border-radius: 12px;
+          background: #f8fafc;
+
+          .trend-period {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 8px;
+          }
+
+          .trend-rating {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+
+          .trend-responses {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 8px;
+          }
+
+          .rating-stars {
+            i {
+              color: #e2e8f0;
+              font-size: 14px;
+              margin: 0 2px;
+
+              &.filled {
+                color: #fbbf24;
+              }
+            }
+          }
+        }
+      }
+
+      // Revenue & Cost Breakdown
+      .revenue-breakdown,
+      .cost-analysis {
+        .revenue-item,
+        .cost-item {
+          display: grid;
+          grid-template-columns: 2fr 1fr auto;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 16px;
+          padding: 12px;
+          border-radius: 8px;
+          transition: background 0.2s ease;
+
+          &:hover {
+            background: #f8fafc;
+          }
+
+          .revenue-info,
+          .cost-info {
+            display: flex;
+            flex-direction: column;
+
+            .revenue-source,
+            .cost-category {
+              font-weight: 600;
+              color: #1a202c;
+              margin-bottom: 4px;
+            }
+
+            .revenue-amount,
+            .cost-amount {
+              font-size: 14px;
+              color: #10b981;
+              font-weight: 500;
+            }
+          }
+
+          .revenue-bar,
+          .cost-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .revenue-fill {
+              height: 100%;
+              background: linear-gradient(135deg, #10b981, #059669);
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+
+            .cost-fill {
+              height: 100%;
+              background: linear-gradient(135deg, #ef4444, #dc2626);
+              border-radius: 4px;
+              transition: width 0.8s ease;
+            }
+          }
+
+          .revenue-percentage,
+          .cost-percentage {
+            font-weight: 600;
+            color: #6366f1;
+            font-size: 14px;
+          }
+        }
+      }
+
+      // Fleet Metrics
+      .fleet-metrics {
+        .fleet-item {
+          margin-bottom: 20px;
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid #f1f5f9;
+
+          .vehicle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+
+            .vehicle-plate {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .utilization-badge {
+              padding: 4px 12px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 600;
+              color: white;
+            }
+          }
+
+          .vehicle-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+
+            .vehicle-stat {
+              text-align: center;
+
+              .stat-label {
+                display: block;
+                font-size: 11px;
+                color: #64748b;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+
+              .stat-value {
+                font-weight: 600;
+                color: #1a202c;
+              }
+            }
+          }
+        }
+      }
+
+      // Driver Metrics
+      .driver-metrics {
+        .driver-item {
+          margin-bottom: 20px;
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid #f1f5f9;
+
+          .driver-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+
+            .driver-name {
+              font-weight: 600;
+              color: #1a202c;
+            }
+
+            .driver-rating {
+              font-weight: 600;
+            }
+          }
+
+          .driver-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+
+            .driver-stat {
+              text-align: center;
+
+              .stat-label {
+                display: block;
+                font-size: 11px;
+                color: #64748b;
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+
+              .stat-value {
+                font-weight: 600;
+                color: #1a202c;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .analytics-container {
+    padding: 16px;
+
+    .header-section {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+
+      .actions {
+        justify-content: center;
+      }
+    }
+
+    .kpi-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .performance-overview {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .analytics-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+
+      .analytics-card {
+        .hour-bar {
+          grid-template-columns: 1fr;
+          gap: 8px;
+          text-align: left;
+
+          .hour-revenue {
+            text-align: left;
+          }
+        }
+
+        .route-item {
+          flex-direction: column;
+          text-align: center;
+          gap: 8px;
+        }
+
+        .demo-stats {
+          grid-template-columns: 1fr;
+        }
+
+        .satisfaction-chart {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .vehicle-stats,
+        .driver-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+
+    .tab-navigation {
+      .tab-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Utility classes for dynamic colors
+.trend-up {
+  color: #10b981 !important;
+}
+
+.trend-down {
+  color: #ef4444 !important;
+}
