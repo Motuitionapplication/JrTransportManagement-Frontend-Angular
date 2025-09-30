@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-owner',
@@ -13,6 +14,7 @@ export class OwnerComponent implements OnInit {
 
   menuItems = [
   { key: 'dashboard', label: 'Dashboard' },
+  { key: 'fleet', label: 'Fleet Management' },
   { key: 'vehicles', label: 'Manage Vehicles' },
   { key: 'drivers', label: 'Manage Drivers' },
   { key: 'bookings', label: 'Bookings' },
@@ -37,18 +39,44 @@ export class OwnerComponent implements OnInit {
     { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     console.log('Owner component initialized');
+    
+    // Listen to route changes and update active section
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event) => {
+      const navigationEvent = event as NavigationEnd;
+      this.updateActiveSection(navigationEvent.url);
+    });
+    
+    // Set initial active section based on current route
+    this.updateActiveSection(this.router.url);
   }
 
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  setActiveSection(section: string): void {
-    this.activeSection = section;
+  navigateToSection(section: string): void {
+    this.router.navigate([`/owner/${section}`]);
+  }
+
+  private updateActiveSection(url: string): void {
+    const segments = url.split('/');
+    const lastSegment = segments[segments.length - 1];
+    
+    // Map URL segments to menu keys
+    if (lastSegment === 'owner' || lastSegment === '') {
+      this.activeSection = 'dashboard';
+    } else {
+      this.activeSection = lastSegment;
+    }
   }
 
   toggleUserDropdown(): void {
