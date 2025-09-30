@@ -13,14 +13,14 @@ export class SidebarComponent {
   }
 
   menuItems = [
-    { label: 'Dashboard', route: '/dashboard', icon: '📊' },
-    { label: 'Vehicles', route: '/vehicles', icon: '🚗' },
-    { label: 'Drivers', route: '/drivers', icon: '👨‍✈️' },
-    { label: 'Bookings', route: '/bookings', icon: '📅' },
-    { label: 'Earnings', route: '/earnings', icon: '💰' },
-    { label: 'Maintenance', route: '/maintenance', icon: '🛠️' },
-    { label: 'Tracking', route: '/tracking', icon: '📍' },
-    { label: 'Analytics', route: '/analytics', icon: '📈' },
-    { label: 'Notifications', route: '/notifications', icon: '🔔' }
+    { label: 'Dashboard', route: 'dashboard', icon: '📊' },
+    { label: 'Vehicles', route: 'vehicles', icon: '🚗' },
+    { label: 'Drivers', route: 'drivers', icon: '👨‍✈️' },
+    { label: 'Bookings', route: 'bookings', icon: '📅' },
+    { label: 'Earnings', route: 'earnings', icon: '💰' },
+    { label: 'Maintenance', route: 'maintenance', icon: '🛠️' },
+    { label: 'Tracking', route: 'tracking', icon: '📍' },
+    { label: 'Analytics', route: 'analytics', icon: '📈' },
+    { label: 'Notifications', route: 'notifications', icon: '🔔' }
   ];
 }

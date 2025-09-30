@@ -15,28 +15,35 @@ import { MatListModule } from '@angular/material/list';
 import { OwnerComponent } from './owner.component';
 import { Dashboard1Component } from './components/dashboard1/dashboard1.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { VehiclesComponent } from './components/vehicles/vehicles.component';
+import { DriversComponent } from './components/drivers/drivers.component';
+import { BookingsComponent } from './components/bookings/bookings.component';
+import { EarningsComponent } from './components/earnings/earnings.component';
+import { TrackingComponent } from './components/tracking/tracking.component';
+import { AnalyticsComponent } from './components/analytics/analytics.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { DriverComponent } from '../driver/driver.component';
+import { OwnerRoutingModule } from './owner-routing.module';
+import { MaintenanceComponent } from './components/maintenance/maintenance.component';
 
-const routes: Routes = [
-  {
-    path: '',
-    component: OwnerComponent,
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: Dashboard1Component },
 
-    ]
-  }
-];
 
 @NgModule({
   declarations: [
     OwnerComponent,
     Dashboard1Component,
-    SidebarComponent
+    SidebarComponent,
+    VehiclesComponent,
+    DriversComponent,
+    BookingsComponent,
+    EarningsComponent,
+    TrackingComponent,
+    AnalyticsComponent,
+    NotificationsComponent,
+    MaintenanceComponent
   ],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes),
     FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
@@ -44,7 +51,8 @@ const routes: Routes = [
     MatIconModule,
     MatToolbarModule,
     MatSidenavModule,
-    MatListModule
+    MatListModule,
+     OwnerRoutingModule 
   ]
 })
 export class OwnerModule {}

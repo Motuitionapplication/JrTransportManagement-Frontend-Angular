@@ -47,6 +47,7 @@ import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicl
 import { MatIconModule } from '@angular/material/icon';
 import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-vehicle.component';
 import { HistoryDialogComponent } from './features/Fetched/history-dialog/history-dialog.component';
+// import { VehiclesComponent } from './vehicles/vehicles.component';
 
 
 
@@ -67,6 +68,7 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     VehicleDialogComponent,
     AssignVehicleComponent,
     HistoryDialogComponent,
+    // VehiclesComponent,
   ],
   imports: [
     MatProgressSpinnerModule,
