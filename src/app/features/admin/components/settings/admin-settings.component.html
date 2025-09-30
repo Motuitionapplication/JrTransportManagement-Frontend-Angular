@@ -1,0 +1,493 @@
+<div class="settings-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1><i class="fas fa-cog"></i> System Settings</h1>
+      <p class="subtitle">Configure and manage system preferences</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="saveSettings()" [disabled]="!hasUnsavedChanges || isLoading">
+        <mat-icon>save</mat-icon>
+        Save Changes
+      </button>
+      <button mat-stroked-button (click)="resetSettings()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Reset to Default
+      </button>
+    </div>
+  </div>
+
+  <!-- Unsaved Changes Warning -->
+  <mat-card class="warning-card" *ngIf="hasUnsavedChanges">
+    <mat-card-content>
+      <div class="warning-content">
+        <mat-icon color="warn">warning</mat-icon>
+        <span>You have unsaved changes. Don't forget to save your settings.</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Settings Tabs -->
+  <mat-card class="settings-card">
+    <mat-tab-group [(selectedIndex)]="selectedTab" (selectedTabChange)="onTabChange($event.index)">
+      
+      <!-- General Settings Tab -->
+      <mat-tab label="General">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>General Configuration</h2>
+            <form [formGroup]="settingsForm">
+              <div class="form-grid">
+                <!-- Company Information -->
+                <div class="form-section">
+                  <h3>Company Information</h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Company Name</mat-label>
+                      <input matInput formControlName="companyName" placeholder="Enter company name">
+                      <mat-icon matSuffix>business</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Company Email</mat-label>
+                      <input matInput type="email" formControlName="companyEmail" placeholder="company@example.com">
+                      <mat-icon matSuffix>email</mat-icon>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Company Phone</mat-label>
+                      <input matInput formControlName="companyPhone" placeholder="+91 98765 43210">
+                      <mat-icon matSuffix>phone</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Company Address</mat-label>
+                      <textarea matInput formControlName="companyAddress" rows="3" placeholder="Enter full address"></textarea>
+                      <mat-icon matSuffix>location_on</mat-icon>
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <!-- Regional Settings -->
+                <div class="form-section">
+                  <h3>Regional Settings</h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Timezone</mat-label>
+                      <mat-select formControlName="timezone">
+                        <mat-option *ngFor="let tz of timezones" [value]="tz.value">
+                          {{ tz.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Currency</mat-label>
+                      <mat-select formControlName="currency">
+                        <mat-option *ngFor="let curr of currencies" [value]="curr.value">
+                          {{ curr.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Language</mat-label>
+                      <mat-select formControlName="language">
+                        <mat-option *ngFor="let lang of languages" [value]="lang.value">
+                          {{ lang.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Booking Settings Tab -->
+      <mat-tab label="Booking">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>Booking Configuration</h2>
+            <form [formGroup]="settingsForm">
+              <div class="form-grid">
+                <!-- Booking Rules -->
+                <div class="form-section">
+                  <h3>Booking Rules</h3>
+                  <div class="form-row">
+                    <mat-slide-toggle formControlName="autoAcceptBookings">
+                      Auto-accept bookings
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Maximum Advance Booking (Days)</mat-label>
+                      <input matInput type="number" formControlName="maxAdvanceBookingDays" min="1">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Cancellation Deadline (Hours)</mat-label>
+                      <input matInput type="number" formControlName="cancellationDeadlineHours" min="0">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Refund Policy</mat-label>
+                      <mat-select formControlName="refundPolicy">
+                        <mat-option *ngFor="let policy of refundPolicies" [value]="policy.value">
+                          {{ policy.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-slide-toggle formControlName="requirePaymentConfirmation">
+                      Require payment confirmation
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Pricing Settings Tab -->
+      <mat-tab label="Pricing">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>Pricing Configuration</h2>
+            <form [formGroup]="settingsForm">
+              <div class="form-grid">
+                <!-- Pricing Structure -->
+                <div class="form-section">
+                  <h3>Fare Structure</h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Base Fare</mat-label>
+                      <input matInput type="number" formControlName="baseFare" min="0" step="0.01">
+                      <span matSuffix>₹</span>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Price per Kilometer</mat-label>
+                      <input matInput type="number" formControlName="pricePerKm" min="0" step="0.01">
+                      <span matSuffix>₹</span>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Night Charge Multiplier</mat-label>
+                      <input matInput type="number" formControlName="nightChargeMultiplier" min="1" step="0.1">
+                      <span matSuffix>x</span>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Waiting Charge (Per Minute)</mat-label>
+                      <input matInput type="number" formControlName="waitingChargePerMinute" min="0" step="0.01">
+                      <span matSuffix>₹</span>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Cancellation Fee</mat-label>
+                      <input matInput type="number" formControlName="cancellationFee" min="0" step="0.01">
+                      <span matSuffix>₹</span>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Notifications Tab -->
+      <mat-tab label="Notifications">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>Notification Settings</h2>
+            <form [formGroup]="settingsForm">
+              <div class="form-grid">
+                <!-- Notification Channels -->
+                <div class="form-section">
+                  <h3>Notification Channels</h3>
+                  <div class="toggle-group">
+                    <mat-slide-toggle formControlName="emailNotifications">
+                      <div class="toggle-content">
+                        <div class="toggle-title">Email Notifications</div>
+                        <div class="toggle-description">Send notifications via email</div>
+                      </div>
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle formControlName="smsNotifications">
+                      <div class="toggle-content">
+                        <div class="toggle-title">SMS Notifications</div>
+                        <div class="toggle-description">Send notifications via SMS</div>
+                      </div>
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle formControlName="pushNotifications">
+                      <div class="toggle-content">
+                        <div class="toggle-title">Push Notifications</div>
+                        <div class="toggle-description">Send push notifications to mobile app</div>
+                      </div>
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+
+                <!-- Notification Types -->
+                <div class="form-section">
+                  <h3>Notification Types</h3>
+                  <div class="toggle-group">
+                    <mat-slide-toggle formControlName="bookingConfirmation">
+                      <div class="toggle-content">
+                        <div class="toggle-title">Booking Confirmations</div>
+                        <div class="toggle-description">Notify when bookings are confirmed</div>
+                      </div>
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle formControlName="paymentReminders">
+                      <div class="toggle-content">
+                        <div class="toggle-title">Payment Reminders</div>
+                        <div class="toggle-description">Send payment due reminders</div>
+                      </div>
+                    </mat-slide-toggle>
+
+                    <mat-slide-toggle formControlName="driverUpdates">
+                      <div class="toggle-content">
+                        <div class="toggle-title">Driver Updates</div>
+                        <div class="toggle-description">Notify about driver status changes</div>
+                      </div>
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Security Tab -->
+      <mat-tab label="Security">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>Security Settings</h2>
+            <form [formGroup]="settingsForm">
+              <div class="form-grid">
+                <!-- Authentication -->
+                <div class="form-section">
+                  <h3>Authentication</h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Minimum Password Length</mat-label>
+                      <input matInput type="number" formControlName="passwordMinLength" min="6" max="20">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Session Timeout (Minutes)</mat-label>
+                      <input matInput type="number" formControlName="sessionTimeoutMinutes" min="5">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Max Login Attempts</mat-label>
+                      <input matInput type="number" formControlName="maxLoginAttempts" min="3" max="10">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-slide-toggle formControlName="requireTwoFactor">
+                      Require Two-Factor Authentication
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="form-section">
+                  <h3>Data Management</h3>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Data Retention (Days)</mat-label>
+                      <input matInput type="number" formControlName="dataRetentionDays" min="30">
+                      <mat-hint>How long to keep deleted data before permanent removal</mat-hint>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Backup & Restore Tab -->
+      <mat-tab label="Backup">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <h2>Backup & Restore</h2>
+            
+            <!-- Backup Actions -->
+            <div class="backup-actions">
+              <button mat-raised-button color="primary" (click)="createBackup()" [disabled]="isLoading">
+                <mat-icon>backup</mat-icon>
+                Create Backup Now
+              </button>
+            </div>
+
+            <!-- Backup History -->
+            <div class="backup-history">
+              <h3>Backup History</h3>
+              <mat-table [dataSource]="backupHistory" class="backup-table">
+                <!-- Date Column -->
+                <ng-container matColumnDef="date">
+                  <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
+                  <mat-cell *matCellDef="let backup"> 
+                    {{ formatDate(backup.date) }}
+                  </mat-cell>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                  <mat-header-cell *matHeaderCellDef> Type </mat-header-cell>
+                  <mat-cell *matCellDef="let backup">
+                    <mat-chip [color]="backup.type === 'Automatic' ? 'primary' : 'accent'" selected>
+                      {{ backup.type }}
+                    </mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- Size Column -->
+                <ng-container matColumnDef="size">
+                  <mat-header-cell *matHeaderCellDef> Size </mat-header-cell>
+                  <mat-cell *matCellDef="let backup"> {{ backup.size }} </mat-cell>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                  <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+                  <mat-cell *matCellDef="let backup">
+                    <mat-chip [color]="getStatusColor(backup.status)" selected>
+                      {{ backup.status }}
+                    </mat-chip>
+                  </mat-cell>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
+                  <mat-cell *matCellDef="let backup">
+                    <button mat-icon-button color="primary" (click)="restoreBackup(backup.id)" 
+                            matTooltip="Restore this backup">
+                      <mat-icon>restore</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteBackup(backup.id)" 
+                            matTooltip="Delete this backup">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="['date', 'type', 'size', 'status', 'actions']"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: ['date', 'type', 'size', 'status', 'actions']"></mat-row>
+              </mat-table>
+            </div>
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- User Management Tab -->
+      <mat-tab label="Users">
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <div class="section-header">
+              <h2>Admin User Management</h2>
+              <button mat-raised-button color="primary" (click)="addAdmin()">
+                <mat-icon>person_add</mat-icon>
+                Add Admin User
+              </button>
+            </div>
+
+            <!-- Admin Users Table -->
+            <mat-table [dataSource]="adminUsers" class="users-table">
+              <!-- Name Column -->
+              <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
+                <mat-cell *matCellDef="let user"> 
+                  <div class="user-info">
+                    <div class="name">{{ user.name }}</div>
+                    <div class="email">{{ user.email }}</div>
+                  </div>
+                </mat-cell>
+              </ng-container>
+
+              <!-- Role Column -->
+              <ng-container matColumnDef="role">
+                <mat-header-cell *matHeaderCellDef> Role </mat-header-cell>
+                <mat-cell *matCellDef="let user">
+                  <mat-chip color="primary" selected>{{ user.role }}</mat-chip>
+                </mat-cell>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+                <mat-cell *matCellDef="let user">
+                  <mat-chip [color]="getStatusColor(user.status)" selected>
+                    {{ user.status }}
+                  </mat-chip>
+                </mat-cell>
+              </ng-container>
+
+              <!-- Last Login Column -->
+              <ng-container matColumnDef="lastLogin">
+                <mat-header-cell *matHeaderCellDef> Last Login </mat-header-cell>
+                <mat-cell *matCellDef="let user"> {{ formatDate(user.lastLogin) }} </mat-cell>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
+                <mat-cell *matCellDef="let user">
+                  <button mat-icon-button [matMenuTriggerFor]="userMenu">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  <mat-menu #userMenu="matMenu">
+                    <button mat-menu-item (click)="editUser(user.id)">
+                      <mat-icon>edit</mat-icon>
+                      Edit User
+                    </button>
+                    <button mat-menu-item (click)="toggleUserStatus(user.id)">
+                      <mat-icon>{{ user.status === 'Active' ? 'block' : 'check_circle' }}</mat-icon>
+                      {{ user.status === 'Active' ? 'Deactivate' : 'Activate' }}
+                    </button>
+                    <button mat-menu-item (click)="deleteUser(user.id)" class="warn-action">
+                      <mat-icon>delete</mat-icon>
+                      Delete User
+                    </button>
+                  </mat-menu>
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="['name', 'role', 'status', 'lastLogin', 'actions']"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: ['name', 'role', 'status', 'lastLogin', 'actions']"></mat-row>
+            </mat-table>
+          </div>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Processing...</p>
+  </div>
+</div>

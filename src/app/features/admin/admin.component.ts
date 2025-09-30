@@ -11,9 +11,6 @@ export class AdminComponent implements OnInit {
   // Sidebar state
   sidebarCollapsed: boolean = false;
   
-  // Active section state
-  activeSection: string = 'dashboard';
-  
   // User dropdown state
   showUserDropdown: boolean = false;
 
@@ -21,8 +18,10 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Admin component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
+    // Redirect to dashboard by default if at root admin path
+    if (this.router.url === '/admin' || this.router.url === '/admin/') {
+      this.router.navigate(['/admin/dashboard']);
+    }
   }
 
   /**
@@ -32,23 +31,7 @@ export class AdminComponent implements OnInit {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  /**
-   * Set the active section for navigation
-   * @param section - The section to activate
-   */
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    console.log('Active section changed to:', section);
-  }
 
-  /**
-   * Check if a section is currently active
-   * @param section - The section to check
-   * @returns boolean indicating if section is active
-   */
-  isActiveSection(section: string): boolean {
-    return this.activeSection === section;
-  }
 
   /**
    * Handle mobile menu toggle
@@ -167,40 +150,34 @@ export class AdminComponent implements OnInit {
    * Navigate to specific section with additional logic if needed
    */
   navigateToSection(section: string, additionalData?: any): void {
-    this.setActiveSection(section);
+    // Navigate to the section using Angular router
+    this.router.navigate([`/admin/${section}`]);
     
     // Add any section-specific logic here
     switch (section) {
       case 'bookings':
-        // Load booking data
-        console.log('Loading bookings data...');
+        console.log('Navigating to bookings...');
         break;
       case 'drivers':
-        // Load drivers data
-        console.log('Loading drivers data...');
+        console.log('Navigating to drivers...');
         break;
       case 'customers':
-        // Load customers data
-        console.log('Loading customers data...');
+        console.log('Navigating to customers...');
         break;
       case 'trucks':
-        // Load trucks data
-        console.log('Loading trucks data...');
+        console.log('Navigating to trucks...');
         break;
       case 'payments':
-        // Load payments data
-        console.log('Loading payments data...');
+        console.log('Navigating to payments...');
         break;
       case 'reports':
-        // Load reports data
-        console.log('Loading reports data...');
+        console.log('Navigating to reports...');
         break;
       case 'settings':
-        // Load settings data
-        console.log('Loading settings data...');
+        console.log('Navigating to settings...');
         break;
       default:
-        console.log('Loading dashboard data...');
+        console.log('Navigating to dashboard...');
     }
   }
 
