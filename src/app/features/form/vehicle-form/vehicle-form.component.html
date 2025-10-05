@@ -7,35 +7,38 @@
   <p>Please fill out the details for the new vehicle.</p>
 
   <div class="form-grid">
+    <!-- Vehicle Number -->
     <mat-form-field appearance="outline">
       <mat-label>Vehicle Number</mat-label>
       <input matInput formControlName="vehicleNumber" placeholder="e.g., MH 12 AB 1234" required>
       <mat-error *ngIf="vehicleForm.get('vehicleNumber')?.hasError('required')">Vehicle number is required</mat-error>
-      <mat-error *ngIf= "vehicleForm.get('vehicleNumber')?.hasError('pattern')">Invalid format</mat-error>
+      <mat-error *ngIf="vehicleForm.get('vehicleNumber')?.hasError('pattern')">Invalid format</mat-error>
     </mat-form-field>
 
+    <!-- Vehicle Type -->
     <mat-form-field appearance="outline">
       <mat-label>Vehicle Type</mat-label>
       <mat-select formControlName="vehicleType" required>
-        <mat-option *ngFor="let type of vehicleTypes" [value]="type">
-          {{ type }}
-        </mat-option>
+        <mat-option *ngFor="let type of vehicleTypes" [value]="type">{{ type }}</mat-option>
       </mat-select>
       <mat-error *ngIf="vehicleForm.get('vehicleType')?.hasError('required')">Vehicle type is required</mat-error>
     </mat-form-field>
 
+    <!-- Manufacturer -->
     <mat-form-field appearance="outline">
       <mat-label>Manufacturer</mat-label>
       <input matInput formControlName="manufacturer" required>
       <mat-error *ngIf="vehicleForm.get('manufacturer')?.hasError('required')">Manufacturer is required</mat-error>
     </mat-form-field>
 
+    <!-- Model -->
     <mat-form-field appearance="outline">
       <mat-label>Model</mat-label>
       <input matInput formControlName="model" required>
       <mat-error *ngIf="vehicleForm.get('model')?.hasError('required')">Model is required</mat-error>
     </mat-form-field>
 
+    <!-- Year -->
     <mat-form-field appearance="outline">
       <mat-label>Year</mat-label>
       <input matInput type="number" formControlName="year" required>
@@ -43,6 +46,7 @@
       <mat-error *ngIf="vehicleForm.get('year')?.hasError('min') || vehicleForm.get('year')?.hasError('max')">Invalid year</mat-error>
     </mat-form-field>
 
+    <!-- Capacity -->
     <mat-form-field appearance="outline">
       <mat-label>Capacity (in tons)</mat-label>
       <input matInput type="number" formControlName="capacity" required>

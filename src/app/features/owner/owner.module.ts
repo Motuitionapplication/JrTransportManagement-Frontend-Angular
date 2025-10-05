@@ -25,9 +25,12 @@ import { NotificationsComponent } from './components/notifications/notifications
 import { DriverComponent } from '../driver/driver.component';
 import { OwnerRoutingModule } from './owner-routing.module';
 import { MaintenanceComponent } from './components/maintenance/maintenance.component';
-
-
-
+import { VehicleFormComponent } from '../form/vehicle-form/vehicle-form.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
 @NgModule({
   declarations: [
     OwnerComponent,
@@ -40,7 +43,8 @@ import { MaintenanceComponent } from './components/maintenance/maintenance.compo
     TrackingComponent,
     AnalyticsComponent,
     NotificationsComponent,
-    MaintenanceComponent
+    MaintenanceComponent,
+    VehicleFormComponent
   ],
   imports: [
     CommonModule,
@@ -52,7 +56,13 @@ import { MaintenanceComponent } from './components/maintenance/maintenance.compo
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
-     OwnerRoutingModule 
+     OwnerRoutingModule ,
+         MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  MatDialogModule,
+  MatTableModule
+  
   ]
 })
 export class OwnerModule {}

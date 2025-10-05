@@ -42,7 +42,7 @@ import { PaymentComponent } from './features/payment/payment.component';
 import { PaymentDialogComponent } from './features/Fetched/payment-dialog/payment-dialog.component';
 import { DialogMessageComponent } from './shared/dialog-message/dialog-message.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { VehicleComponent } from './features/vehicle/vehicle.component';
+import { VehiclesComponent } from './features/vehicle/vehicle.component';
 import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicle-dialog.component';
 import { MatIconModule } from '@angular/material/icon';
 import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-vehicle.component';
@@ -59,12 +59,12 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     DashboardComponent,
 
     DriverFormComponent,
-    VehicleFormComponent,
+    // VehicleFormComponent,
     OwnerFormComponent,
     PaymentComponent,
     PaymentDialogComponent,
     DialogMessageComponent,
-    VehicleComponent,
+    VehiclesComponent,
     VehicleDialogComponent,
     AssignVehicleComponent,
     HistoryDialogComponent,
