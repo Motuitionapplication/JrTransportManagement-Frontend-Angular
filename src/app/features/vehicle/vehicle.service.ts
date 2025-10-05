@@ -39,6 +39,12 @@ export class VehicleService {
   saveVehicle(vehicle: Vehicle): Observable<Vehicle> {
     return this.http.post<Vehicle>(this.apiUrl, vehicle);
   }
+  // vehicle.service.ts
+deleteVehicle(vehicleId: string): Observable<void> {
+  return this.http.delete<void>(`${this.apiUrl}/${vehicleId}`);
+}
+
+
   getOwnerId(): Observable<string> {
     const user = this.authservice.getCurrentUser();
     if (!user || !user.id) {

@@ -66,4 +66,18 @@ export class VehiclesComponent implements OnInit {
       }
     });
   }
+  deleteVehicle(vehicleId: string) {
+  if (!confirm('Are you sure you want to delete this vehicle?')) return;
+
+  this.vehicleService.deleteVehicle(vehicleId).subscribe({
+    next: () => {
+      this.vehicles = this.vehicles.filter(v => v.id !== vehicleId);
+      console.log('Vehicle deleted successfully');
+    },
+    error: (err) => {
+      console.error('Error deleting vehicle', err);
+      alert('Failed to delete vehicle');
+    }
+  });
+}
 }

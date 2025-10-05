@@ -14,6 +14,7 @@ export class VehicleFormComponent implements OnInit {
   error: string | null = null;
 
   vehicleTypes = ['TRUCK', 'VAN', 'TRAILER', 'CONTAINER', 'PICKUP'];
+  statusOptions = ['available', 'in_transit', 'maintenance', 'inactive'];
 
   constructor(
     private fb: FormBuilder,
@@ -32,11 +33,53 @@ export class VehicleFormComponent implements OnInit {
       vehicleType: ['', Validators.required],
       model: ['', Validators.required],
       manufacturer: ['', Validators.required],
-      year: [
-        '',
-        [Validators.required, Validators.min(1990), Validators.max(new Date().getFullYear())]
-      ],
+      year: ['', [Validators.required, Validators.min(1990), Validators.max(new Date().getFullYear())]],
       capacity: ['', [Validators.required, Validators.min(0)]],
+
+      // Status
+      status: ['available', Validators.required],
+
+      // Fare Details
+      fareDetails: this.fb.group({
+        perKmRate: [0, Validators.required],
+        wholeFare: [0, Validators.required],
+        sharingFare: [0, Validators.required],
+        gstIncluded: [true],
+        movingInsurance: [0]
+      }),
+
+      // Documents
+      documents: this.fb.group({
+        registration: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        insurance: this.fb.group({
+          policyNumber: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          provider: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        permit: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        fitness: this.fb.group({
+          certificateNumber: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        pollution: this.fb.group({
+          certificateNumber: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        })
+      }),
+
+      nextServiceDate: [''],
+      isActive: [true]
     });
   }
 
@@ -54,7 +97,12 @@ export class VehicleFormComponent implements OnInit {
     const formValue = this.vehicleForm.value;
     const vehiclePayload: Vehicle = {
       ...formValue,
-      owner: { id: this.data.ownerId }
+      ownerId: this.data.ownerId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      maintenanceHistory: [],
+      currentLocation: undefined,
+      driverId: undefined
     };
 
     this.vehicleService.saveVehicle(vehiclePayload).subscribe({

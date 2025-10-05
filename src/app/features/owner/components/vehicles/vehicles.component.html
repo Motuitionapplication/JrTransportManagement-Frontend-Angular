@@ -1,13 +1,12 @@
-<div class="vehicles-header">
+<div class="vehicles-header d-flex justify-content-between align-items-center mb-3">
   <h2>Owner Vehicles</h2>
   <button mat-raised-button color="primary" (click)="openAddVehicleDialog()">
     <mat-icon>add</mat-icon> Add Vehicle
   </button>
 </div>
 
-<!-- Vehicle list table -->
 <div class="vehicles-list" *ngIf="vehicles.length > 0; else noVehicles">
-  <table mat-table [dataSource]="vehicles" class="mat-elevation-z2">
+  <table mat-table [dataSource]="vehicles" class="mat-elevation-z2 w-100">
 
     <!-- Vehicle Number Column -->
     <ng-container matColumnDef="vehicleNumber">
@@ -45,9 +44,19 @@
       <td mat-cell *matCellDef="let vehicle"> {{vehicle.capacity}} </td>
     </ng-container>
 
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Actions </th>
+      <td mat-cell *matCellDef="let vehicle">
+        <button mat-icon-button color="warn" (click)="deleteVehicle(vehicle.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
     <!-- Table Header and Rows -->
-    <tr mat-header-row *matHeaderRowDef="['vehicleNumber','vehicleType','manufacturer','model','year','capacity']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['vehicleNumber','vehicleType','manufacturer','model','year','capacity'];"></tr>
+    <tr mat-header-row *matHeaderRowDef="['vehicleNumber','vehicleType','manufacturer','model','year','capacity','actions']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['vehicleNumber','vehicleType','manufacturer','model','year','capacity','actions']"></tr>
   </table>
 </div>
 

@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-
+import { MatCheckboxModule } from '@angular/material/checkbox';
 // Components
 import { OwnerComponent } from './owner.component';
 import { Dashboard1Component } from './components/dashboard1/dashboard1.component';
@@ -61,7 +61,8 @@ import { MatTableModule } from '@angular/material/table';
     MatInputModule,
     MatSelectModule,
   MatDialogModule,
-  MatTableModule
+  MatTableModule,
+  MatCheckboxModule
   
   ]
 })
