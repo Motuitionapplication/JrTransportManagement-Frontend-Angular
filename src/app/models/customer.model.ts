@@ -1,6 +1,7 @@
 export interface Customer {
   id: string;
   profile: {
+    phone: any;
     firstName: string;
     lastName: string;
     fatherName: string; // or husband name

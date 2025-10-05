@@ -1,0 +1,82 @@
+<!-- Loader while fetching profile -->
+<div *ngIf="loading" class="spinner-container">
+  <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+  <p>Loading profile...</p>
+</div>
+
+<!-- Profile Card -->
+<div *ngIf="!loading" class="profile-card">
+  <h2 class="title">My Profile</h2>
+
+  <!-- View Mode -->
+  <div *ngIf="!isEditing" class="profile-view">
+    <p><strong>First Name:</strong> {{ customer.profile.firstName }}</p>
+    <p><strong>Last Name:</strong> {{ customer.profile.lastName }}</p>
+    <p><strong>Email:</strong> {{ customer.profile.email }}</p>
+    <p><strong>Phone:</strong> {{ customer.profile.phoneNumber }}</p>
+
+    <div class="actions">
+      <button (click)="enableEdit()">Edit</button>
+      <button (click)="openChangePassword()">Change Password</button>
+    </div>
+  </div>
+
+  <!-- Edit Mode -->
+  <form *ngIf="isEditing" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label>First Name</label>
+      <input type="text" formControlName="firstName" />
+    </div>
+    <div class="form-group">
+      <label>Last Name</label>
+      <input type="text" formControlName="lastName" />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" formControlName="email" />
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="text" formControlName="phone" />
+    </div>
+    <div class="form-group">
+      <label>Address</label>
+      <textarea formControlName="address"></textarea>
+    </div>
+
+    <div class="actions">
+      <button type="submit" [disabled]="isLoading || profileForm.invalid">
+        {{ isLoading ? 'Saving...' : 'Save' }}
+      </button>
+      <button type="button" (click)="cancelEdit()">Cancel</button>
+    </div>
+  </form>
+</div>
+
+<!-- Password Change Dialog -->
+<div class="dialog-overlay" *ngIf="showPasswordDialog">
+  <div class="dialog">
+    <h3>Change Password</h3>
+    <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+      <div class="form-group">
+        <label>Old Password</label>
+        <input type="password" formControlName="oldPassword" />
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input type="password" formControlName="newPassword" />
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" formControlName="confirmPassword" />
+      </div>
+      <div class="actions">
+        <button type="submit" [disabled]="passwordForm.invalid">Update</button>
+        <button type="button" (click)="closeChangePassword()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" [class.show]="toastMessage">{{ toastMessage }}</div>

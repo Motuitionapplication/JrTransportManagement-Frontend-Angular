@@ -71,7 +71,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.login(credentials).subscribe({
           next: (response) => {
             console.log('✅ Login successful:', response);
-            
+
             // --- START OF ADDED REDIRECTION LOGIC ---
             if (response.roles && response.roles.length > 0) {
               const userRole = response.roles[0]; // Get the primary role
@@ -79,6 +79,8 @@ export class LoginComponent implements OnInit, OnDestroy {
               // Save token and role to localStorage
               localStorage.setItem('token', response.token);
               localStorage.setItem('role', userRole);
+              localStorage.setItem('userId', String(response.id));
+              console.log('✅ userId saved to localStorage:', localStorage.getItem('userId'));
 
               // Close the dialog before navigating
               this.dialogRef.close({ success: true, user: response });

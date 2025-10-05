@@ -161,16 +161,19 @@ export class AuthService {
 
   // Logout user
   logout(): void {
-    console.log('🔐 Auth: Logging out user');
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    
-    this.authStateSubject.next({
-      isLoggedIn: false,
-      user: null,
-      token: null
-    });
-  }
+  console.log('🔐 Auth: Logging out user');
+  localStorage.removeItem(this.TOKEN_KEY); // token
+  localStorage.removeItem(this.USER_KEY);  // user object
+  localStorage.removeItem('userId');       // userId if stored separately
+
+  this.authStateSubject.next({
+    isLoggedIn: false,
+    user: null,
+    token: null
+  });
+
+  console.log('✅ User session cleared');
+}
 
   // Store authentication data
   private storeAuthData(authResponse: JwtResponse): void {
