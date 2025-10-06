@@ -1,0 +1,491 @@
+<div class="messages-container">
+  <!-- Page Header -->
+  <div class="messages-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-comments me-2"></i>
+        Messages
+      </h1>
+      <p class="page-subtitle">Communicate with support team, drivers, and administrators</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn btn-primary"
+        (click)="startNewConversation()">
+        <i class="fas fa-plus me-1"></i>
+        New Message
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-outline-secondary"
+        (click)="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="messages-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+    <!-- Conversations Sidebar -->
+    <div class="conversations-sidebar">
+      <!-- Search and Filters -->
+      <div class="sidebar-header">
+        <div class="search-container">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Search conversations..."
+              [(ngModel)]="filter.searchQuery"
+              (input)="applyFilters()">
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls mt-3">
+          <div class="row g-2">
+            <div class="col-6">
+              <select 
+                class="form-select form-select-sm" 
+                [(ngModel)]="filter.conversationType"
+                (change)="applyFilters()">
+                <option value="all">All Types</option>
+                <option value="support">Support</option>
+                <option value="booking">Bookings</option>
+                <option value="general">General</option>
+                <option value="emergency">Emergency</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <div class="form-check form-check-sm">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="unreadOnly"
+                  [(ngModel)]="filter.unreadOnly"
+                  (change)="applyFilters()">
+                <label class="form-check-label" for="unreadOnly">
+                  Unread only
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            type="button" 
+            class="btn btn-link btn-sm p-0 mt-2"
+            (click)="clearFilters()"
+            *ngIf="filter.searchQuery || filter.conversationType !== 'all' || filter.unreadOnly">
+            <i class="fas fa-times me-1"></i>
+            Clear filters
+          </button>
+        </div>
+      </div>
+
+      <!-- Conversations List -->
+      <div class="conversations-list">
+        <div class="loading-spinner text-center py-4" *ngIf="isLoadingConversations">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading conversations...</span>
+          </div>
+          <p class="text-muted mt-2 mb-0">Loading conversations...</p>
+        </div>
+
+        <div 
+          *ngFor="let conversation of filteredConversations; trackBy: trackByConversationId"
+          [class]="getConversationStatusClass(conversation)"
+          (click)="loadMessages(conversation.id)">
+          
+          <!-- Conversation Item -->
+          <div class="conversation-content">
+            <!-- Avatar and Status -->
+            <div class="conversation-avatar">
+              <div class="avatar-container">
+                <i [class]="getConversationTypeIcon(conversation.conversationType)" class="avatar-icon"></i>
+                <span 
+                  class="status-indicator online" 
+                  *ngIf="conversation.conversationType === 'support'">
+                </span>
+              </div>
+            </div>
+
+            <!-- Conversation Details -->
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <h6 class="conversation-title">{{ conversation.title }}</h6>
+                <small class="conversation-time">{{ formatLastMessageTime(conversation.updatedAt) }}</small>
+              </div>
+              
+              <div class="conversation-preview">
+                <p class="last-message">
+                  <span class="message-sender" *ngIf="conversation.lastMessage.senderType !== 'customer'">
+                    {{ conversation.lastMessage.senderName }}:
+                  </span>
+                  <span class="message-content">{{ conversation.lastMessage.content }}</span>
+                </p>
+                
+                <div class="conversation-meta">
+                  <div class="conversation-badges">
+                    <span 
+                      class="badge badge-sm bg-primary"
+                      *ngIf="conversation.unreadCount > 0">
+                      {{ conversation.unreadCount }}
+                    </span>
+                    <i class="fas fa-thumbtack text-warning" *ngIf="conversation.pinned" title="Pinned"></i>
+                    <i class="fas fa-volume-mute text-muted" *ngIf="conversation.muted" title="Muted"></i>
+                    <span 
+                      [class]="getPriorityBadgeClass(conversation.lastMessage.priority)"
+                      *ngIf="conversation.lastMessage.priority !== 'normal'">
+                      {{ conversation.lastMessage.priority }}
+                    </span>
+                  </div>
+                  <i [class]="getMessageStatusIcon(conversation.lastMessage)" *ngIf="conversation.lastMessage.senderType === 'customer'"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-conversations text-center py-4" *ngIf="!isLoadingConversations && filteredConversations.length === 0">
+          <i class="fas fa-comment-slash fa-2x text-muted mb-2"></i>
+          <p class="text-muted">No conversations found</p>
+          <button 
+            type="button" 
+            class="btn btn-primary btn-sm"
+            (click)="startNewConversation()">
+            Start New Conversation
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages Content -->
+    <div class="messages-content">
+      <!-- No Conversation Selected -->
+      <div class="no-conversation-selected" *ngIf="!selectedConversation">
+        <div class="text-center">
+          <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+          <h4>Select a conversation</h4>
+          <p class="text-muted">Choose a conversation from the sidebar to start messaging</p>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="startNewConversation()">
+            <i class="fas fa-plus me-1"></i>
+            New Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected Conversation -->
+      <div class="conversation-view" *ngIf="selectedConversation">
+        <!-- Conversation Header -->
+        <div class="conversation-header-bar">
+          <div class="conversation-info">
+            <div class="conversation-avatar-small">
+              <i [class]="getConversationTypeIcon(selectedConversation.conversationType)"></i>
+            </div>
+            <div class="conversation-title-details">
+              <h5 class="mb-0">{{ selectedConversation.title }}</h5>
+              <small class="text-muted">
+                <span *ngIf="selectedConversation.participantNames.length > 0">
+                  {{ selectedConversation.participantNames.join(', ') }}
+                </span>
+                <span class="ms-2">
+                  <i class="fas fa-circle text-success" style="font-size: 0.5rem;"></i>
+                  Online
+                </span>
+              </small>
+            </div>
+          </div>
+          
+          <div class="conversation-actions">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary btn-sm"
+              (click)="toggleConversationDetails()">
+              <i class="fas fa-info-circle"></i>
+            </button>
+            <div class="dropdown">
+              <button 
+                class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                type="button" 
+                data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                  <button 
+                    class="dropdown-item"
+                    (click)="togglePinConversation(selectedConversation)">
+                    <i [class]="selectedConversation.pinned ? 'fas fa-thumbtack-slash' : 'fas fa-thumbtack'" class="me-2"></i>
+                    {{ selectedConversation.pinned ? 'Unpin' : 'Pin' }} Conversation
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    class="dropdown-item"
+                    (click)="toggleMuteConversation(selectedConversation)">
+                    <i [class]="selectedConversation.muted ? 'fas fa-volume-up' : 'fas fa-volume-mute'" class="me-2"></i>
+                    {{ selectedConversation.muted ? 'Unmute' : 'Mute' }} Conversation
+                  </button>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <button 
+                    class="dropdown-item"
+                    (click)="toggleArchiveConversation(selectedConversation)">
+                    <i [class]="selectedConversation.archived ? 'fas fa-box-open' : 'fas fa-archive'" class="me-2"></i>
+                    {{ selectedConversation.archived ? 'Unarchive' : 'Archive' }} Conversation
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-area" #messagesContainer>
+          <div class="loading-messages text-center py-4" *ngIf="isLoadingMessages">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading messages...</span>
+            </div>
+            <p class="text-muted mt-2 mb-0">Loading messages...</p>
+          </div>
+
+          <div class="messages-list" *ngIf="!isLoadingMessages">
+            <div 
+              *ngFor="let message of messages; trackBy: trackByMessageId"
+              [class]="'message-item ' + (message.senderType === 'customer' ? 'outgoing' : 'incoming')">
+              
+              <!-- Message Container -->
+              <div class="message-container">
+                <!-- Avatar (for incoming messages) -->
+                <div class="message-avatar" *ngIf="message.senderType !== 'customer'">
+                  <div class="avatar-sm">
+                    {{ message.senderName.charAt(0) }}
+                  </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="message-content">
+                  <!-- Reply Reference -->
+                  <div class="reply-reference" *ngIf="message.replyTo">
+                    <i class="fas fa-reply me-1"></i>
+                    <span class="text-muted">Replying to message</span>
+                  </div>
+
+                  <!-- Message Bubble -->
+                  <div class="message-bubble">
+                    <!-- Sender Name (for incoming messages) -->
+                    <div class="message-sender" *ngIf="message.senderType !== 'customer'">
+                      <strong>{{ message.senderName }}</strong>
+                      <span 
+                        [class]="getPriorityBadgeClass(message.priority)"
+                        *ngIf="message.priority !== 'normal'">
+                        {{ message.priority }}
+                      </span>
+                    </div>
+
+                    <!-- Message Text -->
+                    <div class="message-text">
+                      {{ message.content }}
+                      <span class="edit-indicator" *ngIf="message.edited">
+                        <i class="fas fa-edit"></i> edited
+                      </span>
+                    </div>
+
+                    <!-- Message Timestamp -->
+                    <div class="message-timestamp">
+                      {{ formatMessageTime(message.timestamp) }}
+                      <i [class]="getMessageStatusIcon(message)" *ngIf="message.senderType === 'customer'"></i>
+                    </div>
+                  </div>
+
+                  <!-- Message Actions -->
+                  <div class="message-actions" *ngIf="message.senderType === 'customer'">
+                    <button 
+                      type="button" 
+                      class="btn btn-link btn-sm p-0"
+                      (click)="replyToMessage(message)">
+                      <i class="fas fa-reply"></i>
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-link btn-sm p-0"
+                      (click)="editMessage(message)">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-link btn-sm p-0 text-danger"
+                      (click)="deleteMessage(message)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" *ngIf="selectedConversation && typingUsers[selectedConversation.id] && typingUsers[selectedConversation.id].length > 0">
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="typing-text">{{ selectedConversation && typingUsers[selectedConversation.id] ? typingUsers[selectedConversation.id][0] : '' }} is typing...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="message-input-area">
+          <!-- Reply/Edit Context -->
+          <div class="message-context" *ngIf="replyingTo || editingMessage">
+            <div class="context-content">
+              <div class="context-header">
+                <span *ngIf="replyingTo">
+                  <i class="fas fa-reply me-1"></i>
+                  Replying to {{ replyingTo.senderName }}
+                </span>
+                <span *ngIf="editingMessage">
+                  <i class="fas fa-edit me-1"></i>
+                  Editing message
+                </span>
+                <button 
+                  type="button" 
+                  class="btn btn-link btn-sm p-0 ms-auto"
+                  (click)="replyingTo ? cancelReply() : cancelEdit()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="context-preview">
+                {{ (replyingTo || editingMessage)?.content }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Controls -->
+          <div class="input-container">
+            <div class="input-group">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="onFileSelect()">
+                <i class="fas fa-paperclip"></i>
+              </button>
+              
+              <textarea 
+                #messageInput
+                class="form-control message-input"
+                placeholder="Type your message..."
+                [(ngModel)]="newMessage"
+                (keydown)="onKeyPress($event)"
+                rows="1">
+              </textarea>
+              
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="toggleEmojiPicker()">
+                <i class="fas fa-smile"></i>
+              </button>
+              
+              <button 
+                type="button" 
+                class="btn btn-primary"
+                (click)="editingMessage ? saveEditedMessage() : sendMessage()"
+                [disabled]="!newMessage.trim() || isSending">
+                <i class="fas fa-paper-plane" *ngIf="!isSending"></i>
+                <div class="spinner-border spinner-border-sm" role="status" *ngIf="isSending">
+                  <span class="visually-hidden">Sending...</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Emoji Picker -->
+          <div class="emoji-picker" *ngIf="showEmojiPicker">
+            <div class="emoji-grid">
+              <button 
+                type="button" 
+                class="emoji-btn"
+                *ngFor="let emoji of ['😊', '😂', '😍', '👍', '👎', '❤️', '🎉', '🔥', '💯', '👏', '🙏', '✅']"
+                (click)="addEmoji(emoji)">
+                {{ emoji }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation Details Panel -->
+    <div class="conversation-details-panel" *ngIf="showConversationDetails && selectedConversation">
+      <div class="details-header">
+        <h6>Conversation Details</h6>
+        <button 
+          type="button" 
+          class="btn btn-link btn-sm p-0"
+          (click)="toggleConversationDetails()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="details-content">
+        <!-- Basic Info -->
+        <div class="detail-section">
+          <h6>Information</h6>
+          <p><strong>Type:</strong> {{ selectedConversation.conversationType }}</p>
+          <p><strong>Created:</strong> {{ selectedConversation.createdAt | date:'medium' }}</p>
+          <p><strong>Participants:</strong> {{ selectedConversation.participantNames.join(', ') }}</p>
+          <p *ngIf="selectedConversation.bookingId">
+            <strong>Booking ID:</strong> {{ selectedConversation.bookingId }}
+          </p>
+          <p *ngIf="selectedConversation.tripId">
+            <strong>Trip ID:</strong> {{ selectedConversation.tripId }}
+          </p>
+        </div>
+
+        <!-- Settings -->
+        <div class="detail-section">
+          <h6>Settings</h6>
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [checked]="selectedConversation.pinned"
+              (change)="togglePinConversation(selectedConversation)">
+            <label class="form-check-label">Pin conversation</label>
+          </div>
+          <div class="form-check">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              [checked]="selectedConversation.muted"
+              (change)="toggleMuteConversation(selectedConversation)">
+            <label class="form-check-label">Mute notifications</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Input -->
+  <input 
+    type="file" 
+    #fileInput 
+    class="d-none" 
+    multiple 
+    (change)="onFileChange($event)">
+</div>
+
+<!-- Track by functions for performance -->
+<ng-container>
+  <!-- This is just for the TypeScript methods - not rendered -->
+</ng-container>

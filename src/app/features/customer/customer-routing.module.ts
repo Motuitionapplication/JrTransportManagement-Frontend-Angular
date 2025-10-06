@@ -7,6 +7,7 @@ import { MyTripsComponent } from './components/my-trips.component';
 import { TrackingComponent } from './components/tracking.component';
 import { TransportHistoryComponent } from './components/transport-history.component';
 import { WalletComponent } from './components/wallet.component';
+import { MessagesComponent } from './components/messages.component';
 import { BookTransportComponent } from './components/book-transport/book-transport.component';
 import { PaymentHistoryComponent } from './components/payment-history/payment-history.component';
 import { ProfileComponent } from './components/profile/profile.component';
@@ -30,6 +31,7 @@ const routes: Routes = [
       { path: 'tracking', component: TrackingComponent },
       { path: 'transport-history', component: TransportHistoryComponent },
       { path: 'wallet', component: WalletComponent },
+      { path: 'messages', component: MessagesComponent },
       { path: 'book-transport', component: BookTransportComponent },
       { path: 'new-booking', redirectTo: 'book-transport', pathMatch: 'full' },
       { path: 'payments', component: PaymentHistoryComponent },

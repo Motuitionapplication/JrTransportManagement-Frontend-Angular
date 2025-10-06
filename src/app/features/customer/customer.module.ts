@@ -31,6 +31,7 @@ import { MyTripsComponent } from './components/my-trips.component';
 import { TrackingComponent } from './components/tracking.component';
 import { TransportHistoryComponent } from './components/transport-history.component';
 import { WalletComponent } from './components/wallet.component';
+import { MessagesComponent } from './components/messages.component';
 import { PaymentHistoryComponent } from './components/payment-history/payment-history.component';
 import { ProfileComponent } from './components/profile/profile.component';
 import { SupportComponent } from './components/support/support.component';
@@ -49,6 +50,7 @@ import { CustomerRoutingModule } from './customer-routing.module';
     TrackingComponent,
     TransportHistoryComponent,
     WalletComponent,
+    MessagesComponent,
     PaymentHistoryComponent,
     ProfileComponent,
     SupportComponent,
@@ -89,6 +91,7 @@ import { CustomerRoutingModule } from './customer-routing.module';
     TrackingComponent,
     TransportHistoryComponent,
     WalletComponent,
+    MessagesComponent,
     PaymentHistoryComponent,
     ProfileComponent,
     SupportComponent,

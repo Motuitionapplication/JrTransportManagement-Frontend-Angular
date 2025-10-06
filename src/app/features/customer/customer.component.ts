@@ -134,6 +134,9 @@ export class CustomerComponent implements OnInit {
       case 'profile':
         this.router.navigate(['/customer/profile']);
         break;
+      case 'messages':
+        this.router.navigate(['/customer/messages']);
+        break;
       case 'support':
         this.router.navigate(['/customer/support']);
         break;
