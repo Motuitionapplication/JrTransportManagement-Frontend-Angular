@@ -14,6 +14,16 @@ import { MatListModule } from '@angular/material/list';
 // Components
 import { OwnerComponent } from './owner.component';
 import { OwnerDashboardComponent } from './components/dashboard/owner-dashboard.component';
+import { FleetComponent } from './components/fleet/fleet.component';
+import { VehiclesComponent } from './components/vehicles/vehicles.component';
+import { DriversComponent } from './components/drivers/drivers.component';
+import { BookingsComponent } from './components/bookings/bookings.component';
+import { WalletComponent } from './components/wallet/wallet.component';
+import { EarningsComponent } from './components/earnings/earnings.component';
+import { MaintenanceComponent } from './components/maintenance/maintenance.component';
+import { AnalyticsComponent } from './components/analytics/analytics.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { TrackingComponent } from './components/tracking/tracking.component';
 
 const routes: Routes = [
   {
@@ -22,20 +32,16 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: OwnerDashboardComponent },
-      { path: 'vehicles', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'drivers', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'bookings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'payments', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'wallet', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'earnings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'service-center', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'documents', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'notifications', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'profile', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'support', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reviews', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reports', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'business', component: OwnerDashboardComponent } // Temporary placeholder
+      { path: 'fleet', component: FleetComponent },
+      { path: 'vehicles', component: VehiclesComponent },
+      { path: 'drivers', component: DriversComponent },
+      { path: 'bookings', component: BookingsComponent },
+      { path: 'wallet', component: WalletComponent },
+      { path: 'earnings', component: EarningsComponent },
+      { path: 'maintenance', component: MaintenanceComponent },
+      { path: 'analytics', component: AnalyticsComponent },
+      { path: 'notifications', component: NotificationsComponent },
+      { path: 'tracking', component: TrackingComponent }
     ]
   }
 ];
@@ -43,7 +49,17 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     OwnerComponent,
-    OwnerDashboardComponent
+    OwnerDashboardComponent,
+    FleetComponent,
+    VehiclesComponent,
+    DriversComponent,
+    BookingsComponent,
+    WalletComponent,
+    EarningsComponent,
+    MaintenanceComponent,
+    AnalyticsComponent,
+    NotificationsComponent,
+    TrackingComponent
   ],
   imports: [
     CommonModule,

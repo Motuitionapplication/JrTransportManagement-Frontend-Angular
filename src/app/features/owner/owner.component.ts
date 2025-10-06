@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-owner',
@@ -28,34 +30,78 @@ export class OwnerComponent implements OnInit {
     { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
   ];
 
-  constructor() { }
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     console.log('Owner component initialized');
+    
+    // Listen to route changes and update active section
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event) => {
+      const navigationEvent = event as NavigationEnd;
+      this.updateActiveSection(navigationEvent.url);
+    });
+    
+    // Set initial active section based on current route
+    this.updateActiveSection(this.router.url);
   }
 
-  // Navigation methods
-  manageVehicles(): void {
-    console.log('Navigate to vehicle management');
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  trackVehicles(): void {
-    console.log('Navigate to vehicle tracking');
+  navigateToSection(section: string): void {
+    this.router.navigate([`/owner/${section}`]);
   }
 
-  manageDrivers(): void {
-    console.log('Navigate to driver management');
+  private updateActiveSection(url: string): void {
+    const segments = url.split('/');
+    const lastSegment = segments[segments.length - 1];
+    
+    // Map URL segments to menu keys
+    if (lastSegment === 'owner' || lastSegment === '') {
+      this.activeSection = 'dashboard';
+    } else {
+      this.activeSection = lastSegment;
+    }
   }
 
-  viewBookings(): void {
-    console.log('Navigate to bookings');
+  toggleUserDropdown(): void {
+    this.showUserDropdown = !this.showUserDropdown;
   }
 
-  manageWallet(): void {
-    console.log('Navigate to wallet');
+  /**
+   * Close dropdown when clicking outside
+   */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const userProfile = document.querySelector('.user-profile');
+    
+    if (!userProfile?.contains(target)) {
+      this.showUserDropdown = false;
+    }
   }
 
-  viewReports(): void {
-    console.log('Navigate to reports');
+  /**
+   * Handle user logout - clear session and redirect to dashboard
+   */
+  logout(): void {
+    console.log('Owner logging out...');
+    this.showUserDropdown = false;
+    
+    // Clear user session/token if needed
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('ownerToken');
+    sessionStorage.removeItem('userSession');
+    sessionStorage.removeItem('ownerSession');
+    
+    // Navigate to dashboard page
+    this.router.navigate(['/dashboard']);
   }
 }

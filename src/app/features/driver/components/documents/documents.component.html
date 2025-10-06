@@ -1,0 +1,347 @@
+<div class="documents-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">My Documents</h1>
+    <p class="page-subtitle">Manage your required documents and certifications</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading documents...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading">
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="action-btn primary" (click)="openUploadModal()">
+        📤 Upload Document
+      </button>
+      <button class="action-btn secondary" (click)="downloadAllDocuments()">
+        📥 Download All
+      </button>
+      <button class="action-btn secondary" (click)="selectAllDocuments()">
+        ☑️ Select All
+      </button>
+    </div>
+
+    <!-- Document Categories Overview -->
+    <div class="categories-overview">
+      <h2 class="section-title">Document Categories</h2>
+      
+      <div class="categories-grid">
+        <div 
+          *ngFor="let category of documentCategories"
+          class="category-card"
+          [class]="getCategoryStatusClass(category.completionStatus)"
+          (click)="selectCategory(category.type)">
+          
+          <div class="category-header">
+            <div class="category-icon">{{ category.icon }}</div>
+            <div class="category-info">
+              <h3 class="category-name">{{ category.name }}</h3>
+              <p class="category-description">{{ category.description }}</p>
+            </div>
+            <div class="category-status">
+              <span class="status-badge" [class]="getCategoryStatusClass(category.completionStatus)">
+                <span *ngIf="category.completionStatus === 'complete'">✅ Complete</span>
+                <span *ngIf="category.completionStatus === 'incomplete'">❌ Incomplete</span>
+                <span *ngIf="category.completionStatus === 'expiring'">⚠️ Expiring</span>
+              </span>
+              <div class="document-count">{{ category.documents.length }} documents</div>
+            </div>
+          </div>
+
+          <div class="category-progress">
+            <div class="progress-bar">
+              <div 
+                class="progress-fill"
+                [style.width.%]="getProgressPercentage(category.documents)">
+              </div>
+            </div>
+            <div class="progress-text">
+              {{ getApprovedCount(category.documents) }} of {{ category.documents.length }} approved
+            </div>
+          </div>
+
+          <div *ngIf="activeCategory === category.type" class="category-expanded">
+            <div class="category-documents">
+              <div 
+                *ngFor="let doc of category.documents"
+                class="mini-document-item"
+                [class]="getStatusClass(doc.status)">
+                
+                <div class="doc-icon">{{ getStatusIcon(doc.status) }}</div>
+                <div class="doc-info">
+                  <span class="doc-name">{{ doc.name }}</span>
+                  <span class="doc-status">{{ doc.status | titlecase }}</span>
+                </div>
+                
+                <div class="doc-actions">
+                  <button *ngIf="doc.fileName" class="mini-btn view" (click)="viewDocument(doc); $event.stopPropagation()">👁️</button>
+                  <button class="mini-btn upload" (click)="openUploadModal(doc.type); $event.stopPropagation()">📤</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="filters-section">
+      <div class="filter-row">
+        <div class="search-group">
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery"
+            placeholder="Search documents..."
+            class="search-input">
+        </div>
+
+        <div class="filter-group">
+          <label>Status</label>
+          <select [(ngModel)]="statusFilter" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+            <option value="expired">Expired</option>
+            <option value="missing">Missing</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select [(ngModel)]="sortBy" class="filter-select">
+            <option value="uploadDate">Upload Date</option>
+            <option value="name">Name</option>
+            <option value="status">Status</option>
+            <option value="expiryDate">Expiry Date</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Order</label>
+          <select [(ngModel)]="sortOrder" class="filter-select">
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="clear-btn" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Progress -->
+    <div *ngIf="uploadingDocuments.size > 0" class="upload-progress-section">
+      <h3>Uploading Documents</h3>
+      <div class="upload-items">
+        <div 
+          *ngFor="let upload of uploadingDocuments | keyvalue" 
+          class="upload-item">
+          
+          <div class="upload-info">
+            <span class="upload-name">Document {{ upload.value.documentId }}</span>
+            <span class="upload-status">{{ upload.value.progress.toFixed(0) }}%</span>
+          </div>
+          
+          <div class="upload-bar">
+            <div 
+              class="upload-fill"
+              [style.width.%]="upload.value.progress">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="documents-section">
+      <div class="section-header">
+        <h2 class="section-title">All Documents</h2>
+        <div class="results-info">
+          Showing {{ getFilteredDocuments().length }} of {{ documents.length }} documents
+        </div>
+      </div>
+
+      <!-- No Documents State -->
+      <div *ngIf="getFilteredDocuments().length === 0" class="no-documents">
+        <div class="no-documents-icon">📄</div>
+        <h3>No documents found</h3>
+        <p>No documents match your current filters. Try adjusting your search criteria or upload a new document.</p>
+        <button class="upload-btn" (click)="openUploadModal()">Upload First Document</button>
+      </div>
+
+      <!-- Documents Grid -->
+      <div *ngIf="getFilteredDocuments().length > 0" class="documents-grid">
+        <div 
+          *ngFor="let document of getFilteredDocuments(); trackBy: trackByDocumentId"
+          class="document-card"
+          [class]="getStatusClass(document.status)">
+          
+          <div class="document-header">
+            <div class="document-type">
+              <span class="type-icon">{{ getDocumentIcon(document.type) }}</span>
+              <div class="type-info">
+                <h4 class="document-name">{{ document.name }}</h4>
+                <span class="document-type-label">{{ document.type | titlecase }}</span>
+              </div>
+            </div>
+            
+            <div class="document-status">
+              <span class="status-badge" [class]="getStatusClass(document.status)">
+                {{ getStatusIcon(document.status) }} {{ document.status | titlecase }}
+              </span>
+              <span *ngIf="document.isRequired" class="required-badge">Required</span>
+            </div>
+          </div>
+
+          <div class="document-details">
+            <div *ngIf="document.fileName" class="detail-row">
+              <span class="detail-label">File:</span>
+              <span class="detail-value">{{ document.fileName }}</span>
+            </div>
+            
+            <div *ngIf="document.fileSize" class="detail-row">
+              <span class="detail-label">Size:</span>
+              <span class="detail-value">{{ formatFileSize(document.fileSize) }}</span>
+            </div>
+            
+            <div class="detail-row">
+              <span class="detail-label">Uploaded:</span>
+              <span class="detail-value">{{ formatDate(document.uploadDate) }}</span>
+            </div>
+            
+            <div *ngIf="document.expiryDate" class="detail-row expiry">
+              <span class="detail-label">Expires:</span>
+              <span class="detail-value" 
+                    [class.expiring]="isExpiringSoon(document)"
+                    [class.expired]="isExpired(document)">
+                {{ formatDate(document.expiryDate) }}
+                <span *ngIf="!isExpired(document)" class="days-left">
+                  ({{ getDaysUntilExpiry(document) }} days left)
+                </span>
+                <span *ngIf="isExpired(document)" class="expired-label">EXPIRED</span>
+              </span>
+            </div>
+            
+            <div *ngIf="document.approvedBy && document.approvedDate" class="detail-row">
+              <span class="detail-label">Approved by:</span>
+              <span class="detail-value">{{ document.approvedBy }} on {{ formatDate(document.approvedDate) }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="document.description" class="document-description">
+            {{ document.description }}
+          </div>
+
+          <div *ngIf="document.rejectionReason" class="rejection-reason">
+            <strong>Rejection Reason:</strong> {{ document.rejectionReason }}
+          </div>
+
+          <div class="document-actions">
+            <div class="primary-actions">
+              <button 
+                *ngIf="document.fileName && document.status !== 'missing'"
+                class="action-btn view"
+                (click)="viewDocument(document)">
+                👁️ View
+              </button>
+              
+              <button 
+                *ngIf="document.fileName && document.status !== 'missing'"
+                class="action-btn download"
+                (click)="downloadDocument(document)">
+                📥 Download
+              </button>
+              
+              <button 
+                *ngIf="document.status === 'rejected' || document.status === 'expired' || document.status === 'missing'"
+                class="action-btn upload"
+                (click)="openUploadModal(document.type)">
+                📤 {{ document.status === 'missing' ? 'Upload' : 'Replace' }}
+              </button>
+              
+              <button 
+                *ngIf="document.status === 'approved' && document.fileName"
+                class="action-btn replace"
+                (click)="replaceDocument(document)">
+                🔄 Replace
+              </button>
+            </div>
+            
+            <div class="secondary-actions">
+              <button 
+                *ngIf="document.status === 'pending'"
+                class="action-btn verify"
+                (click)="requestVerification(document)">
+                ✅ Request Verification
+              </button>
+              
+              <button class="action-btn help" (click)="getDocumentHelp(document.type)">
+                ❓ Help
+              </button>
+              
+              <button 
+                *ngIf="!document.isRequired"
+                class="action-btn delete"
+                (click)="deleteDocument(document)">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div *ngIf="showUploadModal" class="modal-overlay" (click)="closeUploadModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Upload Document</h3>
+        <button class="close-btn" (click)="closeUploadModal()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="upload-zone">
+          <div class="upload-icon">📤</div>
+          <h4>Drag and drop files here</h4>
+          <p>or click to browse</p>
+          
+          <input 
+            type="file" 
+            multiple
+            [accept]="allowedFileTypes.join(',')"
+            (change)="onFileSelected($event, selectedDocumentType)"
+            class="file-input"
+            id="file-upload">
+          <label for="file-upload" class="file-label">Choose Files</label>
+        </div>
+        
+        <div class="upload-info">
+          <h5>Upload Guidelines:</h5>
+          <ul>
+            <li>Maximum file size: {{ formatFileSize(maxFileSize) }}</li>
+            <li>Allowed formats: {{ allowedFileTypes.join(', ') }}</li>
+            <li>Ensure documents are clear and readable</li>
+            <li>Files should not be password protected</li>
+          </ul>
+        </div>
+        
+        <div *ngIf="selectedDocumentType" class="document-type-info">
+          <h5>Document Type: {{ getDocumentName(selectedDocumentType) }}</h5>
+          <p>{{ getDocumentHelp(selectedDocumentType) }}</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="action-btn secondary" (click)="closeUploadModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
