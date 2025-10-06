@@ -10,31 +10,22 @@ import { filter } from 'rxjs/operators';
 export class OwnerComponent implements OnInit {
   sidebarCollapsed: boolean = false;
   activeSection: string = 'dashboard';
-  showUserDropdown: boolean = false;
 
-  menuItems = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'fleet', label: 'Fleet Management' },
-  { key: 'vehicles', label: 'Manage Vehicles' },
-  { key: 'drivers', label: 'Manage Drivers' },
-  { key: 'bookings', label: 'Bookings' },
-  { key: 'wallet', label: 'Wallet' },
-  { key: 'earnings', label: 'Earnings' },
-  { key: 'maintenance', label: 'Maintenance' },
-  { key: 'analytics', label: 'Analytics' },
-  { key: 'notifications', label: 'Notifications' },
-  { key: 'tracking', label: 'Tracking' },
- // { key: 'reports', label: 'Reports' },
-  //{ key: 'settings', label: 'Settings' }
-];
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
 
+  setActiveSection(section: string) {
+    this.activeSection = section;
+  }
+  // Dashboard stats
+  vehicleCount: number = 12;
+  activeTrips: number = 5;
+  walletBalance: number = 25000;
+  monthlyEarnings: number = 85000;
 
-  vehicleCount = 12;
-  activeTrips = 5;
-  walletBalance = 25000;
-  monthlyEarnings = 85000;
-
-  documentAlerts = [
+  // Document alerts
+  documentAlerts: any[] = [
     { documentType: 'Insurance', daysToExpiry: 15, vehicleNumber: 'MH-12-AB-1234' },
     { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
   ];

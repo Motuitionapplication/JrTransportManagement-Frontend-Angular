@@ -8,16 +8,10 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./customer.component.scss']
 })
 export class CustomerComponent implements OnInit {
-  
-  // Sidebar state
-  sidebarCollapsed: boolean = false;
-  
-  // Active section state
-  activeSection: string = 'dashboard';
-  
-  // User dropdown state
-  showUserDropdown: boolean = false;
+sidebarCollapsed: boolean = false;
+activeSection: string = 'booking-history';
 
+<<<<<<< HEAD
   // Menu items for sidebar navigation
   menuItems = [
     { key: 'dashboard', label: 'Dashboard' },
@@ -34,14 +28,18 @@ export class CustomerComponent implements OnInit {
     { key: 'support', label: 'Support' },
     { key: 'profile', label: 'Profile' }
   ];
+=======
+toggleSidebar() {
+  this.sidebarCollapsed = !this.sidebarCollapsed;
+}
+>>>>>>> 23ddc8783407ab9e8f1765c62781574ad8832d27
 
-  // Document alerts for customer
-  documentAlerts = [
-    { documentType: 'Driving License', vehicleNumber: 'DL-2024-001', daysToExpiry: 30 },
-    { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
-  ];
+setActiveSection(section: string) {
+  this.activeSection = section;
+}
+  customer?: Customer;
 
-  constructor(private router: Router) { }
+  constructor(private customerService: CustomerService) { }
 
   ngOnInit(): void {
     console.log('customer component initialized');

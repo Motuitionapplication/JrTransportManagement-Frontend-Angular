@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  ownerName: string = 'Owner Name';
   
   // Sidebar state
   sidebarCollapsed: boolean = false;
@@ -18,10 +19,12 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Admin component initialized');
-    // Redirect to dashboard by default if at root admin path
-    if (this.router.url === '/admin' || this.router.url === '/admin/') {
-      this.router.navigate(['/admin/dashboard']);
-    }
+    // Set default active section
+    this.activeSection = 'dashboard';
+    // Example: fetch owner name from service or storage
+    // this.ownerName = this.authService.getOwnerName();
+    // For now, set a default name
+    this.ownerName = 'John Doe';
   }
 
   /**
