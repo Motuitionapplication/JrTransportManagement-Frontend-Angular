@@ -6,14 +6,18 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./driver.component.scss']
 })
 export class DriverComponent implements OnInit {
+
+sidebarCollapsed: boolean = false;
+activeSection: string = 'profile';
+servicesOpen: boolean = false;
+
 toggleSidebar() {
-throw new Error('Method not implemented.');
+  this.sidebarCollapsed = !this.sidebarCollapsed;
 }
-sidebarCollapsed: any;
-setActiveSection(arg0: string) {
-throw new Error('Method not implemented.');
+
+setActiveSection(section: string) {
+  this.activeSection = section;
 }
-activeSection: any;
 
   constructor() { }
 

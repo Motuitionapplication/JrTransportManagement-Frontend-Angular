@@ -9,8 +9,8 @@
 
   /* --- TOP NAVBAR --- */
   .top-navbar {
-    background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+    border-bottom: none;
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;
@@ -25,7 +25,7 @@
       width: 100%;
       align-items: center;
 
-      .logo-section {
+  .logo-section {
         display: flex;
         align-items: center;
         gap: 1rem;
@@ -55,17 +55,17 @@
         .brand-name {
           font-size: 1.25rem;
           font-weight: 700;
-          color: #1a1a1a;
+          color: #fff;
           margin: 0;
         }
       }
 
-      .navbar-actions {
+  .navbar-actions {
         display: flex;
         align-items: center;
         gap: 1.5rem;
 
-        .notifications {
+  .notifications {
           position: relative;
 
           .notification-btn {
@@ -82,7 +82,7 @@
             }
 
             svg {
-              stroke: #666;
+              stroke: #fff;
               width: 20px;
               height: 20px;
             }
@@ -105,7 +105,7 @@
           }
         }
 
-        .user-profile {
+  .user-profile {
           display: flex;
           align-items: center;
           gap: 0.75rem;
@@ -123,7 +123,7 @@
               width: 36px;
               height: 36px;
               border-radius: 50%;
-              border: 2px solid #e9ecef;
+              border: 2px solid #2563eb;
             }
           }
 
@@ -134,12 +134,12 @@
             .user-name {
               font-weight: 600;
               font-size: 0.9rem;
-              color: #1a1a1a;
+              color: #fff;
             }
             
             .user-role {
               font-size: 0.75rem;
-              color: #666;
+              color: #cbd5e1;
             }
           }
 
@@ -152,6 +152,7 @@
             svg {
               width: 16px;
               height: 16px;
+              stroke: #fff;
             }
           }
         }
@@ -168,8 +169,8 @@
     /* --- SIDEBAR --- */
     .sidebar {
       width: 240px;
-      background: #ffffff;
-      border-right: 1px solid #e9ecef;
+      background: linear-gradient(180deg, #2563eb 0%, #1e3a8a 100%);
+      border-right: none;
       display: flex;
       flex-direction: column;
       transition: width 0.3s ease;
@@ -186,11 +187,11 @@
         }
       }
 
-      .sidebar-nav {
+  .sidebar-nav {
         flex: 1;
         padding: 1rem 0;
 
-        .nav-menu {
+  .nav-menu {
           list-style: none;
           padding: 0;
           margin: 0;
@@ -201,24 +202,24 @@
               align-items: center;
               gap: 1rem;
               padding: 0.75rem 1.5rem;
-              color: #666;
+              color: #cbd5e1;
               text-decoration: none;
               transition: all 0.2s ease;
               border-left: 3px solid transparent;
 
               &:hover {
-                background: #f8f9fa;
-                color: #333;
+                background: rgba(255,255,255,0.08);
+                color: #fff;
               }
 
               &.active {
-                background: #e3f2fd;
-                color: #1976d2;
-                border-left-color: #1976d2;
+                background: rgba(255,255,255,0.15);
+                color: #fff;
+                border-left-color: #fff;
                 font-weight: 600;
 
                 .nav-icon {
-                  stroke: #1976d2;
+                  stroke: #fff;
                 }
               }
 
@@ -244,6 +245,9 @@
       padding: 2rem;
       overflow-y: auto;
       background: #f8f9fa;
+      width: 100vw;
+      max-width: 100vw;
+      box-sizing: border-box;
 
       .section-header {
         margin-bottom: 2rem;
@@ -564,6 +568,8 @@
   .dashboard-container {
     .main-content-wrapper {
       .dashboard-content {
+        width: 100vw;
+        max-width: 100vw;
         .charts-row {
           grid-template-columns: 1fr;
         }
@@ -609,7 +615,8 @@
 
       .dashboard-content {
         padding: 1rem;
-
+        width: 100vw;
+        max-width: 100vw;
         .stats-grid {
           grid-template-columns: 1fr;
           gap: 1rem;
@@ -642,6 +649,8 @@
     .main-content-wrapper {
       .dashboard-content {
         padding: 1rem 0.5rem;
+        width: 100vw;
+        max-width: 100vw;
 
         .section-header {
           margin-bottom: 1rem;

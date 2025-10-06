@@ -6,12 +6,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./owner.component.scss']
 })
 export class OwnerComponent implements OnInit {
-toggleSidebar() {
-throw new Error('Method not implemented.');
-}
-setActiveSection(arg0: string) {
-throw new Error('Method not implemented.');
-}
+  sidebarCollapsed: boolean = false;
+  activeSection: string = 'dashboard';
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  setActiveSection(section: string) {
+    this.activeSection = section;
+  }
   // Dashboard stats
   vehicleCount: number = 12;
   activeTrips: number = 5;
@@ -23,8 +27,6 @@ throw new Error('Method not implemented.');
     { documentType: 'Insurance', daysToExpiry: 15, vehicleNumber: 'MH-12-AB-1234' },
     { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
   ];
-sidebarCollapsed: any;
-activeSection: any;
 
   constructor() { }
 

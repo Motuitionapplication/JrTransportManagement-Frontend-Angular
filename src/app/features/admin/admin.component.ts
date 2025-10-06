@@ -6,6 +6,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  ownerName: string = 'Owner Name';
   
   // Sidebar state
   sidebarCollapsed: boolean = false;
@@ -19,6 +20,10 @@ export class AdminComponent implements OnInit {
     console.log('Admin component initialized');
     // Set default active section
     this.activeSection = 'dashboard';
+    // Example: fetch owner name from service or storage
+    // this.ownerName = this.authService.getOwnerName();
+    // For now, set a default name
+    this.ownerName = 'John Doe';
   }
 
   /**
