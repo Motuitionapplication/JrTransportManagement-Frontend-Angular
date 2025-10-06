@@ -11,9 +11,28 @@ export class CustomerComponent implements OnInit {
 sidebarCollapsed: boolean = false;
 activeSection: string = 'booking-history';
 
+<<<<<<< HEAD
+  // Menu items for sidebar navigation
+  menuItems = [
+    { key: 'dashboard', label: 'Dashboard' },
+    { key: 'bookings', label: 'My Bookings' },
+    // { key: 'trucks', label: 'My Trucks' },
+    { key: 'trips', label: 'My Trips' },
+    { key: 'tracking', label: 'Tracking' },
+    { key: 'transporthistory', label: 'Transport History' },
+    // { key: 'earnings', label: 'Earnings' },
+    // { key: 'schedule', label: 'Schedule' },
+    // { key: 'documents', label: 'Documents' },
+    { key: 'wallet', label: 'Wallet' },
+    { key: 'messages', label: 'Messages' },
+    { key: 'support', label: 'Support' },
+    { key: 'profile', label: 'Profile' }
+  ];
+=======
 toggleSidebar() {
   this.sidebarCollapsed = !this.sidebarCollapsed;
 }
+>>>>>>> 23ddc8783407ab9e8f1765c62781574ad8832d27
 
 setActiveSection(section: string) {
   this.activeSection = section;
@@ -56,7 +75,7 @@ setActiveSection(section: string) {
       this.activeSection = 'trips';
     } else if (url.includes('/customer/tracking')) {
       this.activeSection = 'tracking';
-    } else if (url.includes('/customer/transporthistory')) {
+    } else if (url.includes('/customer/transport-history')) {
       this.activeSection = 'transporthistory';
     } else if (url.includes('/customer/wallet')) {
       this.activeSection = 'wallet';
@@ -84,9 +103,46 @@ setActiveSection(section: string) {
     this.activeSection = section;
     console.log('Active section changed to:', section);
     
-    // Navigate to the appropriate route for dashboard
-    if (section === 'dashboard') {
-      this.router.navigate(['/customer/dashboard']);
+    // Navigate to the appropriate route
+    switch (section) {
+      case 'dashboard':
+        this.router.navigate(['/customer/dashboard']);
+        break;
+      case 'bookings':
+        this.router.navigate(['/customer/bookings']);
+        break;
+      case 'trips':
+        this.router.navigate(['/customer/trips']);
+        break;
+      case 'tracking':
+        this.router.navigate(['/customer/tracking']);
+        break;
+      case 'transporthistory':
+        this.router.navigate(['/customer/transport-history']);
+        break;
+      case 'wallet':
+        this.router.navigate(['/customer/wallet']);
+        break;
+      case 'book-transport':
+        this.router.navigate(['/customer/book-transport']);
+        break;
+      case 'payments':
+        this.router.navigate(['/customer/payments']);
+        break;
+      case 'profile':
+        this.router.navigate(['/customer/profile']);
+        break;
+      case 'messages':
+        this.router.navigate(['/customer/messages']);
+        break;
+      case 'support':
+        this.router.navigate(['/customer/support']);
+        break;
+      case 'notifications':
+        this.router.navigate(['/customer/notifications']);
+        break;
+      default:
+        console.warn('Unknown section:', section);
     }
   }
 

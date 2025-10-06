@@ -1,0 +1,755 @@
+<div class="profile-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="fas fa-user-circle me-2"></i>
+          My Profile
+        </h2>
+        <p class="page-subtitle">Manage your account information and preferences</p>
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-outline-primary" (click)="enableEditMode()" *ngIf="!isEditing">
+          <i class="fas fa-edit me-2"></i>
+          Edit Profile
+        </button>
+        <div *ngIf="isEditing">
+          <button class="btn btn-outline-secondary me-2" (click)="cancelEdit()">
+            <i class="fas fa-times me-2"></i>
+            Cancel
+          </button>
+          <button class="btn btn-primary" (click)="savePersonalInfo()">
+            <i class="fas fa-save me-2"></i>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Overview Card -->
+  <div class="profile-overview" *ngIf="customerProfile">
+    <div class="overview-card">
+      <div class="row">
+        <div class="col-md-3 text-center">
+          <div class="profile-picture-section">
+            <div class="profile-picture">
+              <img [src]="customerProfile.personalInfo.profilePicture || '/assets/avatars/default-avatar.png'" 
+                   alt="Profile Picture" class="profile-img">
+              <div class="picture-overlay" *ngIf="isEditing">
+                <input type="file" id="profilePicture" accept="image/*" (change)="onProfilePictureSelected($event)" hidden>
+                <label for="profilePicture" class="upload-btn">
+                  <i class="fas fa-camera"></i>
+                </label>
+              </div>
+              <div class="upload-spinner" *ngIf="isUploadingPicture">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Uploading...</span>
+                </div>
+              </div>
+            </div>
+            <h4>{{ customerProfile.personalInfo.firstName }} {{ customerProfile.personalInfo.lastName }}</h4>
+            <p class="user-email">{{ customerProfile.personalInfo.email }}</p>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <div class="account-stats">
+            <div class="row">
+              <div class="col-md-3 col-6">
+                <div class="stat-item">
+                  <div class="stat-icon bg-primary">
+                    <i class="fas fa-calendar-check"></i>
+                  </div>
+                  <div class="stat-content">
+                    <h5>{{ customerProfile.accountInfo.totalBookings }}</h5>
+                    <p>Total Bookings</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-item">
+                  <div class="stat-icon bg-success">
+                    <i class="fas fa-dollar-sign"></i>
+                  </div>
+                  <div class="stat-content">
+                    <h5>{{ formatCurrency(customerProfile.accountInfo.totalSpent) }}</h5>
+                    <p>Total Spent</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-item">
+                  <div class="stat-icon bg-warning">
+                    <i class="fas fa-star"></i>
+                  </div>
+                  <div class="stat-content">
+                    <h5>{{ customerProfile.accountInfo.loyaltyPoints }}</h5>
+                    <p>Loyalty Points</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-item">
+                  <div class="stat-icon bg-info">
+                    <i class="fas fa-user-clock"></i>
+                  </div>
+                  <div class="stat-content">
+                    <h5>{{ formatDate(customerProfile.accountInfo.memberSince) }}</h5>
+                    <p>Member Since</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="verification-status">
+            <h6>Account Verification</h6>
+            <div class="verification-items">
+              <div class="verification-item">
+                <i [class]="getVerificationIcon(customerProfile.accountInfo.verificationStatus.email)"></i>
+                <span>Email Verified</span>
+              </div>
+              <div class="verification-item">
+                <i [class]="getVerificationIcon(customerProfile.accountInfo.verificationStatus.phone)"></i>
+                <span>Phone Verified</span>
+              </div>
+              <div class="verification-item">
+                <i [class]="getVerificationIcon(customerProfile.accountInfo.verificationStatus.identity)"></i>
+                <span>Identity Verified</span>
+              </div>
+            </div>
+            <div class="account-status">
+              <span class="badge" [ngClass]="getAccountStatusClass(customerProfile.accountInfo.accountStatus)">
+                {{ customerProfile.accountInfo.accountStatus | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Tabs -->
+  <div class="profile-tabs">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'personal'" (click)="setActiveTab('personal')">
+          <i class="fas fa-user me-2"></i>Personal Information
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'addresses'" (click)="setActiveTab('addresses')">
+          <i class="fas fa-map-marker-alt me-2"></i>Addresses
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'preferences'" (click)="setActiveTab('preferences')">
+          <i class="fas fa-cog me-2"></i>Preferences
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'security'" (click)="setActiveTab('security')">
+          <i class="fas fa-shield-alt me-2"></i>Security
+        </a>
+      </li>
+    </ul>
+
+    <!-- Personal Information Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'personal'">
+      <div class="tab-card">
+        <div class="card-header">
+          <h5><i class="fas fa-user me-2"></i>Personal Information</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="personalInfoForm" (ngSubmit)="savePersonalInfo()">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="firstName" class="form-label required">First Name</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    class="form-control"
+                    formControlName="firstName"
+                    [readonly]="!isEditing"
+                    [class.is-invalid]="getFieldError(personalInfoForm, 'firstName')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(personalInfoForm, 'firstName')">
+                    {{ getFieldError(personalInfoForm, 'firstName') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="lastName" class="form-label required">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    class="form-control"
+                    formControlName="lastName"
+                    [readonly]="!isEditing"
+                    [class.is-invalid]="getFieldError(personalInfoForm, 'lastName')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(personalInfoForm, 'lastName')">
+                    {{ getFieldError(personalInfoForm, 'lastName') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="email" class="form-label required">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-control"
+                    formControlName="email"
+                    [readonly]="!isEditing"
+                    [class.is-invalid]="getFieldError(personalInfoForm, 'email')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(personalInfoForm, 'email')">
+                    {{ getFieldError(personalInfoForm, 'email') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="phone" class="form-label required">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    class="form-control"
+                    formControlName="phone"
+                    [readonly]="!isEditing"
+                    [class.is-invalid]="getFieldError(personalInfoForm, 'phone')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(personalInfoForm, 'phone')">
+                    {{ getFieldError(personalInfoForm, 'phone') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    class="form-control"
+                    formControlName="dateOfBirth"
+                    [readonly]="!isEditing"
+                  >
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="gender" class="form-label">Gender</label>
+                  <select
+                    id="gender"
+                    class="form-select"
+                    formControlName="gender"
+                    [disabled]="!isEditing"
+                  >
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Addresses Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'addresses'">
+      <div class="tab-card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col">
+              <h5><i class="fas fa-map-marker-alt me-2"></i>My Addresses</h5>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-primary btn-sm" (click)="addAddress()">
+                <i class="fas fa-plus me-2"></i>Add Address
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="addresses-list">
+            <div class="address-card" *ngFor="let address of addresses">
+              <div class="row">
+                <div class="col-md-8">
+                  <div class="address-info">
+                    <h6>
+                      {{ address.label }}
+                      <span class="badge bg-primary ms-2" *ngIf="address.isDefault">Default</span>
+                      <span class="badge bg-secondary ms-2">{{ address.type | titlecase }}</span>
+                    </h6>
+                    <p class="address-text">
+                      {{ address.street }}<br>
+                      {{ address.city }}, {{ address.state }} {{ address.zipCode }}<br>
+                      {{ address.country }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-4 text-end">
+                  <div class="address-actions">
+                    <button class="btn btn-sm btn-outline-primary me-2" (click)="editAddress(address)">
+                      <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-success me-2" 
+                      (click)="setDefaultAddress(address.id)"
+                      *ngIf="!address.isDefault"
+                    >
+                      <i class="fas fa-star me-1"></i>Set Default
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" (click)="deleteAddress(address.id)">
+                      <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-addresses" *ngIf="addresses.length === 0">
+              <div class="text-center">
+                <i class="fas fa-map-marker-alt empty-icon"></i>
+                <h5>No addresses added</h5>
+                <p>Add your addresses for faster booking</p>
+                <button class="btn btn-primary" (click)="addAddress()">
+                  <i class="fas fa-plus me-2"></i>Add Your First Address
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preferences Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'preferences'">
+      <div class="tab-card">
+        <div class="card-header">
+          <h5><i class="fas fa-cog me-2"></i>Preferences & Settings</h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="preferencesForm" (ngSubmit)="savePreferences()">
+            <div class="preferences-section">
+              <h6>General Preferences</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="language" class="form-label">Language</label>
+                    <select id="language" class="form-select" formControlName="language">
+                      <option value="en">English</option>
+                      <option value="es">Spanish</option>
+                      <option value="fr">French</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="currency" class="form-label">Currency</label>
+                    <select id="currency" class="form-select" formControlName="currency">
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GBP">GBP - British Pound</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="timezone" class="form-label">Timezone</label>
+                    <select id="timezone" class="form-select" formControlName="timezone">
+                      <option value="America/New_York">Eastern Time</option>
+                      <option value="America/Chicago">Central Time</option>
+                      <option value="America/Denver">Mountain Time</option>
+                      <option value="America/Los_Angeles">Pacific Time</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="preferences-section">
+              <h6>Notification Preferences</h6>
+              <div class="notification-options">
+                <div class="form-check">
+                  <input type="checkbox" id="emailNotifications" class="form-check-input" formControlName="emailNotifications">
+                  <label class="form-check-label" for="emailNotifications">
+                    <i class="fas fa-envelope me-2"></i>Email notifications
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" id="smsNotifications" class="form-check-input" formControlName="smsNotifications">
+                  <label class="form-check-label" for="smsNotifications">
+                    <i class="fas fa-sms me-2"></i>SMS notifications
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" id="pushNotifications" class="form-check-input" formControlName="pushNotifications">
+                  <label class="form-check-label" for="pushNotifications">
+                    <i class="fas fa-bell me-2"></i>Push notifications
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="preferences-section">
+              <h6>Booking Defaults</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="preferredVehicleType" class="form-label">Preferred Vehicle Type</label>
+                    <select id="preferredVehicleType" class="form-select" formControlName="preferredVehicleType">
+                      <option value="">No preference</option>
+                      <option value="truck-small">Small Truck</option>
+                      <option value="truck-medium">Medium Truck</option>
+                      <option value="truck-large">Large Truck</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="defaultPickupAddress" class="form-label">Default Pickup Address</label>
+                    <input
+                      type="text"
+                      id="defaultPickupAddress"
+                      class="form-control"
+                      placeholder="Enter default pickup address"
+                      formControlName="defaultPickupAddress"
+                    >
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    <label for="defaultDropoffAddress" class="form-label">Default Dropoff Address</label>
+                    <input
+                      type="text"
+                      id="defaultDropoffAddress"
+                      class="form-control"
+                      placeholder="Enter default dropoff address"
+                      formControlName="defaultDropoffAddress"
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+                <span *ngIf="!isSaving">
+                  <i class="fas fa-save me-2"></i>Save Preferences
+                </span>
+                <span *ngIf="isSaving">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Saving...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'security'">
+      <div class="tab-card">
+        <div class="card-header">
+          <h5><i class="fas fa-shield-alt me-2"></i>Security Settings</h5>
+        </div>
+        <div class="card-body">
+          <!-- Password Change -->
+          <div class="security-section">
+            <h6>Change Password</h6>
+            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="currentPassword" class="form-label">Current Password</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      class="form-control"
+                      formControlName="currentPassword"
+                      [class.is-invalid]="getFieldError(passwordForm, 'currentPassword')"
+                    >
+                    <div class="invalid-feedback" *ngIf="getFieldError(passwordForm, 'currentPassword')">
+                      {{ getFieldError(passwordForm, 'currentPassword') }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="newPassword" class="form-label">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      class="form-control"
+                      formControlName="newPassword"
+                      [class.is-invalid]="getFieldError(passwordForm, 'newPassword')"
+                    >
+                    <div class="invalid-feedback" *ngIf="getFieldError(passwordForm, 'newPassword')">
+                      {{ getFieldError(passwordForm, 'newPassword') }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      class="form-control"
+                      formControlName="confirmPassword"
+                      [class.is-invalid]="getFieldError(passwordForm, 'confirmPassword')"
+                    >
+                    <div class="invalid-feedback" *ngIf="getFieldError(passwordForm, 'confirmPassword')">
+                      {{ getFieldError(passwordForm, 'confirmPassword') }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary" [disabled]="!passwordForm.valid || isSaving">
+                <span *ngIf="!isSaving">
+                  <i class="fas fa-key me-2"></i>Change Password
+                </span>
+                <span *ngIf="isSaving">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Changing...
+                </span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Security Settings -->
+          <div class="security-section" *ngIf="securitySettings">
+            <h6>Security Options</h6>
+            <form [formGroup]="securityForm" (ngSubmit)="saveSecuritySettings()">
+              <div class="security-options">
+                <div class="form-check">
+                  <input type="checkbox" id="twoFactorEnabled" class="form-check-input" formControlName="twoFactorEnabled">
+                  <label class="form-check-label" for="twoFactorEnabled">
+                    <i class="fas fa-mobile-alt me-2"></i>Enable Two-Factor Authentication
+                    <small class="d-block text-muted">Add an extra layer of security to your account</small>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" id="loginAlerts" class="form-check-input" formControlName="loginAlerts">
+                  <label class="form-check-label" for="loginAlerts">
+                    <i class="fas fa-bell me-2"></i>Login Alerts
+                    <small class="d-block text-muted">Get notified when someone logs into your account</small>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group mt-3">
+                <label for="sessionTimeout" class="form-label">Session Timeout (minutes)</label>
+                <input
+                  type="number"
+                  id="sessionTimeout"
+                  class="form-control"
+                  style="max-width: 200px;"
+                  formControlName="sessionTimeout"
+                  min="5"
+                  max="120"
+                >
+                <div class="form-text">
+                  Automatically log out after this period of inactivity
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary mt-3" [disabled]="isSaving">
+                <span *ngIf="!isSaving">
+                  <i class="fas fa-save me-2"></i>Save Security Settings
+                </span>
+                <span *ngIf="isSaving">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Saving...
+                </span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Trusted Devices -->
+          <div class="security-section" *ngIf="securitySettings">
+            <h6>Trusted Devices</h6>
+            <div class="trusted-devices">
+              <div class="device-item" *ngFor="let device of securitySettings.trustedDevices">
+                <div class="row align-items-center">
+                  <div class="col-md-8">
+                    <div class="device-info">
+                      <h6>{{ device.deviceName }}</h6>
+                      <p class="device-details">
+                        <span class="device-type">{{ device.deviceType }}</span> • 
+                        <span class="device-location">{{ device.location }}</span><br>
+                        <small class="text-muted">
+                          Last used: {{ formatDate(device.lastUsed) }} • IP: {{ device.ipAddress }}
+                        </small>
+                      </p>
+                    </div>
+                  </div>
+                  <div class="col-md-4 text-end">
+                    <button class="btn btn-sm btn-outline-danger" (click)="removeTrustedDevice(device.id)">
+                      <i class="fas fa-times me-1"></i>Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="empty-devices" *ngIf="securitySettings.trustedDevices.length === 0">
+                <div class="text-center">
+                  <i class="fas fa-mobile-alt empty-icon"></i>
+                  <p>No trusted devices found</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address Modal -->
+  <div class="modal fade" [class.show]="showAddressModal" [style.display]="showAddressModal ? 'block' : 'none'">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ selectedAddress ? 'Edit Address' : 'Add New Address' }}</h5>
+          <button type="button" class="btn-close" (click)="closeAddressModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="addressForm" (ngSubmit)="saveAddress()">
+            <div class="form-group mb-3">
+              <label for="addressLabel" class="form-label required">Address Label</label>
+              <input
+                type="text"
+                id="addressLabel"
+                class="form-control"
+                placeholder="e.g., Home, Office"
+                formControlName="label"
+                [class.is-invalid]="getFieldError(addressForm, 'label')"
+              >
+              <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'label')">
+                {{ getFieldError(addressForm, 'label') }}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="addressStreet" class="form-label required">Street Address</label>
+              <input
+                type="text"
+                id="addressStreet"
+                class="form-control"
+                placeholder="Enter street address"
+                formControlName="street"
+                [class.is-invalid]="getFieldError(addressForm, 'street')"
+              >
+              <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'street')">
+                {{ getFieldError(addressForm, 'street') }}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="addressCity" class="form-label required">City</label>
+                  <input
+                    type="text"
+                    id="addressCity"
+                    class="form-control"
+                    placeholder="Enter city"
+                    formControlName="city"
+                    [class.is-invalid]="getFieldError(addressForm, 'city')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'city')">
+                    {{ getFieldError(addressForm, 'city') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="addressState" class="form-label required">State</label>
+                  <input
+                    type="text"
+                    id="addressState"
+                    class="form-control"
+                    placeholder="Enter state"
+                    formControlName="state"
+                    [class.is-invalid]="getFieldError(addressForm, 'state')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'state')">
+                    {{ getFieldError(addressForm, 'state') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="addressZipCode" class="form-label required">ZIP Code</label>
+                  <input
+                    type="text"
+                    id="addressZipCode"
+                    class="form-control"
+                    placeholder="Enter ZIP code"
+                    formControlName="zipCode"
+                    [class.is-invalid]="getFieldError(addressForm, 'zipCode')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'zipCode')">
+                    {{ getFieldError(addressForm, 'zipCode') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="addressType" class="form-label required">Address Type</label>
+                  <select
+                    id="addressType"
+                    class="form-select"
+                    formControlName="type"
+                    [class.is-invalid]="getFieldError(addressForm, 'type')"
+                  >
+                    <option value="">Select type</option>
+                    <option value="home">Home</option>
+                    <option value="work">Work</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="getFieldError(addressForm, 'type')">
+                    {{ getFieldError(addressForm, 'type') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-check">
+              <input type="checkbox" id="isDefault" class="form-check-input" formControlName="isDefault">
+              <label class="form-check-label" for="isDefault">
+                Set as default address
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAddressModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="saveAddress()" [disabled]="!addressForm.valid">
+            Save Address
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="showAddressModal" *ngIf="showAddressModal"></div>
+</div>
