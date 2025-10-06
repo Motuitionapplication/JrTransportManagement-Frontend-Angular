@@ -70,20 +70,9 @@
 
     <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <!-- Router outlet for child components -->
-      <section class="content-section" *ngIf="activeSection === 'dashboard'">
+      <!-- Router outlet for all child components -->
+      <section class="content-section">
         <router-outlet></router-outlet>
-      </section>
-
-      <!-- Other sections -->
-      <section class="content-section" *ngIf="activeSection !== 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title" style="text-transform: capitalize;">{{ activeSection }}</h1>
-          <p class="section-subtitle">Content for {{ activeSection }} section</p>
-        </div>
-        <div class="placeholder-content">
-          <p>This section is under development.</p>
-        </div>
       </section>
     </main>
   </div>

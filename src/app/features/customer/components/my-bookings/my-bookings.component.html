@@ -1,0 +1,480 @@
+<div class="my-bookings-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="fas fa-calendar-alt me-2"></i>
+          My Bookings
+        </h2>
+        <p class="page-subtitle">Manage and track your transport bookings</p>
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-primary" routerLink="/customer/book-transport">
+          <i class="fas fa-plus me-2"></i>
+          New Booking
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4" *ngIf="bookingSummary">
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-primary">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ bookingSummary.total }}</h4>
+          <p>Total Bookings</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-warning">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ bookingSummary.pending }}</h4>
+          <p>Pending</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-info">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ bookingSummary.inTransit }}</h4>
+          <p>In Transit</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-success">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ bookingSummary.completed }}</h4>
+          <p>Completed</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="row">
+      <div class="col-md-3 mb-3">
+        <div class="form-group">
+          <label for="searchQuery" class="form-label">Search</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input
+              type="text"
+              id="searchQuery"
+              class="form-control"
+              placeholder="Search bookings..."
+              [(ngModel)]="searchQuery"
+              (input)="filterBookings()"
+            >
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="statusFilter" class="form-label">Status</label>
+          <select
+            id="statusFilter"
+            class="form-select"
+            [(ngModel)]="statusFilter"
+            (change)="filterBookings()"
+          >
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="dateFilter" class="form-label">Date Range</label>
+          <select
+            id="dateFilter"
+            class="form-select"
+            [(ngModel)]="dateFilter"
+            (change)="filterBookings()"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="3months">Last 3 Months</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="sortBy" class="form-label">Sort By</label>
+          <select
+            id="sortBy"
+            class="form-select"
+            [(ngModel)]="sortBy"
+            (change)="filterBookings()"
+          >
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="status">Status</option>
+            <option value="amount">Amount</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3 d-flex align-items-end">
+        <button class="btn btn-outline-secondary me-2" (click)="exportBookings()">
+          <i class="fas fa-download me-1"></i>
+          Export
+        </button>
+        <button class="btn btn-outline-primary" (click)="refreshBookings()">
+          <i class="fas fa-sync-alt me-1"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings List -->
+  <div class="bookings-list" *ngIf="!isLoading; else loadingTemplate">
+    <div class="row">
+      <div class="col-12" *ngFor="let booking of filteredBookings">
+        <div class="booking-card" [ngClass]="getStatusClass(booking.status)">
+          <div class="card-header">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <h5 class="booking-number">{{ booking.bookingNumber }}</h5>
+                <span class="badge" [ngClass]="getStatusBadgeClass(booking.status)">
+                  {{ getStatusText(booking.status) }}
+                </span>
+              </div>
+              <div class="col-md-6 text-end">
+                <div class="booking-actions">
+                  <button
+                    class="btn btn-sm btn-outline-info me-2"
+                    (click)="viewBookingDetails(booking)"
+                  >
+                    <i class="fas fa-eye me-1"></i>
+                    Details
+                  </button>
+                  <button
+                    *ngIf="canTrackBooking(booking)"
+                    class="btn btn-sm btn-outline-primary me-2"
+                    (click)="trackBooking(booking)"
+                  >
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    Track
+                  </button>
+                  <button
+                    *ngIf="canCancelBooking(booking)"
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="cancelBooking(booking)"
+                  >
+                    <i class="fas fa-times me-1"></i>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <div class="booking-route">
+                  <div class="route-point">
+                    <i class="fas fa-circle text-success"></i>
+                    <div class="route-details">
+                      <strong>Pickup:</strong>
+                      <p>{{ booking.pickupAddress }}</p>
+                      <small class="text-muted">{{ formatDateTime(booking.pickupDateTime) }}</small>
+                    </div>
+                  </div>
+                  <div class="route-line"></div>
+                  <div class="route-point">
+                    <i class="fas fa-circle text-danger"></i>
+                    <div class="route-details">
+                      <strong>Drop-off:</strong>
+                      <p>{{ booking.dropoffAddress }}</p>
+                      <small class="text-muted" *ngIf="booking.dropoffDateTime">
+                        {{ formatDateTime(booking.dropoffDateTime) }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="booking-info">
+                  <div class="info-item">
+                    <strong>Vehicle Type:</strong>
+                    <span>{{ getVehicleTypeName(booking.vehicleType) }}</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Amount:</strong>
+                    <span class="amount">{{ formatCurrency(booking.totalAmount) }}</span>
+                  </div>
+                  <div class="info-item" *ngIf="booking.driverInfo">
+                    <strong>Driver:</strong>
+                    <span>{{ booking.driverInfo.name }}</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Booked On:</strong>
+                    <span>{{ formatDate(booking.createdAt) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer" *ngIf="booking.trackingInfo">
+            <div class="tracking-info">
+              <div class="progress-bar-container">
+                <div class="progress">
+                  <div
+                    class="progress-bar"
+                    [style.width.%]="getProgressPercentage(booking.status)"
+                    [ngClass]="getProgressClass(booking.status)"
+                  ></div>
+                </div>
+              </div>
+              <div class="tracking-status">
+                <small class="text-muted">
+                  Last Updated: {{ formatDateTime(booking.trackingInfo.lastUpdate) }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredBookings.length === 0">
+      <div class="text-center">
+        <i class="fas fa-calendar-times empty-icon"></i>
+        <h4>No bookings found</h4>
+        <p>You haven't made any bookings yet or no bookings match your filters.</p>
+        <button class="btn btn-primary" routerLink="/customer/book-transport">
+          <i class="fas fa-plus me-2"></i>
+          Create Your First Booking
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <nav aria-label="Bookings pagination">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="goToPage(1)" aria-label="First">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="goToPage(currentPage - 1)" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li
+            class="page-item"
+            *ngFor="let page of getPaginationPages()"
+            [class.active]="page === currentPage"
+          >
+            <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="goToPage(currentPage + 1)" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="goToPage(totalPages)" aria-label="Last">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Loading Template -->
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <div class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Loading your bookings...</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Booking Details Modal -->
+  <div class="modal fade" [class.show]="showBookingModal" [style.display]="showBookingModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" *ngIf="selectedBooking">
+        <div class="modal-header">
+          <h5 class="modal-title">Booking Details - {{ selectedBooking.bookingNumber }}</h5>
+          <button type="button" class="btn-close" (click)="closeBookingModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Route Information</h6>
+              <div class="route-details-modal">
+                <div class="route-point">
+                  <i class="fas fa-play-circle text-success"></i>
+                  <div>
+                    <strong>Pickup Location</strong>
+                    <p>{{ selectedBooking.pickupAddress }}</p>
+                    <small>{{ formatDateTime(selectedBooking.pickupDateTime) }}</small>
+                  </div>
+                </div>
+                <div class="route-point">
+                  <i class="fas fa-stop-circle text-danger"></i>
+                  <div>
+                    <strong>Drop-off Location</strong>
+                    <p>{{ selectedBooking.dropoffAddress }}</p>
+                    <small *ngIf="selectedBooking.dropoffDateTime">
+                      {{ formatDateTime(selectedBooking.dropoffDateTime) }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h6>Booking Information</h6>
+              <div class="booking-details-info">
+                <div class="info-row">
+                  <span>Status:</span>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(selectedBooking.status)">
+                    {{ getStatusText(selectedBooking.status) }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span>Vehicle Type:</span>
+                  <span>{{ getVehicleTypeName(selectedBooking.vehicleType) }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Total Amount:</span>
+                  <span class="fw-bold">{{ formatCurrency(selectedBooking.totalAmount) }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Payment Status:</span>
+                  <span class="badge" [ngClass]="getPaymentStatusClass(selectedBooking.paymentStatus)">
+                    {{ selectedBooking.paymentStatus | titlecase }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Driver Information -->
+          <div class="mt-4" *ngIf="selectedBooking.driverInfo">
+            <h6>Driver Information</h6>
+            <div class="driver-info-card">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span>Name:</span>
+                    <span>{{ selectedBooking.driverInfo.name }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span>Phone:</span>
+                    <span>{{ selectedBooking.driverInfo.phone }}</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span>License:</span>
+                    <span>{{ selectedBooking.driverInfo.licenseNumber }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span>Rating:</span>
+                    <span>
+                      <i class="fas fa-star text-warning"></i>
+                      {{ selectedBooking.driverInfo.rating }}/5
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicle Information -->
+          <div class="mt-4" *ngIf="selectedBooking.vehicleInfo">
+            <h6>Vehicle Information</h6>
+            <div class="vehicle-info-card">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span>Make & Model:</span>
+                    <span>{{ selectedBooking.vehicleInfo.make }} {{ selectedBooking.vehicleInfo.model }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span>License Plate:</span>
+                    <span>{{ selectedBooking.vehicleInfo.plateNumber }}</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="info-row">
+                    <span>Year:</span>
+                    <span>{{ selectedBooking.vehicleInfo.year }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span>Capacity:</span>
+                    <span>{{ selectedBooking.vehicleInfo.capacity }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tracking Information -->
+          <div class="mt-4" *ngIf="selectedBooking.trackingInfo">
+            <h6>Tracking Information</h6>
+            <div class="tracking-timeline">
+              <div class="timeline-item" *ngFor="let update of selectedBooking.trackingInfo.statusHistory">
+                <div class="timeline-marker" [ngClass]="getTimelineMarkerClass(update.status)"></div>
+                <div class="timeline-content">
+                  <h6>{{ update.status | titlecase }}</h6>
+                  <p>{{ update.description }}</p>
+                  <small class="text-muted">{{ formatDateTime(update.timestamp) }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeBookingModal()">Close</button>
+          <button
+            *ngIf="canTrackBooking(selectedBooking)"
+            type="button"
+            class="btn btn-primary"
+            (click)="trackBooking(selectedBooking)"
+          >
+            <i class="fas fa-map-marker-alt me-1"></i>
+            Track Live
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="showBookingModal" *ngIf="showBookingModal"></div>
+</div>

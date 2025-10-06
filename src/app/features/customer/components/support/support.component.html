@@ -1,0 +1,725 @@
+<div class="support-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="page-title">
+          <i class="fas fa-life-ring me-2"></i>
+          Customer Support
+        </h2>
+        <p class="page-subtitle">Get help with your bookings, account, and transport services</p>
+      </div>
+      <div class="col-md-4 text-end">
+        <button class="btn btn-outline-light" (click)="createSupportTicket()">
+          <i class="fas fa-plus me-2"></i>
+          New Ticket
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <div class="row">
+      <div class="col-md-3 col-6">
+        <div class="action-card" (click)="setActiveTab('faq')">
+          <div class="action-icon">
+            <i class="fas fa-question-circle"></i>
+          </div>
+          <h6>FAQ</h6>
+          <p>Find quick answers</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="action-card" (click)="setActiveTab('tickets')">
+          <div class="action-icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <h6>My Tickets</h6>
+          <p>Track support requests</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="action-card" (click)="setActiveTab('contact')">
+          <div class="action-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <h6>Contact Us</h6>
+          <p>Get direct support</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="action-card" (click)="openLiveChat()">
+          <div class="action-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h6>Live Chat</h6>
+          <p>Chat with agent</p>
+          <span class="status-indicator" [class.online]="liveChatAvailable"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Tabs -->
+  <div class="support-tabs">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'tickets'" (click)="setActiveTab('tickets')">
+          <i class="fas fa-ticket-alt me-2"></i>My Tickets
+          <span class="badge bg-primary ms-2" *ngIf="getActiveTicketsCount() > 0">
+            {{ getActiveTicketsCount() }}
+          </span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'faq'" (click)="setActiveTab('faq')">
+          <i class="fas fa-question-circle me-2"></i>FAQ
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'contact'" (click)="setActiveTab('contact')">
+          <i class="fas fa-envelope me-2"></i>Contact
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [class.active]="activeTab === 'guides'" (click)="setActiveTab('guides')">
+          <i class="fas fa-book me-2"></i>User Guides
+        </a>
+      </li>
+    </ul>
+
+    <!-- My Tickets Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'tickets'">
+      <div class="tab-card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col">
+              <h5><i class="fas fa-ticket-alt me-2"></i>Support Tickets</h5>
+            </div>
+            <div class="col-auto">
+              <div class="header-controls">
+                <select class="form-select form-select-sm me-2" [(ngModel)]="selectedTicketFilter" (change)="filterTickets()">
+                  <option value="all">All Tickets</option>
+                  <option value="open">Open</option>
+                  <option value="pending">Pending</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <button class="btn btn-primary btn-sm" (click)="createSupportTicket()">
+                  <i class="fas fa-plus me-2"></i>New Ticket
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="tickets-list" *ngIf="filteredTickets.length > 0; else noTickets">
+            <div class="ticket-item" *ngFor="let ticket of filteredTickets" (click)="viewTicketDetails(ticket)">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <div class="ticket-info">
+                    <div class="ticket-header">
+                      <h6 class="ticket-title">{{ ticket.subject }}</h6>
+                      <span class="badge" [ngClass]="getStatusClass(ticket.status)">
+                        {{ ticket.status | titlecase }}
+                      </span>
+                      <span class="badge" [ngClass]="getPriorityClass(ticket.priority)">
+                        {{ ticket.priority | titlecase }}
+                      </span>
+                    </div>
+                    <p class="ticket-description">{{ ticket.description | slice:0:100 }}{{ ticket.description.length > 100 ? '...' : '' }}</p>
+                    <div class="ticket-meta">
+                      <span class="ticket-id">
+                        <i class="fas fa-hashtag"></i>{{ ticket.id }}
+                      </span>
+                      <span class="ticket-category">
+                        <i class="fas fa-folder"></i>{{ ticket.category }}
+                      </span>
+                      <span class="ticket-date">
+                        <i class="fas fa-clock"></i>{{ formatDate(ticket.createdAt) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 text-end">
+                  <div class="ticket-actions">
+                    <div class="last-update">
+                      <small class="text-muted">
+                        Last update: {{ getTimeAgo(ticket.updatedAt) }}
+                      </small>
+                    </div>
+                    <div class="response-info" *ngIf="ticket.unreadMessages && ticket.unreadMessages > 0">
+                      <span class="unread-badge">
+                        {{ ticket.unreadMessages }} new message{{ (ticket.unreadMessages || 0) > 1 ? 's' : '' }}
+                      </span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewTicketDetails(ticket); $event.stopPropagation()">
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noTickets>
+            <div class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-ticket-alt"></i>
+              </div>
+              <h5>No support tickets found</h5>
+              <p *ngIf="selectedTicketFilter === 'all'">You haven't created any support tickets yet.</p>
+              <p *ngIf="selectedTicketFilter !== 'all'">No {{ selectedTicketFilter }} tickets found.</p>
+              <button class="btn btn-primary" (click)="createSupportTicket()" *ngIf="selectedTicketFilter === 'all'">
+                <i class="fas fa-plus me-2"></i>Create Your First Ticket
+              </button>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'faq'">
+      <div class="tab-card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col">
+              <h5><i class="fas fa-question-circle me-2"></i>Frequently Asked Questions</h5>
+            </div>
+            <div class="col-auto">
+              <div class="search-box">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search FAQ..."
+                  [(ngModel)]="faqSearchTerm"
+                  (input)="searchFAQ()"
+                >
+                <i class="fas fa-search search-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- FAQ Categories -->
+          <div class="faq-categories">
+            <button 
+              class="category-btn" 
+              *ngFor="let category of faqCategories"
+              [class.active]="selectedFaqCategory === category.id"
+              (click)="selectFaqCategory(category.id)"
+            >
+              <i [class]="category.icon"></i>
+              {{ category.name }}
+              <span class="count">({{ category.count }})</span>
+            </button>
+          </div>
+
+          <!-- FAQ Items -->
+          <div class="faq-list">
+            <div class="faq-item" *ngFor="let faq of filteredFaqs">
+              <div class="faq-question" (click)="toggleFaq(faq.id)">
+                <h6>{{ faq.question }}</h6>
+                <i class="fas" [class.fa-chevron-down]="!faq.isOpen" [class.fa-chevron-up]="faq.isOpen"></i>
+              </div>
+              <div class="faq-answer" [class.open]="faq.isOpen">
+                <div class="answer-content" [innerHTML]="faq.answer"></div>
+                <div class="faq-actions">
+                  <small class="text-muted me-3">Was this helpful?</small>
+                  <button class="btn btn-sm btn-link text-success p-0 me-2" (click)="rateFaq(faq.id, true)">
+                    <i class="fas fa-thumbs-up"></i> Yes
+                  </button>
+                  <button class="btn btn-sm btn-link text-danger p-0" (click)="rateFaq(faq.id, false)">
+                    <i class="fas fa-thumbs-down"></i> No
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-footer" *ngIf="filteredFaqs.length === 0 && faqSearchTerm">
+            <div class="text-center">
+              <i class="fas fa-search empty-search-icon"></i>
+              <h6>No FAQ found</h6>
+              <p>We couldn't find any FAQ matching "{{ faqSearchTerm }}"</p>
+              <button class="btn btn-outline-primary" (click)="createSupportTicket()">
+                <i class="fas fa-plus me-2"></i>Ask a Question
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'contact'">
+      <div class="tab-card">
+        <div class="card-header">
+          <h5><i class="fas fa-envelope me-2"></i>Contact Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <!-- Contact Methods -->
+              <div class="contact-methods">
+                <h6>Get in Touch</h6>
+                <div class="contact-item">
+                  <div class="contact-icon bg-primary">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                  <div class="contact-info">
+                    <h6>Phone Support</h6>
+                    <p>{{ supportInfo.phone }}</p>
+                    <small>Available {{ supportInfo.phoneHours }}</small>
+                  </div>
+                </div>
+
+                <div class="contact-item">
+                  <div class="contact-icon bg-success">
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                  <div class="contact-info">
+                    <h6>Email Support</h6>
+                    <p>{{ supportInfo.email }}</p>
+                    <small>Response within {{ supportInfo.emailResponseTime }}</small>
+                  </div>
+                </div>
+
+                <div class="contact-item">
+                  <div class="contact-icon bg-info">
+                    <i class="fas fa-comments"></i>
+                  </div>
+                  <div class="contact-info">
+                    <h6>Live Chat</h6>
+                    <p>Real-time assistance</p>
+                    <div class="chat-status">
+                      <span class="status-dot" [class.online]="liveChatAvailable"></span>
+                      {{ liveChatAvailable ? 'Online' : 'Offline' }}
+                    </div>
+                    <button 
+                      class="btn btn-sm btn-outline-info mt-2" 
+                      (click)="openLiveChat()"
+                      [disabled]="!liveChatAvailable"
+                    >
+                      Start Chat
+                    </button>
+                  </div>
+                </div>
+
+                <div class="contact-item">
+                  <div class="contact-icon bg-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div class="contact-info">
+                    <h6>Emergency Support</h6>
+                    <p>{{ supportInfo.emergencyPhone }}</p>
+                    <small>24/7 for urgent booking issues</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Office Hours -->
+              <div class="office-hours">
+                <h6>Office Hours</h6>
+                <div class="hours-list">
+                  <div class="hour-item" *ngFor="let hour of supportInfo.officeHours">
+                    <span class="day">{{ hour.day }}</span>
+                    <span class="time">{{ hour.hours }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <!-- Quick Contact Form -->
+              <div class="quick-contact">
+                <h6>Send us a Message</h6>
+                <form [formGroup]="quickContactForm" (ngSubmit)="sendQuickMessage()">
+                  <div class="form-group mb-3">
+                    <label for="quickSubject" class="form-label required">Subject</label>
+                    <input
+                      type="text"
+                      id="quickSubject"
+                      class="form-control"
+                      placeholder="Brief description of your issue"
+                      formControlName="subject"
+                      [class.is-invalid]="getFieldError(quickContactForm, 'subject')"
+                    >
+                    <div class="invalid-feedback" *ngIf="getFieldError(quickContactForm, 'subject')">
+                      {{ getFieldError(quickContactForm, 'subject') }}
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label for="quickCategory" class="form-label required">Category</label>
+                    <select
+                      id="quickCategory"
+                      class="form-select"
+                      formControlName="category"
+                      [class.is-invalid]="getFieldError(quickContactForm, 'category')"
+                    >
+                      <option value="">Select category</option>
+                      <option value="booking">Booking Issues</option>
+                      <option value="payment">Payment Problems</option>
+                      <option value="account">Account Management</option>
+                      <option value="technical">Technical Support</option>
+                      <option value="feedback">Feedback</option>
+                      <option value="other">Other</option>
+                    </select>
+                    <div class="invalid-feedback" *ngIf="getFieldError(quickContactForm, 'category')">
+                      {{ getFieldError(quickContactForm, 'category') }}
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label for="quickMessage" class="form-label required">Message</label>
+                    <textarea
+                      id="quickMessage"
+                      class="form-control"
+                      rows="5"
+                      placeholder="Describe your issue or question in detail"
+                      formControlName="message"
+                      [class.is-invalid]="getFieldError(quickContactForm, 'message')"
+                    ></textarea>
+                    <div class="invalid-feedback" *ngIf="getFieldError(quickContactForm, 'message')">
+                      {{ getFieldError(quickContactForm, 'message') }}
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label for="quickPriority" class="form-label">Priority</label>
+                    <select id="quickPriority" class="form-select" formControlName="priority">
+                      <option value="low">Low</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label for="attachments" class="form-label">Attachments</label>
+                    <input
+                      type="file"
+                      id="attachments"
+                      class="form-control"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx"
+                      (change)="onAttachmentSelected($event)"
+                    >
+                    <div class="form-text">
+                      Upload screenshots, documents, or other relevant files (max 10MB each)
+                    </div>
+                    <div class="attachment-list" *ngIf="selectedAttachments.length > 0">
+                      <div class="attachment-item" *ngFor="let file of selectedAttachments; let i = index">
+                        <i class="fas fa-paperclip"></i>
+                        <span>{{ file.name }}</span>
+                        <button type="button" class="btn-remove" (click)="removeAttachment(i)">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary w-100" [disabled]="!quickContactForm.valid || isSending">
+                    <span *ngIf="!isSending">
+                      <i class="fas fa-paper-plane me-2"></i>Send Message
+                    </span>
+                    <span *ngIf="isSending">
+                      <span class="spinner-border spinner-border-sm me-2"></span>Sending...
+                    </span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Guides Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'guides'">
+      <div class="tab-card">
+        <div class="card-header">
+          <h5><i class="fas fa-book me-2"></i>User Guides & Tutorials</h5>
+        </div>
+        <div class="card-body">
+          <div class="guides-grid">
+            <div class="guide-card" *ngFor="let guide of userGuides" (click)="openGuide(guide)">
+              <div class="guide-icon">
+                <i [class]="guide.icon"></i>
+              </div>
+              <div class="guide-content">
+                <h6>{{ guide.title }}</h6>
+                <p>{{ guide.description }}</p>
+                <div class="guide-meta">
+                  <span class="guide-duration">
+                    <i class="fas fa-clock"></i>{{ guide.duration }}
+                  </span>
+                  <span class="guide-difficulty" [ngClass]="getDifficultyClass(guide.difficulty)">
+                    {{ guide.difficulty }}
+                  </span>
+                </div>
+              </div>
+              <div class="guide-arrow">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Ticket Modal -->
+  <div class="modal fade" [class.show]="showTicketModal" [style.display]="showTicketModal ? 'block' : 'none'">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ selectedTicket ? 'Ticket Details' : 'Create Support Ticket' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="closeTicketModal()"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Create Ticket Form -->
+          <form [formGroup]="supportTicketForm" (ngSubmit)="submitSupportTicket()" *ngIf="!selectedTicket">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="ticketSubject" class="form-label required">Subject</label>
+                  <input
+                    type="text"
+                    id="ticketSubject"
+                    class="form-control"
+                    placeholder="Brief description of your issue"
+                    formControlName="subject"
+                    [class.is-invalid]="getFieldError(supportTicketForm, 'subject')"
+                  >
+                  <div class="invalid-feedback" *ngIf="getFieldError(supportTicketForm, 'subject')">
+                    {{ getFieldError(supportTicketForm, 'subject') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="ticketCategory" class="form-label required">Category</label>
+                  <select
+                    id="ticketCategory"
+                    class="form-select"
+                    formControlName="category"
+                    [class.is-invalid]="getFieldError(supportTicketForm, 'category')"
+                  >
+                    <option value="">Select category</option>
+                    <option value="booking">Booking Issues</option>
+                    <option value="payment">Payment Problems</option>
+                    <option value="account">Account Management</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="getFieldError(supportTicketForm, 'category')">
+                    {{ getFieldError(supportTicketForm, 'category') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="ticketPriority" class="form-label">Priority</label>
+                  <select id="ticketPriority" class="form-select" formControlName="priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="relatedBooking" class="form-label">Related Booking (Optional)</label>
+                  <input
+                    type="text"
+                    id="relatedBooking"
+                    class="form-control"
+                    placeholder="Booking ID or reference"
+                    formControlName="relatedBooking"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="ticketDescription" class="form-label required">Description</label>
+              <textarea
+                id="ticketDescription"
+                class="form-control"
+                rows="6"
+                placeholder="Describe your issue or question in detail"
+                formControlName="description"
+                [class.is-invalid]="getFieldError(supportTicketForm, 'description')"
+              ></textarea>
+              <div class="invalid-feedback" *ngIf="getFieldError(supportTicketForm, 'description')">
+                {{ getFieldError(supportTicketForm, 'description') }}
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label for="ticketAttachments" class="form-label">Attachments</label>
+              <input
+                type="file"
+                id="ticketAttachments"
+                class="form-control"
+                multiple
+                accept="image/*,.pdf,.doc,.docx"
+                (change)="onTicketAttachmentSelected($event)"
+              >
+              <div class="form-text">
+                Upload screenshots, documents, or other relevant files (max 10MB each)
+              </div>
+              <div class="attachment-list" *ngIf="ticketAttachments.length > 0">
+                <div class="attachment-item" *ngFor="let file of ticketAttachments; let i = index">
+                  <i class="fas fa-paperclip"></i>
+                  <span>{{ file.name }}</span>
+                  <button type="button" class="btn-remove" (click)="removeTicketAttachment(i)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Ticket Details View -->
+          <div class="ticket-details" *ngIf="selectedTicket">
+            <div class="ticket-header">
+              <div class="row align-items-center">
+                <div class="col">
+                  <h4>{{ selectedTicket.subject }}</h4>
+                  <div class="ticket-meta">
+                    <span class="badge" [ngClass]="getStatusClass(selectedTicket.status)">
+                      {{ selectedTicket.status | titlecase }}
+                    </span>
+                    <span class="badge" [ngClass]="getPriorityClass(selectedTicket.priority)">
+                      {{ selectedTicket.priority | titlecase }}
+                    </span>
+                    <span class="ticket-info">
+                      <i class="fas fa-hashtag"></i>{{ selectedTicket.id }}
+                    </span>
+                    <span class="ticket-info">
+                      <i class="fas fa-calendar"></i>{{ formatDate(selectedTicket.createdAt) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="col-auto">
+                  <div class="ticket-actions">
+                    <button class="btn btn-sm btn-outline-primary me-2" (click)="refreshTicket()">
+                      <i class="fas fa-sync"></i>
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-outline-success"
+                      *ngIf="selectedTicket.status === 'open' || selectedTicket.status === 'pending'"
+                      (click)="closeTicket(selectedTicket.id)"
+                    >
+                      Close Ticket
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ticket-messages">
+              <div class="message-item" *ngFor="let message of selectedTicket.messages" [class.user-message]="message.isFromUser">
+                <div class="message-header">
+                  <div class="message-author">
+                    <div class="author-avatar">
+                      <i [class]="message.isFromUser ? 'fas fa-user' : 'fas fa-headset'"></i>
+                    </div>
+                    <span class="author-name">{{ message.isFromUser ? 'You' : 'Support Team' }}</span>
+                  </div>
+                  <div class="message-time">
+                    {{ formatDate(message.timestamp) }}
+                  </div>
+                </div>
+                <div class="message-content">
+                  <div [innerHTML]="message.content"></div>
+                  <div class="message-attachments" *ngIf="message.attachments?.length">
+                    <div class="attachment" *ngFor="let attachment of message.attachments">
+                      <i class="fas fa-paperclip"></i>
+                      <a [href]="attachment.url" target="_blank">{{ attachment.name }}</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply-form" *ngIf="selectedTicket.status !== 'closed'">
+              <form [formGroup]="replyForm" (ngSubmit)="sendReply()">
+                <div class="form-group mb-3">
+                  <label for="replyMessage" class="form-label">Your Reply</label>
+                  <textarea
+                    id="replyMessage"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Type your reply..."
+                    formControlName="message"
+                    [class.is-invalid]="getFieldError(replyForm, 'message')"
+                  ></textarea>
+                  <div class="invalid-feedback" *ngIf="getFieldError(replyForm, 'message')">
+                    {{ getFieldError(replyForm, 'message') }}
+                  </div>
+                </div>
+                <div class="reply-actions">
+                  <input
+                    type="file"
+                    id="replyAttachments"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx"
+                    (change)="onReplyAttachmentSelected($event)"
+                    hidden
+                  >
+                  <label for="replyAttachments" class="btn btn-outline-secondary btn-sm me-2">
+                    <i class="fas fa-paperclip me-1"></i>Attach Files
+                  </label>
+                  <button type="submit" class="btn btn-primary" [disabled]="!replyForm.valid || isSending">
+                    <span *ngIf="!isSending">
+                      <i class="fas fa-paper-plane me-2"></i>Send Reply
+                    </span>
+                    <span *ngIf="isSending">
+                      <span class="spinner-border spinner-border-sm me-2"></span>Sending...
+                    </span>
+                  </button>
+                </div>
+                <div class="attachment-list" *ngIf="replyAttachments.length > 0">
+                  <div class="attachment-item" *ngFor="let file of replyAttachments; let i = index">
+                    <i class="fas fa-paperclip"></i>
+                    <span>{{ file.name }}</span>
+                    <button type="button" class="btn-remove" (click)="removeReplyAttachment(i)">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" *ngIf="!selectedTicket">
+          <button type="button" class="btn btn-secondary" (click)="closeTicketModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitSupportTicket()" [disabled]="!supportTicketForm.valid || isCreating">
+            <span *ngIf="!isCreating">
+              <i class="fas fa-ticket-alt me-2"></i>Create Ticket
+            </span>
+            <span *ngIf="isCreating">
+              <span class="spinner-border spinner-border-sm me-2"></span>Creating...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="showTicketModal" *ngIf="showTicketModal"></div>
+</div>
