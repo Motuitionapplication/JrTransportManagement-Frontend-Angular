@@ -1,3 +1,4 @@
+<!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
   
   <!-- Top Navigation Bar -->
@@ -25,7 +26,7 @@
         
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=VO" alt="Vehicle driver">
+            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
           </div>
           <div class="user-info">
             <span class="user-name">driver User</span>
@@ -59,10 +60,30 @@
     <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
       <nav class="sidebar-nav">
         <ul class="nav-menu">
-          <li class="nav-item" *ngFor="let item of menuItems">
-            <button type="button" class="nav-link" [class.active]="activeSection === item.key" (click)="navigateToSection(item.key)">
-              <span class="nav-text">{{ item.label }}</span>
-            </button>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'profile'" (click)="setActiveSection('profile')"><span class="nav-text">Profile</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'vehicle'" (click)="setActiveSection('vehicle')"><span class="nav-text">Vehicle</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'consignments'" (click)="setActiveSection('consignments')"><span class="nav-text">Consignments</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'history'" (click)="setActiveSection('history')"><span class="nav-text">History</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'documents'" (click)="setActiveSection('documents')"><span class="nav-text">Documents</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'reviews'" (click)="setActiveSection('reviews')"><span class="nav-text">Reviews</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'support'" (click)="setActiveSection('support')"><span class="nav-text">Support</span></a></li>
+          <li class="nav-item services-dropdown">
+            <a href="#" class="nav-link" (click)="servicesOpen = !servicesOpen" [class.active]="activeSection === 'services'">
+              <span class="nav-text">Services</span>
+              <span style="margin-left:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="vertical-align:middle;">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </a>
+            <ul *ngIf="servicesOpen" class="services-children" style="list-style:none;padding-left:24px;">
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'driver-service'" (click)="setActiveSection('driver-service')"><span class="nav-text">DriverService</span></a></li>
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'vehicle-service'" (click)="setActiveSection('vehicle-service')"><span class="nav-text">VehicleService</span></a></li>
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'consignment-service'" (click)="setActiveSection('consignment-service')"><span class="nav-text">ConsignmentService</span></a></li>
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'review-service'" (click)="setActiveSection('review-service')"><span class="nav-text">ReviewService</span></a></li>
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'owner-service'" (click)="setActiveSection('owner-service')"><span class="nav-text">OwnerService</span></a></li>
+              <li><a href="#" class="nav-link" [class.active]="activeSection === 'customer-service'" (click)="setActiveSection('customer-service')"><span class="nav-text">CustomerService</span></a></li>
+            </ul>
           </li>
         </ul>
       </nav>
@@ -70,8 +91,46 @@
 
     <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <!-- Router Outlet for All Child Components -->
-      <router-outlet></router-outlet>
+      <!-- Main Content Area: Show section title and placeholder for each sidebar item -->
+      <section class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">
+            {{
+              activeSection === 'vehicle-management' ? 'Vehicle Management' :
+              activeSection === 'consignment-management' ? 'Consignment Management' :
+              activeSection === 'driver-management' ? 'Driver Management' :
+              activeSection === 'wallet' ? 'Wallet' :
+              activeSection === 'analytics' ? 'Analytics' :
+              activeSection === 'reports' ? 'Reports' :
+              activeSection === 'fare-terms' ? 'Fare & Terms' :
+              activeSection === 'support' ? 'Support' :
+              activeSection === 'booking-management' ? 'Booking Management' :
+              activeSection === 'earning-components' ? 'Earning Components' :
+              activeSection === 'maintenance' ? 'Maintenance' :
+              'Dashboard'
+            }}
+          </h1>
+          <p class="section-subtitle">
+            Content for {{
+              activeSection === 'vehicle-management' ? 'Vehicle Management' :
+              activeSection === 'consignment-management' ? 'Consignment Management' :
+              activeSection === 'driver-management' ? 'Driver Management' :
+              activeSection === 'wallet' ? 'Wallet' :
+              activeSection === 'analytics' ? 'Analytics' :
+              activeSection === 'reports' ? 'Reports' :
+              activeSection === 'fare-terms' ? 'Fare & Terms' :
+              activeSection === 'support' ? 'Support' :
+              activeSection === 'booking-management' ? 'Booking Management' :
+              activeSection === 'earning-components' ? 'Earning Components' :
+              activeSection === 'maintenance' ? 'Maintenance' :
+              'Dashboard'
+            }} section
+          </p>
+        </div>
+        <div class="placeholder-content">
+          <p>This section is under development.</p>
+        </div>
+      </section>
     </main>
   </div>
 </div>

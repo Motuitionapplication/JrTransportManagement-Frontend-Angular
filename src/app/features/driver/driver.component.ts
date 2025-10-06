@@ -8,15 +8,18 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./driver.component.scss']
 })
 export class DriverComponent implements OnInit {
-  
-  // Sidebar state
-  sidebarCollapsed: boolean = false;
-  
-  // Active section state
-  activeSection: string = 'dashboard';
-  
-  // User dropdown state
-  showUserDropdown: boolean = false;
+
+sidebarCollapsed: boolean = false;
+activeSection: string = 'profile';
+servicesOpen: boolean = false;
+
+toggleSidebar() {
+  this.sidebarCollapsed = !this.sidebarCollapsed;
+}
+
+setActiveSection(section: string) {
+  this.activeSection = section;
+}
 
   // Menu items for sidebar navigation
   menuItems = [

@@ -8,40 +8,19 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./customer.component.scss']
 })
 export class CustomerComponent implements OnInit {
-  
-  // Sidebar state
-  sidebarCollapsed: boolean = false;
-  
-  // Active section state
-  activeSection: string = 'dashboard';
-  
-  // User dropdown state
-  showUserDropdown: boolean = false;
+sidebarCollapsed: boolean = false;
+activeSection: string = 'booking-history';
 
-  // Menu items for sidebar navigation
-  menuItems = [
-    { key: 'dashboard', label: 'Dashboard' },
-    { key: 'bookings', label: 'My Bookings' },
-    // { key: 'trucks', label: 'My Trucks' },
-    { key: 'trips', label: 'My Trips' },
-    { key: 'tracking', label: 'Tracking' },
-    { key: 'transporthistory', label: 'Transport History' },
-    // { key: 'earnings', label: 'Earnings' },
-    // { key: 'schedule', label: 'Schedule' },
-    // { key: 'documents', label: 'Documents' },
-    { key: 'wallet', label: 'Wallet' },
-    { key: 'messages', label: 'Messages' },
-    { key: 'support', label: 'Support' }
-    // { key: 'profile', label: 'Profile' }
-  ];
+toggleSidebar() {
+  this.sidebarCollapsed = !this.sidebarCollapsed;
+}
 
-  // Document alerts for customer
-  documentAlerts = [
-    { documentType: 'Driving License', vehicleNumber: 'DL-2024-001', daysToExpiry: 30 },
-    { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
-  ];
+setActiveSection(section: string) {
+  this.activeSection = section;
+}
+  customer?: Customer;
 
-  constructor(private router: Router) { }
+  constructor(private customerService: CustomerService) { }
 
   ngOnInit(): void {
     console.log('customer component initialized');

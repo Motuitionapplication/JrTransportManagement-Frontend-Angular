@@ -1,3 +1,4 @@
+<!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
   
   <!-- Top Navigation Bar -->
@@ -25,7 +26,7 @@
         
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=VO" alt="Vehicle Owner">
+            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
           </div>
           <div class="user-info">
             <span class="user-name">Owner User</span>
@@ -59,21 +60,63 @@
     <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
       <nav class="sidebar-nav">
         <ul class="nav-menu">
-          <li class="nav-item" *ngFor="let item of menuItems">
-            <a class="nav-link" 
-               [class.active]="activeSection === item.key" 
-               (click)="navigateToSection(item.key); $event.preventDefault()" 
-               [routerLink]="['/owner', item.key]">
-              <span class="nav-text">{{ item.label }}</span>
-            </a>
-          </li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'vehicle-management'" (click)="setActiveSection('vehicle-management')"><span class="nav-text">Vehicle Management</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'consignment-management'" (click)="setActiveSection('consignment-management')"><span class="nav-text">Consignment Management</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'driver-management'" (click)="setActiveSection('driver-management')"><span class="nav-text">Driver Management</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'wallet'" (click)="setActiveSection('wallet')"><span class="nav-text">Wallet</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'analytics'" (click)="setActiveSection('analytics')"><span class="nav-text">Analytics</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'reports'" (click)="setActiveSection('reports')"><span class="nav-text">Reports</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'fare-terms'" (click)="setActiveSection('fare-terms')"><span class="nav-text">Fare & Terms</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'support'" (click)="setActiveSection('support')"><span class="nav-text">Support</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'booking-management'" (click)="setActiveSection('booking-management')"><span class="nav-text">Booking Management</span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'earning-components'" (click)="setActiveSection('earning-components')"><span class="nav-text">Earning </span></a></li>
+          <li class="nav-item"><a href="#" class="nav-link" [class.active]="activeSection === 'maintenance'" (click)="setActiveSection('maintenance')"><span class="nav-text">Maintenance</span></a></li>
         </ul>
       </nav>
     </aside>
 
     <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <router-outlet></router-outlet>
+      <!-- Main Content Area: Show section title and placeholder for each sidebar item -->
+      <section class="content-section">
+        <div class="section-header">
+          <h1 class="section-title">
+            {{
+              activeSection === 'vehicle-management' ? 'Vehicle Management' :
+              activeSection === 'consignment-management' ? 'Consignment Management' :
+              activeSection === 'driver-management' ? 'Driver Management' :
+              activeSection === 'wallet' ? 'Wallet' :
+              activeSection === 'analytics' ? 'Analytics' :
+              activeSection === 'reports' ? 'Reports' :
+              activeSection === 'fare-terms' ? 'Fare & Terms' :
+              activeSection === 'support' ? 'Support' :
+              activeSection === 'booking-management' ? 'Booking Management' :
+              activeSection === 'earning-components' ? 'Earning Components' :
+              activeSection === 'maintenance' ? 'Maintenance' :
+              'Dashboard'
+            }}
+          </h1>
+          <p class="section-subtitle">
+            Content for {{
+              activeSection === 'vehicle-management' ? 'Vehicle Management' :
+              activeSection === 'consignment-management' ? 'Consignment Management' :
+              activeSection === 'driver-management' ? 'Driver Management' :
+              activeSection === 'wallet' ? 'Wallet' :
+              activeSection === 'analytics' ? 'Analytics' :
+              activeSection === 'reports' ? 'Reports' :
+              activeSection === 'fare-terms' ? 'Fare & Terms' :
+              activeSection === 'support' ? 'Support' :
+              activeSection === 'booking-management' ? 'Booking Management' :
+              activeSection === 'earning-components' ? 'Earning Components' :
+              activeSection === 'maintenance' ? 'Maintenance' :
+              'Dashboard'
+            }} section
+          </p>
+        </div>
+        <div class="placeholder-content">
+          <p>This section is under development.</p>
+        </div>
+      </section>
     </main>
   </div>
 </div>
