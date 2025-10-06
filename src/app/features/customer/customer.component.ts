@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-customer',
@@ -44,8 +45,49 @@ export class CustomerComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('customer component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
+    
+    // Subscribe to router events to update active section
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        if (event instanceof NavigationEnd) {
+          this.updateActiveSectionFromUrl(event.url);
+        }
+      });
+    
+    // Set initial active section based on current URL
+    this.updateActiveSectionFromUrl(this.router.url);
+    
+    // Navigate to dashboard by default if we're at the customer root
+    const currentUrl = this.router.url;
+    if (currentUrl === '/customer' || currentUrl === '/customer/') {
+      this.router.navigate(['/customer/dashboard']);
+    }
+  }
+
+  /**
+   * Update active section based on current URL
+   */
+  private updateActiveSectionFromUrl(url: string): void {
+    if (url.includes('/customer/dashboard')) {
+      this.activeSection = 'dashboard';
+    } else if (url.includes('/customer/bookings')) {
+      this.activeSection = 'bookings';
+    } else if (url.includes('/customer/trips')) {
+      this.activeSection = 'trips';
+    } else if (url.includes('/customer/tracking')) {
+      this.activeSection = 'tracking';
+    } else if (url.includes('/customer/transporthistory')) {
+      this.activeSection = 'transporthistory';
+    } else if (url.includes('/customer/wallet')) {
+      this.activeSection = 'wallet';
+    } else if (url.includes('/customer/messages')) {
+      this.activeSection = 'messages';
+    } else if (url.includes('/customer/support')) {
+      this.activeSection = 'support';
+    } else {
+      this.activeSection = 'dashboard';
+    }
   }
 
   /**
@@ -62,6 +104,11 @@ export class CustomerComponent implements OnInit {
   setActiveSection(section: string): void {
     this.activeSection = section;
     console.log('Active section changed to:', section);
+    
+    // Navigate to the appropriate route for dashboard
+    if (section === 'dashboard') {
+      this.router.navigate(['/customer/dashboard']);
+    }
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-driver',
@@ -21,13 +22,13 @@ export class DriverComponent implements OnInit {
   menuItems = [
     { key: 'dashboard', label: 'Dashboard' },
     { key: 'bookings', label: 'My Bookings' },
-    { key: 'trucks', label: 'My Trucks' },
-    { key: 'trips', label: 'My Trips' },
+    { key: 'my-truck', label: 'My Trucks' },
+    { key: 'my-trips', label: 'My Trips' },
     { key: 'earnings', label: 'Earnings' },
     { key: 'schedule', label: 'Schedule' },
     { key: 'documents', label: 'Documents' },
-    {key: 'messages', label: 'Messages' },
-    { key: 'support', label: 'Support' },
+    { key: 'messages', label: 'Messages' },
+    { key: 'support-center', label: 'Support Center' },
     { key: 'profile', label: 'Profile' }
   ];
 
@@ -37,12 +38,24 @@ export class DriverComponent implements OnInit {
     { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
   ];
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
-    console.log('driver component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
+    console.log('Driver component initialized');
+    
+    // Listen to route changes and update active section
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event) => {
+      const navigationEvent = event as NavigationEnd;
+      this.updateActiveSection(navigationEvent.url);
+    });
+    
+    // Set initial active section based on current route
+    this.updateActiveSection(this.router.url);
   }
 
   /**
@@ -53,12 +66,33 @@ export class DriverComponent implements OnInit {
   }
 
   /**
-   * Set the active section for navigation
-   * @param section - The section to activate
+   * Navigate to specific section
    */
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    console.log('Active section changed to:', section);
+  navigateToSection(section: string): void {
+    console.log('Navigating to driver section:', section);
+    console.log('Navigation URL:', `/driver/${section}`);
+    this.router.navigate([`/driver/${section}`]);
+  }
+
+  /**
+   * Update active section based on current URL
+   */
+  private updateActiveSection(url: string): void {
+    const segments = url.split('/');
+    const lastSegment = segments[segments.length - 1];
+    
+    // Map URL segments to menu keys
+    if (lastSegment === 'driver' || lastSegment === '') {
+      this.activeSection = 'dashboard';
+    } else if (lastSegment === 'my-trips') {
+      this.activeSection = 'my-trips';
+    } else if (lastSegment === 'my-truck' || lastSegment === 'trucks') {
+      this.activeSection = 'my-truck'; // Both routes point to same component
+    } else if (lastSegment === 'support-center') {
+      this.activeSection = 'support-center';
+    } else {
+      this.activeSection = lastSegment;
+    }
   }
 
   /**
@@ -183,46 +217,7 @@ export class DriverComponent implements OnInit {
     ];
   }
 
-  /**
-   * Navigate to specific section with additional logic if needed
-   */
-  navigateToSection(section: string, additionalData?: any): void {
-    this.setActiveSection(section);
-    
-    // Add any section-specific logic here
-    switch (section) {
-      case 'bookings':
-        // Load booking data
-        console.log('Loading bookings data...');
-        break;
-      case 'drivers':
-        // Load drivers data
-        console.log('Loading drivers data...');
-        break;
-      case 'customers':
-        // Load customers data
-        console.log('Loading customers data...');
-        break;
-      case 'trucks':
-        // Load trucks data
-        console.log('Loading trucks data...');
-        break;
-      case 'payments':
-        // Load payments data
-        console.log('Loading payments data...');
-        break;
-      case 'reports':
-        // Load reports data
-        console.log('Loading reports data...');
-        break;
-      case 'settings':
-        // Load settings data
-        console.log('Loading settings data...');
-        break;
-      default:
-        console.log('Loading dashboard data...');
-    }
-  }
+
 
   /**
    * Handle user logout
@@ -270,17 +265,19 @@ export class DriverComponent implements OnInit {
   }
 
   /**
-   * Handle user logout - redirect to dashboard
+   * Handle user logout - redirect to login
    */
   logout(): void {
     console.log('User logging out...');
     this.showUserDropdown = false;
     
-    // Clear user session/token if needed
+    // Clear user session/token
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('userSession');
     
-    // Navigate to dashboard page
-    this.router.navigate(['/dashboard']);
+    // Navigate to login page
+    this.router.navigate(['/auth/login']);
   }
 }

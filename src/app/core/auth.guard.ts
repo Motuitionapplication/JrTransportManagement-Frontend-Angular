@@ -4,14 +4,20 @@ import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   constructor(private router: Router) {}
+  
   canActivate(route: ActivatedRouteSnapshot): boolean {
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('role');
     const requiredRole = route.data['role'];
+    
+    // Check if user is authenticated and has the required role
     if (token && userRole && requiredRole && userRole === requiredRole) {
       return true;
     }
-    this.router.navigate(['/login']);
+    
+    // If not authenticated or wrong role, redirect to auth login
+    console.log('Access denied. Required role:', requiredRole, 'User role:', userRole);
+    this.router.navigate(['/auth/login']);
     return false;
   }
 }

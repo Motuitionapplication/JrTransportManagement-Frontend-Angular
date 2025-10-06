@@ -1,0 +1,299 @@
+<div class="schedule-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">My Schedule</h1>
+    <p class="page-subtitle">Manage your daily schedule and availability</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading schedule data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading">
+    <!-- Availability Status -->
+    <div class="availability-section">
+      <div class="status-card" [class]="availabilityStatus.currentStatus">
+        <div class="status-header">
+          <div class="status-icon">
+            <span *ngIf="availabilityStatus.currentStatus === 'available'">🟢</span>
+            <span *ngIf="availabilityStatus.currentStatus === 'busy'">🔴</span>
+            <span *ngIf="availabilityStatus.currentStatus === 'break'">🟡</span>
+            <span *ngIf="availabilityStatus.currentStatus === 'offline'">⚪</span>
+          </div>
+          <div class="status-text">
+            <h3>{{ availabilityStatus.currentStatus | titlecase }}</h3>
+            <p *ngIf="availabilityStatus.reason">{{ availabilityStatus.reason }}</p>
+          </div>
+        </div>
+        <button class="create-event-btn" (click)="createNewEvent()">
+          ➕ Add Event
+        </button>
+      </div>
+    </div>
+
+    <!-- Schedule Navigation -->
+    <div class="schedule-nav">
+      <div class="nav-left">
+        <div class="view-modes">
+          <button 
+            *ngFor="let mode of ['day', 'week', 'month']"
+            class="view-btn"
+            [class.active]="viewMode === mode"
+            (click)="changeViewModeHelper(mode)">
+            {{ mode | titlecase }}
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <button class="nav-btn" (click)="navigateDate('prev')">‹</button>
+        <div class="date-display">
+          <h2>{{ formatDateRange() }}</h2>
+        </div>
+        <button class="nav-btn" (click)="navigateDate('next')">›</button>
+      </div>
+
+      <div class="nav-right">
+        <button class="today-btn" (click)="goToToday()">Today</button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Event Type</label>
+          <select 
+            [(ngModel)]="eventTypeFilter"
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">All Types</option>
+            <option value="trip">Trips</option>
+            <option value="break">Breaks</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="training">Training</option>
+            <option value="personal">Personal</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Status</label>
+          <select 
+            [(ngModel)]="statusFilter"
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="clear-btn" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Views -->
+    <!-- Day View -->
+    <div *ngIf="viewMode === 'day'" class="day-view">
+      <div class="day-header">
+        <h3>{{ formatDate(selectedDate) }}</h3>
+        <div class="event-count">{{ filteredEvents.length }} events</div>
+      </div>
+
+      <!-- No Events State -->
+      <div *ngIf="filteredEvents.length === 0" class="no-events">
+        <div class="no-events-icon">📅</div>
+        <h3>No events scheduled</h3>
+        <p>You have no events for this day. Time to relax or add a new event!</p>
+        <button class="add-event-btn" (click)="createNewEvent()">Add Event</button>
+      </div>
+
+      <!-- Events Timeline -->
+      <div *ngIf="filteredEvents.length > 0" class="timeline">
+        <div 
+          *ngFor="let event of filteredEvents; trackBy: trackByEventId" 
+          class="timeline-event"
+          [class]="getEventTypeClass(event.type) + ' ' + getEventStatusClass(event.status) + ' ' + getPriorityClass(event.priority)"
+          (click)="selectEvent(event)">
+          
+          <div class="event-time">
+            <div class="time-range">
+              {{ formatTime(event.startTime) }} - {{ formatTime(event.endTime) }}
+            </div>
+            <div class="duration">
+              {{ event.endTime.split(':')[0] | number }} - {{ event.startTime.split(':')[0] | number }}h
+            </div>
+          </div>
+
+          <div class="event-content">
+            <div class="event-header">
+              <h4 class="event-title">{{ event.title }}</h4>
+              <div class="event-badges">
+                <span class="type-badge" [style.background-color]="event.color">
+                  {{ event.type | titlecase }}
+                </span>
+                <span class="status-badge" [class]="getEventStatusClass(event.status)">
+                  {{ event.status | titlecase }}
+                </span>
+                <span *ngIf="event.priority === 'high'" class="priority-badge high">High Priority</span>
+              </div>
+            </div>
+
+            <div class="event-details">
+              <div *ngIf="event.customerName" class="detail-item">
+                <span class="detail-icon">👤</span>
+                <span class="detail-text">{{ event.customerName }}</span>
+              </div>
+              <div *ngIf="event.location" class="detail-item">
+                <span class="detail-icon">📍</span>
+                <span class="detail-text">{{ event.location }}</span>
+              </div>
+              <div *ngIf="event.tripId" class="detail-item">
+                <span class="detail-icon">🚗</span>
+                <span class="detail-text">{{ event.tripId }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="event.description" class="event-description">
+              {{ event.description }}
+            </div>
+          </div>
+
+          <div class="event-actions">
+            <button 
+              *ngIf="event.status === 'scheduled'"
+              class="action-btn start-btn"
+              (click)="startEvent(event); $event.stopPropagation()">
+              ▶️
+            </button>
+            <button 
+              *ngIf="event.status === 'in-progress'"
+              class="action-btn complete-btn"
+              (click)="completeEvent(event); $event.stopPropagation()">
+              ✅
+            </button>
+            <button 
+              class="action-btn edit-btn"
+              (click)="editEvent(event); $event.stopPropagation()">
+              ✏️
+            </button>
+            <button 
+              *ngIf="event.status === 'scheduled'"
+              class="action-btn cancel-btn"
+              (click)="cancelEvent(event); $event.stopPropagation()">
+              ❌
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Week View -->
+    <div *ngIf="viewMode === 'week'" class="week-view">
+      <div class="week-header">
+        <h3>Week of {{ formatDateRange() }}</h3>
+      </div>
+
+      <div class="week-grid">
+        <div *ngFor="let day of dayNames; let i = index" class="day-column">
+          <div class="day-header">
+            <div class="day-name">{{ day }}</div>
+            <div class="day-date">
+              {{ (getWeekStart(selectedDate).getDate() + i) }}
+            </div>
+          </div>
+          
+          <div class="day-events">
+            <div 
+              *ngFor="let event of getEventsForDateByIndex(i)"
+              class="week-event"
+              [class]="getEventTypeClass(event.type)"
+              [style.background-color]="event.color"
+              (click)="selectEvent(event)">
+              <div class="event-time">{{ formatTime(event.startTime) }}</div>
+              <div class="event-title">{{ event.title }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Month View -->
+    <div *ngIf="viewMode === 'month'" class="month-view">
+      <div class="month-header">
+        <h3>{{ monthNames[selectedDate.getMonth()] }} {{ selectedDate.getFullYear() }}</h3>
+      </div>
+
+      <div class="calendar-grid">
+        <div *ngFor="let day of dayNames" class="calendar-day-header">
+          {{ day }}
+        </div>
+
+        <div 
+          *ngFor="let week of calendarWeeks"
+          class="calendar-week">
+          <div 
+            *ngFor="let date of week"
+            class="calendar-day"
+            [class.other-month]="date.getMonth() !== selectedDate.getMonth()"
+            [class.today]="isToday(date)"
+            [class.selected]="isSelectedDate(date)"
+            [class.has-events]="hasEvents(date)"
+            (click)="selectDate(date)">
+            
+            <div class="day-number">{{ date.getDate() }}</div>
+            
+            <div class="day-events">
+              <div 
+                *ngFor="let event of getEventsForDate(date); let i = index"
+                class="month-event"
+                [class]="getEventTypeClass(event.type)"
+                [style.background-color]="event.color">
+                <span *ngIf="i < 2">{{ event.title }}</span>
+                <span *ngIf="i === 2">+{{ getEventsForDate(date).length - 2 }} more</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Working Hours Settings -->
+    <div class="working-hours-section">
+      <div class="section-header">
+        <h2>Working Hours</h2>
+        <button class="edit-hours-btn">Edit Hours</button>
+      </div>
+
+      <div class="hours-grid">
+        <div 
+          *ngFor="let hours of workingHours"
+          class="hours-card"
+          [class.not-working]="!hours.isWorking">
+          
+          <div class="day-name">{{ hours.day }}</div>
+          
+          <div *ngIf="hours.isWorking" class="hours-details">
+            <div class="work-hours">
+              {{ formatTime(hours.startTime) }} - {{ formatTime(hours.endTime) }}
+            </div>
+            <div *ngIf="hours.breakStart && hours.breakEnd" class="break-hours">
+              Break: {{ formatTime(hours.breakStart) }} - {{ formatTime(hours.breakEnd) }}
+            </div>
+          </div>
+          
+          <div *ngIf="!hours.isWorking" class="off-day">
+            Day Off
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
