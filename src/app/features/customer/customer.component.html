@@ -60,7 +60,7 @@
       <nav class="sidebar-nav">
         <ul class="nav-menu">
           <li class="nav-item" *ngFor="let item of menuItems">
-            <a href="#" class="nav-link" [class.active]="activeSection === item.key" (click)="setActiveSection(item.key)">
+            <a href="#" class="nav-link" [class.active]="activeSection === item.key" (click)="setActiveSection(item.key); $event.preventDefault()">
               <span class="nav-text">{{ item.label }}</span>
             </a>
           </li>
@@ -70,51 +70,9 @@
 
     <!-- Dashboard Content -->
     <main class="dashboard-content">
+      <!-- Router outlet for child components -->
       <section class="content-section" *ngIf="activeSection === 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title">customer Dashboard</h1>
-        </div>
-
-        <!-- Stats -->
-        <!-- <div class="stats-grid">
-          <div class="stat-card">
-            <h3 class="stat-value">{{ vehicleCount }}</h3>
-            <p class="stat-label">Total Vehicles</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">{{ activeTrips }}</h3>
-            <p class="stat-label">Active Trips</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ walletBalance }}</h3>
-            <p class="stat-label">Wallet Balance</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ monthlyEarnings }}</h3>
-            <p class="stat-label">Monthly Earnings</p>
-          </div>
-        </div> -->
-
-        <!-- Document Alerts -->
-        <!-- <div class="table-card">
-          <h3 class="table-title">Document Alerts</h3>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Document</th>
-                <th>Vehicle</th>
-                <th>Days to Expiry</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let alert of documentAlerts">
-                <td>{{ alert.documentType }}</td>
-                <td>{{ alert.vehicleNumber }}</td>
-                <td>{{ alert.daysToExpiry }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div> -->
+        <router-outlet></router-outlet>
       </section>
 
       <!-- Other sections -->

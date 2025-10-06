@@ -1,0 +1,345 @@
+<div class="my-truck-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-left">
+      <h1 class="page-title">My Truck</h1>
+      <p class="page-subtitle">Manage your vehicle details, maintenance, and performance</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="downloadReport()">
+        <i class="fas fa-download"></i>
+        Download Report
+      </button>
+      <button class="btn btn-primary" (click)="openAddTruckModal()">
+        <i class="fas fa-plus"></i>
+        Add Truck
+      </button>
+    </div>
+  </div>
+
+  <!-- Service Alerts -->
+  <div class="alerts-section" *ngIf="serviceAlerts.length > 0">
+    <h3 class="section-title">Service Alerts</h3>
+    <div class="alerts-grid">
+      <div 
+        class="alert-card" 
+        *ngFor="let alert of serviceAlerts"
+        [class]="getPriorityClass(alert.priority)">
+        <div class="alert-icon">
+          <i class="fas fa-exclamation-triangle" *ngIf="alert.priority === 'high'"></i>
+          <i class="fas fa-info-circle" *ngIf="alert.priority === 'medium'"></i>
+          <i class="fas fa-bell" *ngIf="alert.priority === 'low'"></i>
+        </div>
+        <div class="alert-content">
+          <h4>{{ alert.title }}</h4>
+          <p>{{ alert.description }}</p>
+          <span class="alert-days">{{ alert.daysRemaining }} days remaining</span>
+        </div>
+        <div class="alert-actions">
+          <button class="btn btn-sm btn-primary">Resolve</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Truck Selection -->
+  <div class="truck-selection">
+    <div class="filters-section">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input 
+          type="text" 
+          placeholder="Search trucks..." 
+          [(ngModel)]="searchTerm">
+      </div>
+      <div class="filter-select">
+        <select [(ngModel)]="statusFilter">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="truck-cards-grid">
+      <div 
+        class="truck-card" 
+        *ngFor="let truck of getFilteredTrucks()"
+        [class.selected]="selectedTruck?.id === truck.id"
+        (click)="selectTruck(truck)">
+        <div class="truck-header">
+          <h3>{{ truck.plateNumber }}</h3>
+          <span class="truck-status" [class]="getStatusClass(truck.status)">
+            {{ truck.status | titlecase }}
+          </span>
+        </div>
+        <div class="truck-details">
+          <p><strong>Model:</strong> {{ truck.model }}</p>
+          <p><strong>Capacity:</strong> {{ truck.capacity }}</p>
+          <p><strong>Mileage:</strong> {{ truck.mileage | number }} km</p>
+        </div>
+        <div class="truck-earnings">
+          <span class="earnings-label">Monthly Earnings:</span>
+          <span class="earnings-amount">{{ formatCurrency(truck.earnings.monthly) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Truck Information -->
+  <div class="truck-details-section" *ngIf="selectedTruck">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'overview'"
+        (click)="switchTab('overview')">
+        Overview
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'documents'"
+        (click)="switchTab('documents')">
+        Documents
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'maintenance'"
+        (click)="switchTab('maintenance')">
+        Maintenance
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'performance'"
+        (click)="switchTab('performance')">
+        Performance
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'location'"
+        (click)="switchTab('location')">
+        Location
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      
+      <!-- Overview Tab -->
+      <div class="tab-pane" *ngIf="activeTab === 'overview'">
+        <div class="overview-grid">
+          <div class="info-card">
+            <h3>Vehicle Information</h3>
+            <div class="info-list">
+              <div class="info-item">
+                <span class="label">Plate Number:</span>
+                <span class="value">{{ selectedTruck.plateNumber }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Model:</span>
+                <span class="value">{{ selectedTruck.model }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Year:</span>
+                <span class="value">{{ selectedTruck.year }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Capacity:</span>
+                <span class="value">{{ selectedTruck.capacity }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Fuel Type:</span>
+                <span class="value">{{ selectedTruck.fuelType }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Current Mileage:</span>
+                <span class="value">{{ selectedTruck.mileage | number }} km</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h3>Service Information</h3>
+            <div class="info-list">
+              <div class="info-item">
+                <span class="label">Last Service:</span>
+                <span class="value">{{ formatDate(selectedTruck.lastServiceDate) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Next Service Due:</span>
+                <span class="value">{{ formatDate(selectedTruck.nextServiceDue) }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Days Until Service:</span>
+                <span class="value">{{ getDaysUntil(selectedTruck.nextServiceDue) }} days</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" (click)="scheduleService(selectedTruck)">
+              Schedule Service
+            </button>
+          </div>
+
+          <div class="info-card earnings-card">
+            <h3>Earnings Overview</h3>
+            <div class="earnings-grid">
+              <div class="earning-stat">
+                <span class="stat-label">Daily</span>
+                <span class="stat-value">{{ formatCurrency(selectedTruck.earnings.daily) }}</span>
+              </div>
+              <div class="earning-stat">
+                <span class="stat-label">Weekly</span>
+                <span class="stat-value">{{ formatCurrency(selectedTruck.earnings.weekly) }}</span>
+              </div>
+              <div class="earning-stat">
+                <span class="stat-label">Monthly</span>
+                <span class="stat-value">{{ formatCurrency(selectedTruck.earnings.monthly) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents Tab -->
+      <div class="tab-pane" *ngIf="activeTab === 'documents'">
+        <div class="documents-section">
+          <div class="documents-header">
+            <h3>Vehicle Documents</h3>
+            <button class="btn btn-primary" (click)="openDocumentModal()">
+              <i class="fas fa-plus"></i>
+              Add Document
+            </button>
+          </div>
+          <div class="documents-grid">
+            <div 
+              class="document-card" 
+              *ngFor="let doc of selectedTruck.documents">
+              <div class="document-header">
+                <h4>{{ doc.type | titlecase }}</h4>
+                <span class="document-status" [class]="getDocumentStatusClass(doc.status)">
+                  {{ doc.status | titlecase }}
+                </span>
+              </div>
+              <div class="document-details">
+                <p><strong>Number:</strong> {{ doc.number }}</p>
+                <p><strong>Issue Date:</strong> {{ formatDate(doc.issueDate) }}</p>
+                <p><strong>Expiry Date:</strong> {{ formatDate(doc.expiryDate) }}</p>
+                <p *ngIf="doc.status === 'expiring'">
+                  <strong>Days to Expiry:</strong> 
+                  <span class="text-warning">{{ getDaysUntil(doc.expiryDate) }} days</span>
+                </p>
+              </div>
+              <div class="document-actions">
+                <button class="btn btn-sm btn-secondary">View</button>
+                <button class="btn btn-sm btn-primary" (click)="renewDocument(doc)">Renew</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance Tab -->
+      <div class="tab-pane" *ngIf="activeTab === 'maintenance'">
+        <div class="maintenance-section">
+          <div class="maintenance-header">
+            <h3>Maintenance History</h3>
+            <button class="btn btn-primary" (click)="openMaintenanceModal()">
+              <i class="fas fa-plus"></i>
+              Add Record
+            </button>
+          </div>
+          <div class="maintenance-list">
+            <div 
+              class="maintenance-record" 
+              *ngFor="let record of selectedTruck.maintenance">
+              <div class="record-date">
+                {{ formatDate(record.date) }}
+              </div>
+              <div class="record-content">
+                <h4>{{ record.description }}</h4>
+                <p><strong>Type:</strong> {{ record.type | titlecase }}</p>
+                <p><strong>Service Provider:</strong> {{ record.serviceProvider }}</p>
+                <p><strong>Cost:</strong> {{ formatCurrency(record.cost) }}</p>
+              </div>
+              <div class="record-actions">
+                <button class="btn btn-sm btn-secondary">View Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Tab -->
+      <div class="tab-pane" *ngIf="activeTab === 'performance'">
+        <div class="performance-section">
+          <h3>Performance Metrics</h3>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon">
+                <i class="fas fa-gas-pump"></i>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Fuel Efficiency</span>
+                <span class="metric-value">{{ chartData.performance?.fuelEfficiency }} km/l</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Uptime</span>
+                <span class="metric-value">{{ chartData.performance?.uptime }}%</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon">
+                <i class="fas fa-wrench"></i>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Maintenance Cost</span>
+                <span class="metric-value">{{ formatCurrency(chartData.performance?.maintenanceCost) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Tab -->
+      <div class="tab-pane" *ngIf="activeTab === 'location'">
+        <div class="location-section">
+          <h3>Current Location</h3>
+          <div class="location-info">
+            <div class="location-details">
+              <p><strong>Address:</strong> {{ selectedTruck.location.address }}</p>
+              <p><strong>Last Updated:</strong> {{ formatDate(selectedTruck.location.lastUpdated) }}</p>
+              <p><strong>Coordinates:</strong> {{ selectedTruck.location.latitude }}, {{ selectedTruck.location.longitude }}</p>
+            </div>
+            <button class="btn btn-primary" (click)="trackLocation(selectedTruck)">
+              <i class="fas fa-map-marker-alt"></i>
+              Track Live Location
+            </button>
+          </div>
+          <!-- Map placeholder -->
+          <div class="map-placeholder">
+            <i class="fas fa-map"></i>
+            <p>Live tracking map will be displayed here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Truck Modal -->
+<div class="modal-overlay" *ngIf="showAddTruckModal" (click)="closeAddTruckModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Add New Truck</h3>
+      <button class="close-btn" (click)="closeAddTruckModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p>Add truck form will be implemented here</p>
+    </div>
+  </div>
+</div>

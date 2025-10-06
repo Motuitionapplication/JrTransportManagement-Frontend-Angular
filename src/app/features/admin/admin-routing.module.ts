@@ -9,11 +9,14 @@ import { AdminTrucksComponent } from './components/trucks/admin-trucks.component
 import { AdminPaymentsComponent } from './components/payments/admin-payments.component';
 import { AdminReportsComponent } from './components/reports/admin-reports.component';
 import { AdminSettingsComponent } from './components/settings/admin-settings.component';
+import { AuthGuard } from '../../core/auth.guard';
 
 const routes: Routes = [
   {
     path: '',
     component: AdminComponent,
+    canActivate: [AuthGuard],
+    data: { role: 'ROLE_ADMIN' },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboardComponent },
