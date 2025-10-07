@@ -82,7 +82,20 @@ export class DriverComponent implements OnInit {
   navigateToSection(section: string): void {
     console.log('Navigating to driver section:', section);
     console.log('Navigation URL:', `/driver/${section}`);
-    this.router.navigate([`/driver/${section}`]);
+    
+    // Set active section immediately for UI responsiveness
+    this.setActiveSection(section);
+    
+    // Navigate to the route
+    this.router.navigate([`/driver/${section}`]).then(success => {
+      if (success) {
+        console.log('Navigation successful to:', `/driver/${section}`);
+      } else {
+        console.error('Navigation failed to:', `/driver/${section}`);
+      }
+    }).catch(error => {
+      console.error('Navigation error:', error);
+    });
   }
 
   /**
@@ -92,6 +105,8 @@ export class DriverComponent implements OnInit {
     const segments = url.split('/');
     const lastSegment = segments[segments.length - 1];
     
+    console.log('Updating active section for URL:', url, 'Last segment:', lastSegment);
+    
     // Map URL segments to menu keys
     if (lastSegment === 'driver' || lastSegment === '') {
       this.activeSection = 'dashboard';
@@ -99,11 +114,13 @@ export class DriverComponent implements OnInit {
       this.activeSection = 'my-trips';
     } else if (lastSegment === 'my-truck' || lastSegment === 'trucks') {
       this.activeSection = 'my-truck'; // Both routes point to same component
-    } else if (lastSegment === 'support-center') {
-      this.activeSection = 'support-center';
+    } else if (lastSegment === 'support-center' || lastSegment === 'support') {
+      this.activeSection = 'support-center'; // Handle both old and new routes
     } else {
       this.activeSection = lastSegment;
     }
+    
+    console.log('Active section set to:', this.activeSection);
   }
 
   /**
