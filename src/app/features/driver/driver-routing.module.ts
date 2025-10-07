@@ -3,10 +3,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { DriverComponent } from './driver.component';
 import { DriverDashboardComponent } from './components/driver-dashboard.component';
 import { DriverBookingsComponent } from './components/driver-bookings.component';
-import { DriverSupportComponent } from './components/driver-support.component';
 import { AuthGuard } from '../../core/auth.guard';
 
-// New detailed components with folder structure
+// Folder-based detailed components
 import { MyTripsComponent } from './components/my-trips/my-trips.component';
 import { EarningsComponent } from './components/earnings/earnings.component';
 import { ScheduleComponent } from './components/schedule/schedule.component';
@@ -25,18 +24,19 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DriverDashboardComponent },
-      { path: 'bookings', component: DriverBookingsComponent },
-      { path: 'trucks', component: MyTruckComponent }, // Redirect old route to new component
-      { path: 'support', component: SupportComponent },
-      // New detailed component routes
       { path: 'my-trips', component: MyTripsComponent },
+      { path: 'bookings', component: DriverBookingsComponent },
+      { path: 'my-truck', component: MyTruckComponent },
       { path: 'earnings', component: EarningsComponent },
       { path: 'schedule', component: ScheduleComponent },
       { path: 'documents', component: DocumentsComponent },
       { path: 'messages', component: MessagesComponent },
       { path: 'profile', component: ProfileComponent },
-      { path: 'my-truck', component: MyTruckComponent },
-      { path: 'support-center', component: SupportComponent }
+      { path: 'support-center', component: SupportComponent },
+      
+      // Legacy redirects for backward compatibility
+      { path: 'trucks', redirectTo: 'my-truck', pathMatch: 'full' },
+      { path: 'support', redirectTo: 'support-center', pathMatch: 'full' }
     ]
   }
 ];

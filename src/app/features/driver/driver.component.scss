@@ -207,6 +207,13 @@
               text-decoration: none;
               transition: all 0.2s ease;
               border-left: 3px solid transparent;
+              background: none;
+              border: none;
+              width: 100%;
+              text-align: left;
+              cursor: pointer;
+              font-family: inherit;
+              font-size: inherit;
 
               &:hover {
                 background: rgba(255,255,255,0.08);

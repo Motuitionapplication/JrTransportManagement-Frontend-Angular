@@ -17,8 +17,6 @@ import { DriverRoutingModule } from './driver-routing.module';
 import { DriverComponent } from './driver.component';
 import { DriverDashboardComponent } from './components/driver-dashboard.component';
 import { DriverBookingsComponent } from './components/driver-bookings.component';
-import { DriverTrucksComponent } from './components/driver-trucks.component';
-import { DriverSupportComponent } from './components/driver-support.component';
 
 // New detailed components with folder structure
 import { MyTripsComponent } from './components/my-trips/my-trips.component';
@@ -35,9 +33,7 @@ import { SupportComponent } from './components/support/support.component';
     DriverComponent,
     DriverDashboardComponent,
     DriverBookingsComponent,
-    DriverTrucksComponent,
-    DriverSupportComponent,
-    // New detailed components
+    // Detailed components
     MyTripsComponent,
     EarningsComponent,
     ScheduleComponent,
