@@ -98,22 +98,29 @@ export class BookTransportComponent implements OnInit {
       dropoffLocation: ['', Validators.required],
       dropoffContactName: ['', Validators.required],
       dropoffContactPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      specialInstructions: [''],
       
-      // Step 2: Vehicle Selection (handled by selectedVehicle)
-      
-      // Step 3: Goods Information
+      // Step 2: Goods Information
       goodsType: ['', Validators.required],
       goodsDescription: ['', Validators.required],
       goodsWeight: ['', [Validators.required, Validators.min(0.1)]],
       goodsValue: ['', [Validators.required, Validators.min(1)]],
-      estimatedWeight: ['', [Validators.required, Validators.min(0.1)]],
+      goodsLength: [''],
+      goodsWidth: [''],
+      goodsHeight: [''],
+      fragileGoods: [false],
+      temperatureControlled: [false],
+      hazardousMaterials: [false],
+      loadingUnloadingHelp: [false],
+      insuranceRequired: [false],
       
       // Step 4: Customer Information & Confirmation
       customerName: ['', Validators.required],
       customerEmail: ['', [Validators.required, Validators.email]],
       customerPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      contactName: ['', Validators.required],
-      contactPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      emailNotifications: [true],
+      smsNotifications: [true],
+      paymentMethod: ['', Validators.required],
       agreeTerms: [false, Validators.requiredTrue]
     });
   }
@@ -350,16 +357,18 @@ export class BookTransportComponent implements OnInit {
       'dropoffLocation': 'Dropoff Location',
       'dropoffContactName': 'Dropoff Contact Name',
       'dropoffContactPhone': 'Dropoff Contact Phone',
+      'specialInstructions': 'Special Instructions',
       'goodsType': 'Goods Type',
       'goodsDescription': 'Goods Description',
       'goodsWeight': 'Goods Weight',
       'goodsValue': 'Goods Value',
-      'estimatedWeight': 'Estimated Weight',
+      'goodsLength': 'Goods Length',
+      'goodsWidth': 'Goods Width',
+      'goodsHeight': 'Goods Height',
       'customerName': 'Customer Name',
       'customerEmail': 'Customer Email',
       'customerPhone': 'Customer Phone',
-      'contactName': 'Contact Name',
-      'contactPhone': 'Contact Phone',
+      'paymentMethod': 'Payment Method',
       'agreeTerms': 'Terms and Conditions'
     };
     return labels[fieldName] || fieldName;

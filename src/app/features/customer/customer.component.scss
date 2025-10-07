@@ -207,14 +207,21 @@
               text-decoration: none;
               transition: all 0.2s ease;
               border-left: 3px solid transparent;
+              background: none !important;
+              border: none !important;
+              width: 100% !important;
+              text-align: left !important;
+              cursor: pointer !important;
+              font-family: inherit !important;
+              font-size: inherit !important;
 
               &:hover {
-                background: rgba(255,255,255,0.08);
+                background: rgba(255,255,255,0.08) !important;
                 color: #fff;
               }
 
               &.active {
-                background: rgba(255,255,255,0.15);
+                background: rgba(255,255,255,0.15) !important;
                 color: #fff;
                 border-left-color: #fff;
                 font-weight: 600;
