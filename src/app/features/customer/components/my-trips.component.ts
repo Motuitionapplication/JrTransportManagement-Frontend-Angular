@@ -530,4 +530,12 @@ export class MyTripsComponent implements OnInit {
     console.log('Exporting trips data...');
     // Implementation for exporting trips to PDF/Excel
   }
+
+  /**
+   * Get formatted vehicle type with proper capitalization
+   */
+  getFormattedVehicleType(vehicleType: string): string {
+    if (!vehicleType) return '';
+    return vehicleType.charAt(0).toUpperCase() + vehicleType.slice(1).toLowerCase();
+  }
 }

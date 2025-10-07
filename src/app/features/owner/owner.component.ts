@@ -8,16 +8,15 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./owner.component.scss']
 })
 export class OwnerComponent implements OnInit {
+  
+  // Sidebar state
   sidebarCollapsed: boolean = false;
+  
+  // Active section state
   activeSection: string = 'dashboard';
-
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
-
-  setActiveSection(section: string) {
-    this.activeSection = section;
-  }
+  
+  // User dropdown state
+  showUserDropdown: boolean = false;
   // Dashboard stats
   vehicleCount: number = 12;
   activeTrips: number = 5;
@@ -52,6 +51,14 @@ export class OwnerComponent implements OnInit {
 
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  /**
+   * Set the active section for navigation
+   */
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+    console.log('Active section changed to:', section);
   }
 
   navigateToSection(section: string): void {
