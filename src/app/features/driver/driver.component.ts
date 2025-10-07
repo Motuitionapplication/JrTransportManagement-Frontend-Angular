@@ -9,17 +9,17 @@ import { filter } from 'rxjs/operators';
 })
 export class DriverComponent implements OnInit {
 
-sidebarCollapsed: boolean = false;
-activeSection: string = 'profile';
-servicesOpen: boolean = false;
-
-toggleSidebar() {
-  this.sidebarCollapsed = !this.sidebarCollapsed;
-}
-
-setActiveSection(section: string) {
-  this.activeSection = section;
-}
+  // Sidebar state
+  sidebarCollapsed: boolean = false;
+  
+  // Active section state
+  activeSection: string = 'dashboard';
+  
+  // Services dropdown state
+  servicesOpen: boolean = false;
+  
+  // User dropdown state
+  showUserDropdown: boolean = false;
 
   // Menu items for sidebar navigation
   menuItems = [
@@ -46,6 +46,21 @@ setActiveSection(section: string) {
     private activatedRoute: ActivatedRoute
   ) { }
 
+  /**
+   * Set the active section for navigation
+   */
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+    console.log('Active section changed to:', section);
+  }
+
+  /**
+   * Toggle sidebar collapsed state
+   */
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
   ngOnInit(): void {
     console.log('Driver component initialized');
     
@@ -59,13 +74,6 @@ setActiveSection(section: string) {
     
     // Set initial active section based on current route
     this.updateActiveSection(this.router.url);
-  }
-
-  /**
-   * Toggle sidebar collapsed state
-   */
-  toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
   /**

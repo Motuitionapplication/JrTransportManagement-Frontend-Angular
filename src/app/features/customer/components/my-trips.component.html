@@ -286,7 +286,7 @@
           </div>
           <div class="payment-status">
             <span class="payment-badge" [class]="getPaymentStatusClass(trip.paymentStatus)">
-              {{ trip.paymentStatus | titlecase }}
+              {{ getFormattedVehicleType(trip.paymentStatus) }}
             </span>
           </div>
         </div>
@@ -443,25 +443,25 @@
             <div class="col-md-6">
               <div class="detail-item">
                 <label>Distance</label>
-                <span>{{ formatDistance(selectedTrip.distance) }}</span>
+                <span>{{ selectedTrip ? formatDistance(selectedTrip.distance) : '-' }}</span>
               </div>
             </div>
             <div class="col-md-6">
               <div class="detail-item">
                 <label>Duration</label>
-                <span>{{ formatDuration(selectedTrip.actualDuration || selectedTrip.estimatedDuration) }}</span>
+                <span>{{ selectedTrip ? formatDuration(selectedTrip.actualDuration || selectedTrip.estimatedDuration) : '-' }}</span>
               </div>
             </div>
             <div class="col-md-6">
               <div class="detail-item">
                 <label>Vehicle Type</label>
-                <span>{{ getVehicleTypeIcon(selectedTrip.vehicleType) }} {{ selectedTrip.vehicleType | titlecase }}</span>
+                <span>{{ selectedTrip ? getVehicleTypeIcon(selectedTrip.vehicleType) + ' ' + getFormattedVehicleType(selectedTrip.vehicleType) : '-' }}</span>
               </div>
             </div>
             <div class="col-md-6">
               <div class="detail-item">
                 <label>Trip Cost</label>
-                <span>{{ formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) }}</span>
+                <span>{{ selectedTrip ? formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) : '-' }}</span>
               </div>
             </div>
           </div>
@@ -475,8 +475,8 @@
               <div class="driver-card">
                 <div class="d-flex align-items-center">
                   <img 
-                    [src]="selectedTrip.driver.profileImage || 'https://via.placeholder.com/50x50/6c757d/ffffff?text=D'" 
-                    [alt]="selectedTrip.driver.name"
+                    [src]="selectedTrip?.driver?.profileImage || 'https://via.placeholder.com/50x50/6c757d/ffffff?text=D'"
+                    [alt]="selectedTrip?.driver?.name || 'Driver'"
                     class="driver-avatar-large me-3">
                   <div>
                     <h6 class="mb-1">{{ selectedTrip.driver.name }}</h6>
@@ -491,11 +491,11 @@
             </div>
             <div class="col-md-6">
               <div class="vehicle-card">
-                <h6>{{ selectedTrip.vehicle.make }} {{ selectedTrip.vehicle.model }}</h6>
+                <h6>{{ selectedTrip?.vehicle?.make || 'Vehicle' }} {{ selectedTrip?.vehicle?.model || '' }}</h6>
                 <p class="mb-1">
-                  <strong>{{ selectedTrip.vehicle.registrationNumber }}</strong>
+                  <strong>{{ selectedTrip?.vehicle?.registrationNumber || 'N/A' }}</strong>
                 </p>
-                <small class="text-muted">{{ selectedTrip.vehicle.type }}</small>
+                <small class="text-muted">{{ selectedTrip?.vehicle?.type || 'N/A' }}</small>
               </div>
             </div>
           </div>
@@ -504,7 +504,7 @@
         <!-- Special Instructions -->
         <div *ngIf="selectedTrip.specialInstructions" class="instructions-section mt-4">
           <h6 class="section-title">Special Instructions</h6>
-          <p class="instruction-text">{{ selectedTrip.specialInstructions }}</p>
+          <p class="instruction-text">{{ selectedTrip?.specialInstructions || 'No special instructions' }}</p>
         </div>
 
         <!-- Payment Information -->
@@ -515,15 +515,15 @@
               <div class="col-md-6">
                 <div class="detail-item">
                   <label>Payment Status</label>
-                  <span class="payment-badge" [class]="getPaymentStatusClass(selectedTrip.paymentStatus)">
-                    {{ selectedTrip.paymentStatus | titlecase }}
+                  <span class="payment-badge" [class]="selectedTrip ? getPaymentStatusClass(selectedTrip.paymentStatus) : 'bg-secondary'">
+                    {{ selectedTrip?.paymentStatus ? getFormattedVehicleType(selectedTrip.paymentStatus) : 'N/A' }}
                   </span>
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="detail-item">
                   <label>Total Amount</label>
-                  <span class="amount-large">{{ formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) }}</span>
+                  <span class="amount-large">{{ selectedTrip ? formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) : '-' }}</span>
                 </div>
               </div>
             </div>
@@ -536,7 +536,7 @@
           *ngIf="canTrack(selectedTrip)" 
           type="button" 
           class="btn btn-primary"
-          (click)="trackTrip(selectedTrip); closeTripModal()">
+          (click)="selectedTrip && trackTrip(selectedTrip); closeTripModal()">
           <i class="fas fa-map-marker-alt"></i> Track Trip
         </button>
         <button 
@@ -568,7 +568,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Track Trip - {{ selectedTrip.tripNumber }}</h5>
+        <h5 class="modal-title">Track Trip - {{ selectedTrip?.tripNumber || 'N/A' }}</h5>
         <button type="button" class="btn-close" (click)="closeTrackingModal()"></button>
       </div>
       <div class="modal-body">
@@ -577,12 +577,12 @@
           <div class="status-card">
             <h6>Current Status</h6>
             <p class="status-text">
-              <span class="status-badge" [class]="getStatusClass(selectedTrip.status)">
-                {{ getStatusText(selectedTrip.status) }}
+              <span class="status-badge" [class]="selectedTrip ? getStatusClass(selectedTrip.status) : 'bg-secondary'">
+                {{ selectedTrip ? getStatusText(selectedTrip.status) : 'N/A' }}
               </span>
             </p>
             <small class="text-muted" *ngIf="selectedTrip.trackingInfo">
-              Last updated: {{ getTimeAgo(selectedTrip.trackingInfo.lastUpdate) }}
+              Last updated: {{ selectedTrip?.trackingInfo?.lastUpdate ? getTimeAgo(selectedTrip?.trackingInfo?.lastUpdate!) : 'N/A' }}
             </small>
           </div>
         </div>
@@ -627,7 +627,7 @@
               <button 
                 type="button" 
                 class="btn btn-outline-primary"
-                (click)="getDirections(selectedTrip)">
+                (click)="selectedTrip && getDirections(selectedTrip)">
                 <i class="fas fa-directions"></i> Get Directions
               </button>
             </div>

@@ -12,6 +12,9 @@ export class AdminComponent implements OnInit {
   // Sidebar state
   sidebarCollapsed: boolean = false;
   
+  // Active section state
+  activeSection: string = 'dashboard';
+  
   // User dropdown state
   showUserDropdown: boolean = false;
 
