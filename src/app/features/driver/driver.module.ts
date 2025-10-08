@@ -15,7 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { DriverRoutingModule } from './driver-routing.module';
 import { DriverComponent } from './driver.component';
-import { DriverDashboardComponent } from './components/driver-dashboard.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { DriverBookingsComponent } from './components/driver-bookings.component';
 
 // New detailed components with folder structure
@@ -31,7 +31,7 @@ import { SupportComponent } from './components/support/support.component';
 @NgModule({
   declarations: [
     DriverComponent,
-    DriverDashboardComponent,
+    DashboardComponent,
     DriverBookingsComponent,
     // Detailed components
     MyTripsComponent,

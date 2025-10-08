@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { DriverComponent } from './driver.component';
-import { DriverDashboardComponent } from './components/driver-dashboard.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { DriverBookingsComponent } from './components/driver-bookings.component';
 import { AuthGuard } from '../../core/auth.guard';
 
@@ -23,9 +23,9 @@ const routes: Routes = [
     data: { role: 'ROLE_DRIVER' },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DriverDashboardComponent },
+      { path: 'dashboard', component: DashboardComponent },
       { path: 'my-trips', component: MyTripsComponent },
-      { path: 'bookings', component: DriverBookingsComponent },
+     { path: 'bookings', component: DriverBookingsComponent },
       { path: 'my-truck', component: MyTruckComponent },
       { path: 'earnings', component: EarningsComponent },
       { path: 'schedule', component: ScheduleComponent },
