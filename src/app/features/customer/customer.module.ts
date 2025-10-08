@@ -27,7 +27,7 @@ import { CustomerDashboardComponent } from './components/customer-dashboard.comp
 import { MyBookingsComponent } from './components/my-bookings/my-bookings.component';
 // Force refresh - BookTransport component exists and builds successfully
 import { BookTransportComponent } from './components/book-transport/book-transport.component';
-import { MyTripsComponent } from './components/my-trips.component';
+import { MyTripsComponent } from './components/my-trips/my-trips.component';
 import { TrackingComponent } from './components/tracking.component';
 import { TransportHistoryComponent } from './components/transport-history.component';
 import { WalletComponent } from './components/wallet.component';

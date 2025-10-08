@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { CustomerComponent } from './customer.component';
 import { CustomerDashboardComponent } from './components/customer-dashboard.component';
 import { MyBookingsComponent } from './components/my-bookings/my-bookings.component';
-import { MyTripsComponent } from './components/my-trips.component';
+import { MyTripsComponent } from './components/my-trips/my-trips.component';
 import { TrackingComponent } from './components/tracking.component';
 import { TransportHistoryComponent } from './components/transport-history.component';
 import { WalletComponent } from './components/wallet.component';

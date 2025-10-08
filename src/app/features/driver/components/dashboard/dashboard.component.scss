@@ -1,0 +1,453 @@
+// Dashboard Container
+.dashboard-container {
+  padding: 0;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+
+  .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .header-content {
+      .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .page-subtitle {
+        opacity: 0.9;
+        margin-bottom: 0;
+        font-size: 1.1rem;
+      }
+    }
+
+    .header-actions {
+      .btn {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .fa-spin {
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+  }
+}
+
+// Stats Section
+.stats-section {
+  margin-bottom: 2rem;
+  padding: 0 1.5rem;
+
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card-body {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .stat-content {
+      flex: 1;
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #2d3748;
+      }
+
+      .stat-loading {
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-label {
+        color: #718096;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-change {
+        font-size: 0.8rem;
+        font-weight: 600;
+
+        &.positive {
+          color: #38a169;
+        }
+
+        &.negative {
+          color: #e53e3e;
+        }
+
+        &.neutral {
+          color: #718096;
+        }
+
+        i {
+          margin-right: 0.25rem;
+        }
+      }
+    }
+
+    // Stat card color variants
+    &.stat-primary {
+      .stat-icon {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+      }
+    }
+
+    &.stat-success {
+      .stat-icon {
+        background: linear-gradient(135deg, #48bb78, #38a169);
+        color: white;
+      }
+    }
+
+    &.stat-warning {
+      .stat-icon {
+        background: linear-gradient(135deg, #ed8936, #dd6b20);
+        color: white;
+      }
+    }
+
+    &.stat-info {
+      .stat-icon {
+        background: linear-gradient(135deg, #4299e1, #3182ce);
+        color: white;
+      }
+    }
+
+    &.stat-secondary {
+      .stat-icon {
+        background: linear-gradient(135deg, #a0aec0, #718096);
+        color: white;
+      }
+    }
+
+    &.stat-danger {
+      .stat-icon {
+        background: linear-gradient(135deg, #f56565, #e53e3e);
+        color: white;
+      }
+    }
+  }
+}
+
+// Main Content
+.row {
+  margin: 0 1.5rem;
+}
+
+// Quick Actions Card
+.quick-action-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e0;
+  }
+
+  .action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .action-content {
+    flex: 1;
+
+    .action-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #2d3748;
+    }
+
+    .action-description {
+      font-size: 0.85rem;
+      color: #718096;
+      margin-bottom: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .action-arrow {
+    color: #cbd5e0;
+    font-size: 0.875rem;
+  }
+}
+
+// Recent Activities
+.activities-list {
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f7fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #f7fafc;
+      margin: 0 -1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border-radius: 6px;
+    }
+
+    .activity-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      background-color: rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+    }
+
+    .activity-content {
+      flex: 1;
+      min-width: 0;
+
+      .activity-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #2d3748;
+      }
+
+      .activity-description {
+        font-size: 0.8rem;
+        color: #718096;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .activity-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+
+        .activity-time {
+          font-size: 0.75rem;
+          color: #a0aec0;
+        }
+
+        .badge {
+          font-size: 0.7rem;
+          padding: 0.25rem 0.5rem;
+        }
+
+        .activity-amount {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #38a169;
+        }
+      }
+    }
+  }
+}
+
+// Cards
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+
+  .card-header {
+    background-color: white;
+    border-bottom: 1px solid #f7fafc;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px 12px 0 0 !important;
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2d3748;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+// Loading States
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  .loading-spinner {
+    text-align: center;
+
+    p {
+      margin-top: 1rem;
+      color: #718096;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .dashboard-container {
+    .page-header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+
+      .header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+    }
+  }
+
+  .stats-section {
+    padding: 0 1rem;
+  }
+
+  .row {
+    margin: 0 1rem;
+  }
+
+  .stat-card {
+    .stat-card-body {
+      padding: 1.25rem;
+    }
+
+    .stat-content {
+      .stat-value {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .quick-action-card {
+    padding: 1rem;
+
+    .action-content {
+      .action-title {
+        font-size: 0.9rem;
+      }
+
+      .action-description {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-section {
+    .stat-card {
+      .stat-card-body {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+      }
+    }
+  }
+
+  .quick-action-card {
+    .action-content {
+      .action-description {
+        display: none;
+      }
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Utility classes for text colors
+.text-primary { color: #667eea !important; }
+.text-success { color: #48bb78 !important; }
+.text-warning { color: #ed8936 !important; }
+.text-info { color: #4299e1 !important; }
+.text-danger { color: #f56565 !important; }
+.text-secondary { color: #a0aec0 !important; }
