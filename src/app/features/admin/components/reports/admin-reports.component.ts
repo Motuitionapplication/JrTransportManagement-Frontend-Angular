@@ -1,4 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { HttpClient } from '@angular/common/http';
 
 export interface ReportData {
   totalBookings: number;
@@ -11,6 +15,7 @@ export interface ReportData {
   totalKilometers: number;
   fuelCosts: number;
   profitMargin: number;
+  avgRevenuePerCustomer?: number; // Optional field for average revenue per customer
 }
 
 export interface ChartData {
@@ -134,7 +139,7 @@ export class AdminReportsComponent implements OnInit {
     ]
   };
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   ngOnInit(): void {
     this.loadReportData();
@@ -145,32 +150,55 @@ export class AdminReportsComponent implements OnInit {
    * Load report data based on selected date range
    */
   loadReportData(): void {
-    // Mock data - replace with actual API calls
-    this.reportData = {
-      totalBookings: 1245,
-      completedBookings: 1089,
-      cancelledBookings: 156,
-      totalRevenue: 2850000,
-      monthlyRevenue: 485000,
-      activeDrivers: 248,
-      activeCustomers: 1850,
-      totalKilometers: 425000,
-      fuelCosts: 125000,
-      profitMargin: 22.5
+    const params = {
+      startDate: this.startDate.toISOString(),
+      endDate: this.endDate.toISOString(),
+      reportType: this.selectedReportType
     };
+
+    this.http.get<ReportData>('/api/reports', { params }).subscribe(
+      (data) => {
+        this.reportData = {
+          ...data,
+          activeCustomers: data.activeCustomers || 0, // Ensure activeCustomers is set
+          avgRevenuePerCustomer: data.activeCustomers > 0
+            ? data.totalRevenue / data.activeCustomers
+            : 0 // Handle division by zero
+        };
+        this.generateChartData();
+      },
+      (error) => {
+        console.error('Failed to fetch report data:', error);
+        this.reportData = {
+          totalBookings: 0,
+          completedBookings: 0,
+          cancelledBookings: 0,
+          totalRevenue: 0,
+          monthlyRevenue: 0,
+          activeDrivers: 0,
+          activeCustomers: 0,
+          totalKilometers: 0,
+          fuelCosts: 0,
+          profitMargin: 0,
+          avgRevenuePerCustomer: 0 // Reset to zero on error
+        };
+      }
+    );
   }
 
   /**
    * Generate chart data for visualization
    */
   generateChartData(): void {
+    if (!this.reportData) return;
+
     // Revenue Chart Data
     this.revenueChartData = {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       datasets: [
         {
           label: 'Monthly Revenue (₹)',
-          data: [380000, 425000, 465000, 485000, 520000, 485000, 545000, 580000, 485000, 425000, 465000, 485000],
+          data: this.reportData.monthlyRevenue ? [this.reportData.monthlyRevenue] : [],
           backgroundColor: ['rgba(33, 150, 243, 0.1)'],
           borderColor: 'rgba(33, 150, 243, 1)',
           borderWidth: 2
@@ -247,8 +275,69 @@ export class AdminReportsComponent implements OnInit {
    * Export report data
    */
   exportReport(format: string): void {
-    console.log(`Exporting report in ${format} format`);
-    // Implement export functionality
+    if (format === 'pdf') {
+      const doc = new jsPDF();
+      const head = [['Metric', 'Value']];
+      const body = [
+        ['Total Bookings', this.reportData.totalBookings],
+        ['Completed Bookings', this.reportData.completedBookings],
+        ['Cancelled Bookings', this.reportData.cancelledBookings],
+        ['Total Revenue', this.formatCurrency(this.reportData.totalRevenue)],
+        ['Monthly Revenue', this.formatCurrency(this.reportData.monthlyRevenue)],
+        ['Active Drivers', this.reportData.activeDrivers],
+        ['Active Customers', this.reportData.activeCustomers],
+        ['Total Kilometers', `${this.reportData.totalKilometers} km`],
+        ['Fuel Costs', this.formatCurrency(this.reportData.fuelCosts)],
+        ['Profit Margin', `${this.reportData.profitMargin}%`]
+      ];
+      autoTable(doc, { head, body });
+      doc.save('report.pdf');
+    } else if (format === 'excel') {
+      const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet([
+        {
+          Metric: 'Total Bookings',
+          Value: this.reportData.totalBookings
+        },
+        {
+          Metric: 'Completed Bookings',
+          Value: this.reportData.completedBookings
+        },
+        {
+          Metric: 'Cancelled Bookings',
+          Value: this.reportData.cancelledBookings
+        },
+        {
+          Metric: 'Total Revenue',
+          Value: this.formatCurrency(this.reportData.totalRevenue)
+        },
+        {
+          Metric: 'Monthly Revenue',
+          Value: this.formatCurrency(this.reportData.monthlyRevenue)
+        },
+        {
+          Metric: 'Active Drivers',
+          Value: this.reportData.activeDrivers
+        },
+        {
+          Metric: 'Active Customers',
+          Value: this.reportData.activeCustomers
+        },
+        {
+          Metric: 'Total Kilometers',
+          Value: `${this.reportData.totalKilometers} km`
+        },
+        {
+          Metric: 'Fuel Costs',
+          Value: this.formatCurrency(this.reportData.fuelCosts)
+        },
+        {
+          Metric: 'Profit Margin',
+          Value: `${this.reportData.profitMargin}%`
+        }
+      ]);
+      const workbook: XLSX.WorkBook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+      XLSX.writeFile(workbook, 'report.xlsx');
+    }
   }
 
   /**
@@ -256,15 +345,55 @@ export class AdminReportsComponent implements OnInit {
    */
   generateDetailedReport(): void {
     console.log('Generating detailed report...');
-    // Implement detailed report generation
+
+    // Simulate fetching detailed report data from backend
+    const detailedReportData = [
+      { Metric: 'Total Bookings', Value: this.reportData.totalBookings },
+      { Metric: 'Completed Bookings', Value: this.reportData.completedBookings },
+      { Metric: 'Cancelled Bookings', Value: this.reportData.cancelledBookings },
+      { Metric: 'Total Revenue', Value: this.formatCurrency(this.reportData.totalRevenue) },
+      { Metric: 'Monthly Revenue', Value: this.formatCurrency(this.reportData.monthlyRevenue) },
+      { Metric: 'Active Drivers', Value: this.reportData.activeDrivers },
+      { Metric: 'Active Customers', Value: this.reportData.activeCustomers },
+      { Metric: 'Total Kilometers', Value: `${this.reportData.totalKilometers} km` },
+      { Metric: 'Fuel Costs', Value: this.formatCurrency(this.reportData.fuelCosts) },
+      { Metric: 'Profit Margin', Value: `${this.reportData.profitMargin}%` }
+    ];
+
+    // Display the detailed report in the console (replace with actual UI logic)
+    console.table(detailedReportData);
+
+    // TODO: Replace this with logic to display the detailed report in a dialog or new page
   }
 
   /**
    * Schedule automatic report
    */
   scheduleReport(): void {
-    console.log('Scheduling automatic report...');
-    // Implement report scheduling functionality
+    console.log('Scheduling report...');
+    // TODO: Call backend API to schedule report
+  }
+
+  /**
+   * Export detailed report to Excel
+   */
+  exportExcel(): void {
+    const detailedReportData = [
+      { Metric: 'Total Bookings', Value: this.reportData.totalBookings },
+      { Metric: 'Completed Bookings', Value: this.reportData.completedBookings },
+      { Metric: 'Cancelled Bookings', Value: this.reportData.cancelledBookings },
+      { Metric: 'Total Revenue', Value: this.formatCurrency(this.reportData.totalRevenue) },
+      { Metric: 'Monthly Revenue', Value: this.formatCurrency(this.reportData.monthlyRevenue) },
+      { Metric: 'Active Drivers', Value: this.reportData.activeDrivers },
+      { Metric: 'Active Customers', Value: this.reportData.activeCustomers },
+      { Metric: 'Total Kilometers', Value: `${this.reportData.totalKilometers} km` },
+      { Metric: 'Fuel Costs', Value: this.formatCurrency(this.reportData.fuelCosts) },
+      { Metric: 'Profit Margin', Value: `${this.reportData.profitMargin}%` }
+    ];
+
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(detailedReportData);
+    const workbook: XLSX.WorkBook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+    XLSX.writeFile(workbook, 'detailed_report.xlsx');
   }
 
   /**

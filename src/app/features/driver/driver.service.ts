@@ -22,6 +22,27 @@ export class DriverService {
     this.apiUrl = `${this.envService.getApiUrl()}/transport/drivers`;
   }
 
+  /**
+   * Fetch all drivers from backend
+   */
+  getAllDrivers() {
+    return this.http.get<Driver[]>(`${this.apiUrl}`);
+  }
+
+  /**
+   * Fetch single driver by id
+   */
+  getDriverById(driverId: string) {
+    return this.http.get<Driver>(`${this.apiUrl}/${driverId}`);
+  }
+
+  /**
+   * Create a new driver
+   */
+  createDriver(driverDTO: DriverDTO) {
+    return this.http.post<Driver>(`${this.apiUrl}`, driverDTO);
+  }
+
   updateDriverDetails(driverId: string, driverDTO: DriverDTO): Observable<DriverDTO> {
     return this.http.put<DriverDTO>(`${this.apiUrl}/${driverId}`, driverDTO);
   }

@@ -1,4 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, fromEvent } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { BookingService } from 'src/app/services/booking.service';
+import { VehicleService } from 'src/app/services/vehicle.service';
+import { OwnerService } from 'src/app/services/owner.service';
+import { DashboardStatsService, DashboardStats } from 'src/app/services/dashboard-stats.service';
+import { Booking } from 'src/app/models/booking.model';
+import { ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
+import { Router } from '@angular/router';
 
 interface StatCard {
   title: string;
@@ -18,471 +27,285 @@ interface Activity {
 
 @Component({
   selector: 'app-admin-dashboard',
-  template: `
-    <div class="admin-dashboard">
-      <!-- Header Section -->
-      <div class="header-section">
-        <h1 class="dashboard-title">Admin Dashboard</h1>
-        <p class="dashboard-subtitle">Welcome to JR Transport Management System</p>
-      </div>
-
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        <div class="stat-card" *ngFor="let stat of statsData">
-          <div class="stat-icon">
-            <mat-icon>{{ stat.icon }}</mat-icon>
-          </div>
-          <div class="stat-content">
-            <h3 class="stat-value">{{ stat.value }}</h3>
-            <p class="stat-title">{{ stat.title }}</p>
-            <span class="stat-change" [ngClass]="stat.changeType">
-              {{ stat.change }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts and Activity Row -->
-      <div class="dashboard-row">
-        <!-- Revenue Chart Card -->
-        <mat-card class="chart-card">
-          <mat-card-header>
-            <mat-card-title>Revenue Overview</mat-card-title>
-            <mat-card-subtitle>Monthly revenue tracking</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="chart-container">
-              <!-- Placeholder for chart -->
-              <div class="chart-placeholder">
-                <mat-icon>trending_up</mat-icon>
-                <p>Chart implementation pending</p>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <!-- Recent Activity Card -->
-        <mat-card class="activity-card">
-          <mat-card-header>
-            <mat-card-title>Recent Activity</mat-card-title>
-            <mat-card-subtitle>Latest system activities</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <div class="activity-list">
-              <div class="activity-item" *ngFor="let activity of recentActivities">
-                <div class="activity-icon" [ngClass]="activity.type">
-                  <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
-                </div>
-                <div class="activity-details">
-                  <h4 class="activity-title">{{ activity.title }}</h4>
-                  <p class="activity-subtitle" *ngIf="activity.subtitle">{{ activity.subtitle }}</p>
-                  <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
-                </div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <h2 class="section-title">Quick Actions</h2>
-        <div class="actions-grid">
-          <mat-card class="action-card" routerLink="/admin/bookings">
-            <mat-icon>book_online</mat-icon>
-            <h3>Manage Bookings</h3>
-            <p>View and manage all transport bookings</p>
-          </mat-card>
-
-          <mat-card class="action-card" routerLink="/admin/drivers">
-            <mat-icon>person</mat-icon>
-            <h3>Driver Management</h3>
-            <p>Manage driver profiles and assignments</p>
-          </mat-card>
-
-          <mat-card class="action-card" routerLink="/admin/customers">
-            <mat-icon>people</mat-icon>
-            <h3>Customer Management</h3>
-            <p>Manage customer accounts and profiles</p>
-          </mat-card>
-
-          <mat-card class="action-card" routerLink="/admin/trucks">
-            <mat-icon>local_shipping</mat-icon>
-            <h3>Fleet Management</h3>
-            <p>Manage vehicle fleet and maintenance</p>
-          </mat-card>
-
-          <mat-card class="action-card" routerLink="/admin/payments">
-            <mat-icon>payment</mat-icon>
-            <h3>Payment Management</h3>
-            <p>Process payments and transactions</p>
-          </mat-card>
-
-          <mat-card class="action-card" routerLink="/admin/reports">
-            <mat-icon>assessment</mat-icon>
-            <h3>Reports & Analytics</h3>
-            <p>Generate reports and view analytics</p>
-          </mat-card>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .admin-dashboard {
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-    }
-
-    .header-section {
-      text-align: center;
-      margin-bottom: 2rem;
-      padding: 2rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 12px;
-      margin: 1rem;
-    }
-
-    .dashboard-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .dashboard-subtitle {
-      font-size: 1.1rem;
-      margin: 0.5rem 0 0 0;
-      opacity: 0.9;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      margin: 2rem 1rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      transition: transform 0.2s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .stat-icon {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 12px;
-      padding: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .stat-icon mat-icon {
-      font-size: 1.5rem;
-      width: 1.5rem;
-      height: 1.5rem;
-    }
-
-    .stat-content {
-      flex: 1;
-    }
-
-    .stat-value {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin: 0;
-      color: #333;
-    }
-
-    .stat-title {
-      font-size: 0.9rem;
-      color: #666;
-      margin: 0.25rem 0;
-    }
-
-    .stat-change {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 0.25rem 0.5rem;
-      border-radius: 20px;
-    }
-
-    .stat-change.positive {
-      background: rgba(76, 175, 80, 0.1);
-      color: #4caf50;
-    }
-
-    .stat-change.negative {
-      background: rgba(244, 67, 54, 0.1);
-      color: #f44336;
-    }
-
-    .dashboard-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1.5rem;
-      margin: 2rem 1rem;
-    }
-
-    .chart-card, .activity-card {
-      background: white;
-      border-radius: 12px;
-    }
-
-    .chart-container {
-      height: 300px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chart-placeholder {
-      text-align: center;
-      color: #666;
-    }
-
-    .chart-placeholder mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      margin-bottom: 1rem;
-    }
-
-    .activity-list {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      padding: 1rem 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .activity-item:last-child {
-      border-bottom: none;
-    }
-
-    .activity-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .activity-icon.success {
-      background: rgba(76, 175, 80, 0.1);
-      color: #4caf50;
-    }
-
-    .activity-icon.warning {
-      background: rgba(255, 152, 0, 0.1);
-      color: #ff9800;
-    }
-
-    .activity-icon.error {
-      background: rgba(244, 67, 54, 0.1);
-      color: #f44336;
-    }
-
-    .activity-icon.info {
-      background: rgba(33, 150, 243, 0.1);
-      color: #2196f3;
-    }
-
-    .activity-details {
-      flex: 1;
-    }
-
-    .activity-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin: 0;
-      color: #333;
-    }
-
-    .activity-subtitle {
-      font-size: 0.8rem;
-      color: #666;
-      margin: 0.25rem 0;
-    }
-
-    .activity-time {
-      font-size: 0.75rem;
-      color: #999;
-    }
-
-    .quick-actions {
-      margin: 2rem 1rem;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
-
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .action-card {
-      padding: 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      background: white;
-      border-radius: 12px;
-    }
-
-    .action-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .action-card mat-icon {
-      font-size: 2.5rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      color: #667eea;
-      margin-bottom: 1rem;
-    }
-
-    .action-card h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0 0 0.5rem 0;
-      color: #333;
-    }
-
-    .action-card p {
-      font-size: 0.9rem;
-      color: #666;
-      margin: 0;
-      line-height: 1.4;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .dashboard-row {
-        grid-template-columns: 1fr;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr;
-        margin: 1rem;
-      }
-      
-      .actions-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      }
-      
-      .header-section {
-        margin: 0.5rem;
-        padding: 1.5rem;
-      }
-      
-      .dashboard-title {
-        font-size: 2rem;
-      }
-    }
-  `]
+  templateUrl: './admin-dashboard.component.html',
+  styleUrls: ['./admin-dashboard.component.scss']
 })
-export class AdminDashboardComponent implements OnInit {
-  
+export class AdminDashboardComponent implements OnInit, AfterViewInit {
+  @ViewChild('revenueChart', { static: false }) revenueChartRef!: ElementRef<HTMLCanvasElement>;
+
+  private chartCtx: CanvasRenderingContext2D | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private destroy$ = new Subject<void>();
+
   statsData: StatCard[] = [
-    {
-      title: 'Total Bookings',
-      value: 1245,
-      change: '+12% this month',
-      changeType: 'positive',
-      icon: 'book_online'
-    },
-    {
-      title: 'Active Drivers',
-      value: 248,
-      change: '+8% this month',
-      changeType: 'positive',
-      icon: 'person'
-    },
-    {
-      title: 'Monthly Revenue',
-      value: '$54,630',
-      change: '-3% this month',
-      changeType: 'negative',
-      icon: 'attach_money'
-    },
-    {
-      title: 'Pending Payments',
-      value: 32,
-      change: '-15% this month',
-      changeType: 'positive',
-      icon: 'payment'
-    }
+    { title: 'Total Bookings', value: 0, change: '', changeType: 'positive', icon: 'book_online' },
+    { title: 'Active Drivers', value: 0, change: '', changeType: 'positive', icon: 'person' },
+    { title: 'Monthly Revenue', value: '$0', change: '', changeType: 'positive', icon: 'attach_money' },
+    { title: 'Pending Payments', value: 0, change: '', changeType: 'negative', icon: 'payment' }
   ];
 
-  recentActivities: Activity[] = [
-    {
-      id: 1,
-      type: 'success',
-      title: 'New booking received',
-      subtitle: 'Booking #B12345 from Mumbai to Delhi',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: 'Driver assigned',
-      subtitle: 'Raj Kumar assigned to booking #B12344',
-      timestamp: new Date(Date.now() - 1000 * 60 * 45) // 45 minutes ago
-    },
-    {
-      id: 3,
-      type: 'warning',
-      title: 'Payment pending',
-      subtitle: 'Payment overdue for booking #B12340',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'Delivery completed',
-      subtitle: 'Booking #B12339 successfully delivered',
-      timestamp: new Date(Date.now() - 1000 * 60 * 90) // 1.5 hours ago
-    },
-    {
-      id: 5,
-      type: 'error',
-      title: 'Payment failed',
-      subtitle: 'Payment processing failed for booking #B12338',
-      timestamp: new Date(Date.now() - 1000 * 60 * 120) // 2 hours ago
-    }
-  ];
+  recentActivities: Activity[] = [];
+  visibleActivities = 5;
 
-  constructor() { }
+  // internal caches
+  private bookings: Booking[] = [];
+
+  constructor(
+    private bookingService: BookingService,
+    private vehicleService: VehicleService,
+    private ownerService: OwnerService,
+    private statsService: DashboardStatsService
+    ,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     console.log('Admin Dashboard Component initialized');
+    this.loadDashboardData();
+  }
+
+  ngAfterViewInit(): void {
+    // setup canvas context when view init completes
+    if (this.revenueChartRef) {
+      const canvas = this.revenueChartRef.nativeElement;
+      this.chartCtx = canvas.getContext('2d');
+      this.setupCanvasSize();
+      // redraw when bookings change handled via bookings subscription
+      // observe resizes
+      try {
+        this.resizeObserver = new ResizeObserver(() => {
+          this.setupCanvasSize();
+          this.drawRevenueChart();
+        });
+        this.resizeObserver.observe(canvas.parentElement || canvas);
+      } catch (e) {
+        // ResizeObserver may not be available in some environments
+        window.addEventListener('resize', this.onWindowResize);
+      }
+    }
+  }
+
+  private onWindowResize = () => {
+    this.setupCanvasSize();
+    this.drawRevenueChart();
+  }
+
+  private loadDashboardData(): void {
+    // Subscribe to bookings stream
+    this.bookingService.bookings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((bookings) => {
+        this.bookings = bookings || [];
+        this.updateStatsFromBookings();
+        this.buildRecentActivitiesFromBookings();
+        // redraw chart when bookings update
+        this.drawRevenueChart();
+      });
+
+    // Fetch consolidated stats (try backend first, fall back to local computation)
+    this.statsService.getAllStats()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((s: DashboardStats) => {
+        this.setStat('Total Bookings', s.totalBookings);
+        this.setStat('Active Drivers', s.activeDrivers);
+        this.setStat('Monthly Revenue', `$${s.monthlyRevenue.toFixed(2)}`);
+        this.setStat('Pending Payments', s.pendingPayments);
+      }, (err) => {
+        console.warn('Dashboard stats fetch failed, falling back to local streams', err);
+      });
+
+    // Vehicles -> active drivers count approximation
+    this.vehicleService.vehicles$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((vehicles) => {
+        const activeDrivers = vehicles ? vehicles.filter(v => !!v.isActive).length : 0;
+        this.setStat('Active Drivers', activeDrivers);
+      });
+
+    // Owners -> pending payments approximation (owners with pending wallet transactions)
+    this.ownerService.owners$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((owners) => {
+        // Approximate pending payments as owners with reserved amount > 0
+        const pending = owners ? owners.reduce((acc, o) => acc + (o.wallet?.reservedAmount || 0), 0) : 0;
+        this.setStat('Pending Payments', pending);
+      });
+  }
+
+  private updateStatsFromBookings(): void {
+    const totalBookings = this.bookings.length;
+    const monthlyRevenue = this.bookings.reduce((acc, b) => acc + (b.pricing?.finalAmount || 0), 0);
+    const pendingPaymentsCount = this.bookings.filter(b => b.payment?.status === 'pending').length;
+
+    this.setStat('Total Bookings', totalBookings);
+    this.setStat('Monthly Revenue', `$${monthlyRevenue.toFixed(2)}`);
+    this.setStat('Pending Payments', pendingPaymentsCount);
+  }
+
+  private getMonthlyRevenueSeries(months: number = 6): { label: string; value: number }[] {
+    // Build last `months` month buckets (including current month)
+    const now = new Date();
+    const series: { label: string; value: number }[] = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleString(undefined, { month: 'short' });
+      series.push({ label, value: 0 });
+    }
+
+    this.bookings.forEach(b => {
+      const created = new Date(b.createdAt || b.updatedAt || new Date());
+      const monthIndex = series.findIndex(s => {
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - (months - 1 - series.indexOf(s)), 1);
+        return monthDate.getMonth() === created.getMonth() && monthDate.getFullYear() === created.getFullYear();
+      });
+      if (monthIndex !== -1) {
+        series[monthIndex].value += (b.pricing?.finalAmount || 0);
+      }
+    });
+
+    return series;
+  }
+
+  private setupCanvasSize(): void {
+    if (!this.revenueChartRef) return;
+    const canvas = this.revenueChartRef.nativeElement;
+    const parent = canvas.parentElement as HTMLElement;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(300, Math.floor((parent.clientWidth) * dpr));
+    canvas.height = Math.floor(240 * dpr);
+    canvas.style.width = `${parent.clientWidth}px`;
+    canvas.style.height = `240px`;
+    this.chartCtx = canvas.getContext('2d');
+    if (this.chartCtx) this.chartCtx.scale(dpr, dpr);
+  }
+
+  private drawRevenueChart(): void {
+    if (!this.chartCtx || !this.revenueChartRef) return;
+    const ctx = this.chartCtx;
+    const canvas = this.revenueChartRef.nativeElement;
+    const w = canvas.clientWidth;
+    const h = 240;
+    // clear
+    ctx.clearRect(0, 0, w, h);
+
+    const series = this.getMonthlyRevenueSeries(6);
+    const max = Math.max(1, ...series.map(s => s.value));
+
+    // margins
+    const margin = { left: 40, right: 16, top: 16, bottom: 32 };
+    const chartW = w - margin.left - margin.right;
+    const chartH = h - margin.top - margin.bottom;
+
+    // draw axes
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, margin.top + chartH);
+    ctx.lineTo(margin.left + chartW, margin.top + chartH);
+    ctx.stroke();
+
+    // draw grid lines and labels
+    ctx.fillStyle = '#666';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    const gridLines = 4;
+    for (let i = 0; i <= gridLines; i++) {
+      const y = margin.top + (chartH * i / gridLines);
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(margin.left + chartW, y);
+      ctx.stroke();
+
+      const value = Math.round(max * (1 - i / gridLines));
+      ctx.fillStyle = '#999';
+      ctx.fillText(value.toString(), margin.left - 8, y);
+    }
+
+    // draw line
+    ctx.strokeStyle = '#667eea';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    series.forEach((s, i) => {
+      const x = margin.left + (chartW * (i / (series.length - 1)));
+      const y = margin.top + chartH - (chartH * (s.value / max));
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // draw area fill
+    ctx.fillStyle = 'rgba(102,126,234,0.12)';
+    ctx.lineTo(margin.left + chartW, margin.top + chartH);
+    ctx.lineTo(margin.left, margin.top + chartH);
+    ctx.closePath();
+    ctx.fill();
+
+    // draw points and labels
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#667eea';
+    series.forEach((s, i) => {
+      const x = margin.left + (chartW * (i / (series.length - 1)));
+      const y = margin.top + chartH - (chartH * (s.value / max));
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // label
+      ctx.fillStyle = '#333';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label, x, margin.top + chartH + 16);
+      ctx.fillStyle = '#667eea';
+      ctx.textAlign = 'center';
+      ctx.fillText(`₹${Math.round(s.value)}`, x, y - 10);
+      ctx.fillStyle = '#fff';
+    });
+  }
+
+  private buildRecentActivitiesFromBookings(): void {
+    this.recentActivities = this.bookings.map((booking) => ({
+      id: parseInt(booking.id, 10), // Convert id to number
+      type: booking.status === 'delivered' ? 'success' : booking.status === 'cancelled' ? 'error' : 'info',
+      title: `Booking ${booking.status}`,
+      subtitle: `Customer ID: ${booking.customerId}`,
+      timestamp: new Date(booking.payment?.paymentDate || booking.tracking?.estimatedArrival || booking.tracking?.currentLocation?.timestamp || new Date())
+    })).slice(0, this.visibleActivities) as Activity[]; // Explicitly cast to Activity[]
+  }
+
+  get recentActivitiesSlice(): (Activity & { isRead?: boolean })[] {
+    return (this.recentActivities as any).slice(0, this.visibleActivities);
+  }
+
+  loadMore(): void {
+    this.visibleActivities += 5;
+  }
+
+  toggleRead(activity: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    activity.isRead = !activity.isRead;
+  }
+
+  openActivity(activity: any): void {
+    // mark read and navigate where appropriate
+    activity.isRead = true;
+    // If activity references booking number, navigate to bookings page and filter
+    const match = activity.title.match(/Booking\s+(JRT?\w+)/i) || activity.title.match(/booking\s+(JRT?\w+)/i);
+    if (match && match[1]) {
+      // Use router to navigate (lazy navigation to bookings list)
+      try {
+        (this as any).router.navigate(['/admin/bookings'], { queryParams: { q: match[1] } });
+      } catch (e) {
+        // router may not be injected in this component in some setups
+        console.warn('Router navigation failed', e);
+      }
+    }
+  }
+
+  private setStat(title: string, value: string | number): void {
+    const stat = this.statsData.find(s => s.title === title);
+    if (stat) stat.value = value;
   }
 
   getActivityIcon(type: string): string {
@@ -515,5 +338,17 @@ export class AdminDashboardComponent implements OnInit {
       const days = Math.floor(diffInMinutes / 1440);
       return `${days} day${days > 1 ? 's' : ''} ago`;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  getStatAbbreviation(title: string): string {
+    if (!title) return '';
+    const words = title.split(/\s+/).filter(w => w.length > 0);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
   }
 }
