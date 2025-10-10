@@ -27,6 +27,7 @@ import { DocumentsComponent } from './components/documents/documents.component';
 import { MessagesComponent } from './components/messages/messages.component';
 import { MyTruckComponent } from './components/my-truck/my-truck.component';
 import { SupportComponent } from './components/support/support.component';
+import { LocationPromptComponent } from '../../components/location-prompt/location-prompt.component';
 
 @NgModule({
   declarations: [
@@ -42,6 +43,7 @@ import { SupportComponent } from './components/support/support.component';
     MessagesComponent,
     MyTruckComponent,
     SupportComponent
+    , LocationPromptComponent
   ],
   imports: [
     CommonModule,

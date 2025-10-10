@@ -1,0 +1,17 @@
+<div class="lp-overlay" role="dialog" aria-modal="true" aria-labelledby="lpTitle">
+  <div class="lp-card" role="document">
+    <h3 id="lpTitle">{{ title }}</h3>
+    <p>{{ message }}</p>
+
+    <div class="lp-actions">
+      <button class="btn btn-primary" (click)="onRetry()">Retry</button>
+      <button class="btn btn-secondary" (click)="onCancel()">Maybe later</button>
+    </div>
+
+    <div class="lp-help">
+      <small>
+        If you denied location access, open your browser settings and enable location for this site.
+      </small>
+    </div>
+  </div>
+</div>

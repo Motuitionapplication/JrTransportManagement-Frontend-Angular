@@ -1,5 +1,12 @@
 <!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
+  <!-- Location prompt for drivers: overlays the UI and requests geolocation permission -->
+  <app-location-prompt *ngIf="showPrompt"
+    [title]="'Enable location'"
+    [message]="'To use driver features please enable location services on your device.'"
+    (retry)="onRetryLocation()"
+    (cancel)="onCancelPrompt()">
+  </app-location-prompt>
   
   <!-- Top Navigation Bar -->
   <nav class="top-navbar">

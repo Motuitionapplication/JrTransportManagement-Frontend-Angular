@@ -66,7 +66,7 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     VehicleComponent,
     VehicleDialogComponent,
     AssignVehicleComponent,
-    HistoryDialogComponent,
+  HistoryDialogComponent,
   ],
   imports: [
     MatProgressSpinnerModule,
