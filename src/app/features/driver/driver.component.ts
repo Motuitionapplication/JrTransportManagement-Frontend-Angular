@@ -1,4 +1,6 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { GeolocationService, GeolocationPermissionState } from '../../services/geolocation.service';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
@@ -41,9 +43,16 @@ export class DriverComponent implements OnInit {
     { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
   ];
 
+  // --- Geolocation prompt state ---
+  showPrompt: boolean = false; // controls whether the location prompt modal is shown
+  // TODO: replace this placeholder with real auth/role check
+  isDriverUser: boolean = true;
+  private geolocationSub: Subscription | null = null;
+
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private geo: GeolocationService
   ) { }
 
   /**
@@ -74,6 +83,45 @@ export class DriverComponent implements OnInit {
     
     // Set initial active section based on current route
     this.updateActiveSection(this.router.url);
+
+    // Geolocation: show prompt for drivers if permission is not granted
+    if (this.isDriverUser) {
+      // init permission state and subscribe
+      this.geo.updatePermissionState().then((state: GeolocationPermissionState) => {
+        this.showPrompt = state !== 'granted';
+      }).catch(() => {
+        this.showPrompt = true;
+      });
+
+      this.geolocationSub = this.geo.permission$().subscribe((state) => {
+        this.showPrompt = this.isDriverUser && state !== 'granted';
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.geolocationSub) {
+      this.geolocationSub.unsubscribe();
+      this.geolocationSub = null;
+    }
+  }
+
+  // Called by the LocationPromptComponent when Retry is clicked
+  onRetryLocation(): void {
+    // Try to request location once; on success hide prompt
+    this.geo.requestLocationOnce(12000).then(pos => {
+      console.log('Location obtained', pos.coords);
+      this.showPrompt = false;
+    }).catch(err => {
+      console.warn('Location request failed', err);
+      // keep the prompt visible; permission change will update via permission$()
+    });
+  }
+
+  // Called when user clicks Maybe later - app may allow dismissing non-blocking
+  onCancelPrompt(): void {
+    // NOTE: make this blocking by removing the ability to cancel
+    this.showPrompt = false;
   }
 
   /**

@@ -19,179 +19,175 @@
 
   <!-- Stats Cards -->
   <div class="stats-section">
-    <div class="row g-4 mb-4">
+    <div class="stats-grid mb-4">
       <!-- Total Bookings -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-primary">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-clipboard-list"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-primary" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ stats.totalBookings }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Total Bookings</div>
-              <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i> +8% this month
-              </div>
+            </div>
+            <div class="stat-label">Total Bookings</div>
+            <div class="stat-change positive">
+              <i class="fas fa-arrow-up"></i> +8% this month
             </div>
           </div>
         </div>
       </div>
 
       <!-- Completed Trips -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-success">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-success" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ stats.completedTrips }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Completed Trips</div>
-              <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i> {{ getCompletionRate() }}% completion rate
-              </div>
+            </div>
+            <div class="stat-label">Completed Trips</div>
+            <div class="stat-change positive">
+              <i class="fas fa-arrow-up"></i> {{ getCompletionRate() }}% completion rate
             </div>
           </div>
         </div>
       </div>
 
       <!-- Pending Trips -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-warning">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-warning" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ stats.pendingTrips }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Pending Trips</div>
-              <div class="stat-change neutral">
-                <i class="fas fa-minus"></i> Needs attention
-              </div>
+            </div>
+            <div class="stat-label">Pending Trips</div>
+            <div class="stat-change neutral">
+              <i class="fas fa-minus"></i> Needs attention
             </div>
           </div>
         </div>
       </div>
 
       <!-- Total Earnings -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-info">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-rupee-sign"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-info" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-rupee-sign"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ formatCurrency(stats.totalEarnings) }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Total Earnings</div>
-              <div class="stat-change positive">
-                <i class="fas fa-arrow-up"></i> +{{ getEarningsGrowth() }}% this month
-              </div>
+            </div>
+            <div class="stat-label">Total Earnings</div>
+            <div class="stat-change positive">
+              <i class="fas fa-arrow-up"></i> +{{ getEarningsGrowth() }}% this month
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Additional Stats Row -->
-    <div class="row g-4 mb-4">
       <!-- This Month Earnings -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-secondary">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-calendar-month"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-secondary" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-calendar-month"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ formatCurrency(stats.thisMonthEarnings) }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">This Month</div>
             </div>
+            <div class="stat-label">This Month</div>
           </div>
         </div>
       </div>
 
       <!-- Average Rating -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-success">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-star"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-success" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-star"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ stats.averageRating }}/5</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Average Rating</div>
             </div>
+            <div class="stat-label">Average Rating</div>
           </div>
         </div>
       </div>
 
       <!-- Total Distance -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-primary">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-road"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-primary" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-road"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ formatDistance(stats.totalDistance) }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Total Distance</div>
             </div>
+            <div class="stat-label">Total Distance</div>
           </div>
         </div>
       </div>
 
       <!-- Fuel Expense -->
-      <div class="col-lg-3 col-md-6">
-        <div class="stat-card stat-danger">
-          <div class="stat-card-body">
-            <div class="stat-icon">
-              <i class="fas fa-gas-pump"></i>
-            </div>
-            <div class="stat-content">
+      <div class="stat-card stat-danger" role="group">
+        <div class="stat-card-body">
+          <div class="stat-content">
+            <div class="stat-top">
+              <div class="stat-icon">
+                <i class="fas fa-gas-pump"></i>
+              </div>
               <div class="stat-value" *ngIf="!statsLoading">{{ formatCurrency(stats.fuelExpense) }}</div>
               <div class="stat-loading" *ngIf="statsLoading">
                 <div class="spinner-border spinner-border-sm"></div>
               </div>
-              <div class="stat-label">Fuel Expense</div>
             </div>
+            <div class="stat-label">Fuel Expense</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Main Content -->
-  <div class="row g-4">
-    <!-- Quick Actions -->
-    <div class="col-lg-8">
+  <!-- Main Content: two-column layout (Quick Actions | Recent Activities) -->
+  <div class="main-grid">
+    <div class="main-left">
       <div class="card">
         <div class="card-header">
           <h5 class="card-title mb-0">Quick Actions</h5>
         </div>
         <div class="card-body">
-          <div class="row g-3">
-            <div class="col-lg-4 col-md-6" *ngFor="let action of quickActions">
+          <div class="quick-actions-grid">
+            <div class="quick-action-item" *ngFor="let action of quickActions">
               <div class="quick-action-card" (click)="navigateTo(action.route)">
                 <div class="action-icon" [class]="'text-' + action.color">
                   <i [class]="action.icon"></i>
@@ -210,8 +206,7 @@
       </div>
     </div>
 
-    <!-- Recent Activities -->
-    <div class="col-lg-4">
+    <div class="main-right">
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="card-title mb-0">Recent Activities</h5>
