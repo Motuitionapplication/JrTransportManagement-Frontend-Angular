@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { DriverService } from '../../driver.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { Driver } from 'src/app/models/driver.model';
 
 type TabKey = 'personal' | 'vehicle' | 'work' | 'stats' | 'preferences';
 
@@ -133,7 +136,10 @@ export class ProfileComponent implements OnInit {
     'Suburbs', 'Tourist Areas', 'Transportation Hubs'
   ];
 
-  constructor() { }
+  constructor(
+    private driverService: DriverService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     this.loadProfile();
@@ -141,13 +147,77 @@ export class ProfileComponent implements OnInit {
 
   loadProfile(): void {
     this.loading = true;
-    
-    // Simulate API call
-    setTimeout(() => {
+    const currentUser = this.authService.getCurrentUser();
+
+    if (currentUser?.id != null) {
+      // Attempt to pull fresh data from backend; fallback to mock data if unavailable.
+      this.driverService.getDriverByUserId(currentUser.id.toString()).subscribe({
+        next: (driver) => {
+          this.hydrateProfileFromDriver(driver);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.warn('Driver profile fetch failed, using mock data instead.', err);
+          this.profile = this.generateMockProfile();
+          this.originalProfile = JSON.parse(JSON.stringify(this.profile));
+          this.loading = false;
+        }
+      });
+    } else {
+      // No authenticated user context; use mock data but surface TODO for future guard.
+      console.warn('Driver profile: no authenticated user found. Falling back to mock profile.');
       this.profile = this.generateMockProfile();
       this.originalProfile = JSON.parse(JSON.stringify(this.profile));
       this.loading = false;
-    }, 1000);
+    }
+  }
+
+  /**
+   * Minimal mapping from backend driver model to existing profile view model.
+   * TODO: replace mock scaffolding with full backend-driven structure once API stabilises.
+   */
+  private hydrateProfileFromDriver(driver: Driver): void {
+    const baseline = this.generateMockProfile();
+
+    baseline.id = driver.id ?? baseline.id;
+
+    const prof = driver.profile;
+    if (prof) {
+      baseline.personalInfo.firstName = prof.firstName || baseline.personalInfo.firstName;
+      baseline.personalInfo.lastName = prof.lastName || baseline.personalInfo.lastName;
+      baseline.personalInfo.email = prof.email || baseline.personalInfo.email;
+      baseline.personalInfo.phone = prof.phoneNumber || baseline.personalInfo.phone;
+
+      if (prof.address) {
+        baseline.personalInfo.address.street = prof.address.street || baseline.personalInfo.address.street;
+        baseline.personalInfo.address.city = prof.address.city || baseline.personalInfo.address.city;
+        baseline.personalInfo.address.state = prof.address.state || baseline.personalInfo.address.state;
+        baseline.personalInfo.address.zipCode = prof.address.pincode || baseline.personalInfo.address.zipCode;
+      }
+
+      if (prof.emergencyContact) {
+        baseline.personalInfo.emergencyContact.name = prof.emergencyContact.name || baseline.personalInfo.emergencyContact.name;
+        baseline.personalInfo.emergencyContact.relationship = prof.emergencyContact.relationship || baseline.personalInfo.emergencyContact.relationship;
+        baseline.personalInfo.emergencyContact.phone = prof.emergencyContact.phoneNumber || baseline.personalInfo.emergencyContact.phone;
+      }
+    }
+
+    const dl = driver.drivingLicense;
+    if (dl) {
+      baseline.driverInfo.licenseNumber = dl.licenseNumber || baseline.driverInfo.licenseNumber;
+      baseline.driverInfo.licenseExpiry = dl.expiryDate ? new Date(dl.expiryDate) : baseline.driverInfo.licenseExpiry;
+    }
+
+    const experienceYears = driver.experience?.totalYears;
+    if (experienceYears != null) {
+      baseline.driverInfo.yearsOfExperience = experienceYears;
+    }
+
+    // Vehicle and statistics data remain mock-backed until dedicated endpoints are wired.
+    // TODO: hydrate vehicleInfo once driver API exposes assigned vehicle details.
+
+    this.profile = baseline;
+    this.originalProfile = JSON.parse(JSON.stringify(this.profile));
   }
 
   generateMockProfile(): DriverProfile {

@@ -22,6 +22,19 @@ export class DriverService {
     this.apiUrl = `${this.envService.getApiUrl()}/transport/drivers`;
   }
 
+  /** Get driver record by driverId */
+  getDriverById(driverId: string): Observable<Driver> {
+    return this.http.get<Driver>(`${this.apiUrl}/${driverId}`);
+  }
+
+  /**
+   * Get driver details by associated userId.
+   * Endpoint expectation: GET /transport/drivers/profile/userId/{userId}
+   */
+  getDriverByUserId(userId: string): Observable<Driver> {
+    return this.http.get<Driver>(`${this.apiUrl}/profile/userId/${encodeURIComponent(userId)}`);
+  }
+
   updateDriverDetails(driverId: string, driverDTO: DriverDTO): Observable<DriverDTO> {
     return this.http.put<DriverDTO>(`${this.apiUrl}/${driverId}`, driverDTO);
   }
@@ -48,6 +61,19 @@ export class DriverService {
   unassignvehicle(driverId: string) {
     return this.http.patch(`${this.apiUrl}/${driverId}/unassign-vehicle`, { driverId });
 
+  }
+
+  /**
+   * Update driver's last-known location.
+   * Preferred endpoint: PATCH /api/transport/drivers/{driverId}/location
+   * TODO: Confirm backend path/contract if different.
+   */
+  updateDriverLocation(driverId: string, coords: { latitude: number; longitude: number }): Observable<Driver> {
+    const url = `${this.apiUrl}/${driverId}/location`;
+    return this.http.patch<Driver>(url, {
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    });
   }
 }
 
