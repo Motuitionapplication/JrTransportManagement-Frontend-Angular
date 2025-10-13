@@ -15,6 +15,11 @@ export class GeolocationService {
     });
   }
 
+  /** Quick check for geolocation support in current browser */
+  public isSupported(): boolean {
+    return typeof navigator !== 'undefined' && 'geolocation' in navigator;
+  }
+
   // Public observable for reactive permission state
   public permission$(): Observable<GeolocationPermissionState> {
     return this.permissionState$.asObservable();
@@ -53,6 +58,11 @@ export class GeolocationService {
     return 'prompt';
   }
 
+  /** Convenience: request latest permission state */
+  public async requestPermission(): Promise<GeolocationPermissionState> {
+    return this.updatePermissionState();
+  }
+
   /**
    * Request the user's current position once. Resolves with position or rejects with error.
    * On success the permission state is set to 'granted'. On error we refresh permission state.
@@ -78,6 +88,15 @@ export class GeolocationService {
         { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 }
       );
     });
+  }
+
+  /** Helper returning plain latitude/longitude pair */
+  public async getCurrentPosition(timeoutMs = 10000): Promise<{ latitude: number; longitude: number }> {
+    const pos = await this.requestLocationOnce(timeoutMs);
+    return {
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude
+    };
   }
 
   /**
