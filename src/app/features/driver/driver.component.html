@@ -1,4 +1,12 @@
+<!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
+  <!-- Location prompt for drivers: overlays the UI and requests geolocation permission -->
+  <app-location-prompt *ngIf="showPrompt"
+    [title]="'Enable location'"
+    [message]="'To use driver features please enable location services on your device.'"
+    (retry)="onRetryLocation()"
+    (cancel)="onCancelPrompt()">
+  </app-location-prompt>
   
   <!-- Top Navigation Bar -->
   <nav class="top-navbar">
@@ -25,7 +33,7 @@
         
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=VO" alt="Vehicle driver">
+            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
           </div>
           <div class="user-info">
             <span class="user-name">driver User</span>
@@ -59,10 +67,55 @@
     <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
       <nav class="sidebar-nav">
         <ul class="nav-menu">
-          <li class="nav-item" *ngFor="let item of menuItems">
-            <a href="#" class="nav-link" [class.active]="activeSection === item.key" (click)="setActiveSection(item.key)">
-              <span class="nav-text">{{ item.label }}</span>
-            </a>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'dashboard'" (click)="navigateToSection('dashboard'); $event.preventDefault()">
+              <span class="nav-text">Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'my-trips'" (click)="navigateToSection('my-trips'); $event.preventDefault()">
+              <span class="nav-text">My Trips</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'bookings'" (click)="navigateToSection('bookings'); $event.preventDefault()">
+              <span class="nav-text">My Bookings</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'my-truck'" (click)="navigateToSection('my-truck'); $event.preventDefault()">
+              <span class="nav-text">My Truck</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'earnings'" (click)="navigateToSection('earnings'); $event.preventDefault()">
+              <span class="nav-text">Earnings</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'schedule'" (click)="navigateToSection('schedule'); $event.preventDefault()">
+              <span class="nav-text">Schedule</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'documents'" (click)="navigateToSection('documents'); $event.preventDefault()">
+              <span class="nav-text">Documents</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'messages'" (click)="navigateToSection('messages'); $event.preventDefault()">
+              <span class="nav-text">Messages</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'profile'" (click)="navigateToSection('profile'); $event.preventDefault()">
+              <span class="nav-text">Profile</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button type="button" class="nav-link" [class.active]="activeSection === 'support-center'" (click)="navigateToSection('support-center'); $event.preventDefault()">
+              <span class="nav-text">Support Center</span>
+            </button>
           </li>
         </ul>
       </nav>
@@ -70,63 +123,8 @@
 
     <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <section class="content-section" *ngIf="activeSection === 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title">Driver Dashboard</h1>
-        </div>
-
-        <!-- Stats -->
-        <!-- <div class="stats-grid">
-          <div class="stat-card">
-            <h3 class="stat-value">{{ vehicleCount }}</h3>
-            <p class="stat-label">Total Vehicles</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">{{ activeTrips }}</h3>
-            <p class="stat-label">Active Trips</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ walletBalance }}</h3>
-            <p class="stat-label">Wallet Balance</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ monthlyEarnings }}</h3>
-            <p class="stat-label">Monthly Earnings</p>
-          </div>
-        </div> -->
-
-        <!-- Document Alerts -->
-        <!-- <div class="table-card">
-          <h3 class="table-title">Document Alerts</h3>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Document</th>
-                <th>Vehicle</th>
-                <th>Days to Expiry</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let alert of documentAlerts">
-                <td>{{ alert.documentType }}</td>
-                <td>{{ alert.vehicleNumber }}</td>
-                <td>{{ alert.daysToExpiry }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div> -->
-      </section>
-
-      <!-- Other sections -->
-      <section class="content-section" *ngIf="activeSection !== 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title" style="text-transform: capitalize;">{{ activeSection }}</h1>
-          <p class="section-subtitle">Content for {{ activeSection }} section</p>
-        </div>
-        <div class="placeholder-content">
-          <p>This section is under development.</p>
-        </div>
-      </section>
+      <!-- Router Outlet for Child Components -->
+      <router-outlet></router-outlet>
     </main>
   </div>
 </div>

@@ -70,5 +70,18 @@ export class DriverService {
     return this.http.patch(`${this.apiUrl}/${driverId}/unassign-vehicle`, { driverId });
 
   }
+
+  /**
+   * Update driver's last-known location.
+   * Preferred endpoint: PATCH /api/transport/drivers/{driverId}/location
+   * TODO: Confirm backend path/contract if different.
+   */
+  updateDriverLocation(driverId: string, coords: { latitude: number; longitude: number }): Observable<Driver> {
+    const url = `${this.apiUrl}/${driverId}/location`;
+    return this.http.patch<Driver>(url, {
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    });
+  }
 }
 

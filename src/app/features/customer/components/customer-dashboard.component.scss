@@ -1,0 +1,20 @@
+/* Customer Dashboard Component Styles */
+/* Styles are defined inline in the component TypeScript file */
+/* This file serves as a placeholder for external styles if needed */
+
+/* Additional custom styles can be added here if needed */
+.customer-dashboard {
+  position: relative;
+}
+
+/* Custom responsive breakpoints */
+@media (max-width: 480px) {
+  .customer-dashboard .stats-grid {
+    margin: 0.5rem;
+  }
+  
+  .customer-dashboard .header-section {
+    margin: 0.25rem;
+    padding: 1rem;
+  }
+}

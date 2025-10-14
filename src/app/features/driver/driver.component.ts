@@ -1,5 +1,8 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { GeolocationService, GeolocationPermissionState } from '../../services/geolocation.service';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-driver',
@@ -7,12 +10,15 @@ import { Router } from '@angular/router';
   styleUrls: ['./driver.component.scss']
 })
 export class DriverComponent implements OnInit {
-  
+
   // Sidebar state
   sidebarCollapsed: boolean = false;
   
   // Active section state
   activeSection: string = 'dashboard';
+  
+  // Services dropdown state
+  servicesOpen: boolean = false;
   
   // User dropdown state
   showUserDropdown: boolean = false;
@@ -21,13 +27,13 @@ export class DriverComponent implements OnInit {
   menuItems = [
     { key: 'dashboard', label: 'Dashboard' },
     { key: 'bookings', label: 'My Bookings' },
-    { key: 'trucks', label: 'My Trucks' },
-    { key: 'trips', label: 'My Trips' },
+    { key: 'my-truck', label: 'My Trucks' },
+    { key: 'my-trips', label: 'My Trips' },
     { key: 'earnings', label: 'Earnings' },
     { key: 'schedule', label: 'Schedule' },
     { key: 'documents', label: 'Documents' },
-    {key: 'messages', label: 'Messages' },
-    { key: 'support', label: 'Support' },
+    { key: 'messages', label: 'Messages' },
+    { key: 'support-center', label: 'Support Center' },
     { key: 'profile', label: 'Profile' }
   ];
 
@@ -37,12 +43,24 @@ export class DriverComponent implements OnInit {
     { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
   ];
 
-  constructor(private router: Router) { }
+  // --- Geolocation prompt state ---
+  showPrompt: boolean = false; // controls whether the location prompt modal is shown
+  // TODO: replace this placeholder with real auth/role check
+  isDriverUser: boolean = true;
+  private geolocationSub: Subscription | null = null;
 
-  ngOnInit(): void {
-    console.log('driver component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private geo: GeolocationService
+  ) { }
+
+  /**
+   * Set the active section for navigation
+   */
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+    console.log('Active section changed to:', section);
   }
 
   /**
@@ -52,13 +70,105 @@ export class DriverComponent implements OnInit {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
+  ngOnInit(): void {
+    console.log('Driver component initialized');
+    
+    // Listen to route changes and update active section
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event) => {
+      const navigationEvent = event as NavigationEnd;
+      this.updateActiveSection(navigationEvent.url);
+    });
+    
+    // Set initial active section based on current route
+    this.updateActiveSection(this.router.url);
+
+    // Geolocation: show prompt for drivers if permission is not granted
+    if (this.isDriverUser) {
+      // init permission state and subscribe
+      this.geo.updatePermissionState().then((state: GeolocationPermissionState) => {
+        this.showPrompt = state !== 'granted';
+      }).catch(() => {
+        this.showPrompt = true;
+      });
+
+      this.geolocationSub = this.geo.permission$().subscribe((state) => {
+        this.showPrompt = this.isDriverUser && state !== 'granted';
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.geolocationSub) {
+      this.geolocationSub.unsubscribe();
+      this.geolocationSub = null;
+    }
+  }
+
+  // Called by the LocationPromptComponent when Retry is clicked
+  onRetryLocation(): void {
+    // Try to request location once; on success hide prompt
+    this.geo.requestLocationOnce(12000).then(pos => {
+      console.log('Location obtained', pos.coords);
+      this.showPrompt = false;
+    }).catch(err => {
+      console.warn('Location request failed', err);
+      // keep the prompt visible; permission change will update via permission$()
+    });
+  }
+
+  // Called when user clicks Maybe later - app may allow dismissing non-blocking
+  onCancelPrompt(): void {
+    // NOTE: make this blocking by removing the ability to cancel
+    this.showPrompt = false;
+  }
+
   /**
-   * Set the active section for navigation
-   * @param section - The section to activate
+   * Navigate to specific section
    */
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    console.log('Active section changed to:', section);
+  navigateToSection(section: string): void {
+    console.log('Navigating to driver section:', section);
+    console.log('Navigation URL:', `/driver/${section}`);
+    
+    // Set active section immediately for UI responsiveness
+    this.setActiveSection(section);
+    
+    // Navigate to the route
+    this.router.navigate([`/driver/${section}`]).then(success => {
+      if (success) {
+        console.log('Navigation successful to:', `/driver/${section}`);
+      } else {
+        console.error('Navigation failed to:', `/driver/${section}`);
+      }
+    }).catch(error => {
+      console.error('Navigation error:', error);
+    });
+  }
+
+  /**
+   * Update active section based on current URL
+   */
+  private updateActiveSection(url: string): void {
+    const segments = url.split('/');
+    const lastSegment = segments[segments.length - 1];
+    
+    console.log('Updating active section for URL:', url, 'Last segment:', lastSegment);
+    
+    // Map URL segments to menu keys
+    if (lastSegment === 'driver' || lastSegment === '') {
+      this.activeSection = 'dashboard';
+    } else if (lastSegment === 'my-trips') {
+      this.activeSection = 'my-trips';
+    } else if (lastSegment === 'my-truck' || lastSegment === 'trucks') {
+      this.activeSection = 'my-truck'; // Both routes point to same component
+    } else if (lastSegment === 'support-center' || lastSegment === 'support') {
+      this.activeSection = 'support-center'; // Handle both old and new routes
+    } else {
+      this.activeSection = lastSegment;
+    }
+    
+    console.log('Active section set to:', this.activeSection);
   }
 
   /**
@@ -183,46 +293,7 @@ export class DriverComponent implements OnInit {
     ];
   }
 
-  /**
-   * Navigate to specific section with additional logic if needed
-   */
-  navigateToSection(section: string, additionalData?: any): void {
-    this.setActiveSection(section);
-    
-    // Add any section-specific logic here
-    switch (section) {
-      case 'bookings':
-        // Load booking data
-        console.log('Loading bookings data...');
-        break;
-      case 'drivers':
-        // Load drivers data
-        console.log('Loading drivers data...');
-        break;
-      case 'customers':
-        // Load customers data
-        console.log('Loading customers data...');
-        break;
-      case 'trucks':
-        // Load trucks data
-        console.log('Loading trucks data...');
-        break;
-      case 'payments':
-        // Load payments data
-        console.log('Loading payments data...');
-        break;
-      case 'reports':
-        // Load reports data
-        console.log('Loading reports data...');
-        break;
-      case 'settings':
-        // Load settings data
-        console.log('Loading settings data...');
-        break;
-      default:
-        console.log('Loading dashboard data...');
-    }
-  }
+
 
   /**
    * Handle user logout
@@ -270,17 +341,19 @@ export class DriverComponent implements OnInit {
   }
 
   /**
-   * Handle user logout - redirect to dashboard
+   * Handle user logout - redirect to login
    */
   logout(): void {
     console.log('User logging out...');
     this.showUserDropdown = false;
     
-    // Clear user session/token if needed
+    // Clear user session/token
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('userSession');
     
-    // Navigate to dashboard page
-    this.router.navigate(['/dashboard']);
+    // Navigate to login page
+    this.router.navigate(['/auth/login']);
   }
 }

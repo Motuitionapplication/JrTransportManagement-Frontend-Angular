@@ -1,0 +1,664 @@
+<div class="transport-history-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Transport History</h1>
+      <p class="page-subtitle">View and manage your past trips and bookings</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn btn-outline-primary me-2" 
+        (click)="loadTransportHistory()"
+        [disabled]="isLoading">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i> Refresh
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        routerLink="/customer/book-transport">
+        <i class="fas fa-plus"></i> Book New Trip
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Section -->
+  <div class="stats-section">
+    <div class="stats-cards row g-3 mb-4">
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card total-trips">
+          <div class="card-icon">
+            <i class="fas fa-route"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ stats.totalTrips }}</h3>
+            <p class="card-label">Total Trips</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card total-distance">
+          <div class="card-icon">
+            <i class="fas fa-road"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ formatDistance(stats.totalDistance) }}</h3>
+            <p class="card-label">Distance Covered</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card total-spent">
+          <div class="card-icon">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ formatCurrency(stats.totalAmountSpent) }}</h3>
+            <p class="card-label">Total Spent</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6">
+        <div class="stat-card average-rating">
+          <div class="card-icon">
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ stats.averageRating || 'N/A' }}</h3>
+            <p class="card-label">Average Rating</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <!-- Search -->
+          <div class="col-lg-3 col-md-6">
+            <label for="searchInput" class="form-label">Search History</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input 
+                type="text" 
+                id="searchInput"
+                class="form-control" 
+                placeholder="Search by booking, location, driver..."
+                [(ngModel)]="filter.searchTerm"
+                (input)="applyFilters()">
+            </div>
+          </div>
+
+          <!-- Status Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label for="statusFilter" class="form-label">Trip Status</label>
+            <select 
+              id="statusFilter"
+              class="form-select" 
+              [(ngModel)]="filter.status"
+              (change)="applyFilters()">
+              <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Payment Status Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label for="paymentFilter" class="form-label">Payment</label>
+            <select 
+              id="paymentFilter"
+              class="form-select" 
+              [(ngModel)]="filter.paymentStatus"
+              (change)="applyFilters()">
+              <option *ngFor="let option of paymentStatusOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Date Range Filter -->
+          <div class="col-lg-2 col-md-6">
+            <label for="dateFilter" class="form-label">Time Period</label>
+            <select 
+              id="dateFilter"
+              class="form-select" 
+              [(ngModel)]="filter.dateRange"
+              (change)="applyFilters()">
+              <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sort Options -->
+          <div class="col-lg-2 col-md-6">
+            <label for="sortFilter" class="form-label">Sort By</label>
+            <div class="input-group">
+              <select 
+                id="sortFilter"
+                class="form-select" 
+                [(ngModel)]="filter.sortBy"
+                (change)="applyFilters()">
+                <option *ngFor="let option of sortOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                (click)="filter.sortOrder = filter.sortOrder === 'asc' ? 'desc' : 'asc'; applyFilters()">
+                <i [class]="filter.sortOrder === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Clear Filters -->
+          <div class="col-lg-1 col-md-6">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary w-100"
+              (click)="clearFilters()"
+              title="Clear all filters">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading your transport history...</p>
+    </div>
+  </div>
+
+  <!-- History Content -->
+  <div *ngIf="!isLoading" class="history-content">
+    <!-- No Trips Message -->
+    <div *ngIf="filteredTrips.length === 0" class="no-trips">
+      <div class="text-center py-5">
+        <div class="no-trips-icon">
+          <i class="fas fa-history fa-4x text-muted"></i>
+        </div>
+        <h3 class="mt-3">No Trip History Found</h3>
+        <p class="text-muted" *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all' || filter.paymentStatus !== 'all'">
+          No trips match your current filters. Try adjusting your search criteria.
+        </p>
+        <p class="text-muted" *ngIf="!filter.searchTerm && filter.status === 'all' && filter.dateRange === 'all' && filter.paymentStatus === 'all'">
+          You haven't made any trips yet. Start by booking your first transport.
+        </p>
+        <div class="no-trips-actions mt-4">
+          <button 
+            type="button" 
+            class="btn btn-primary me-3" 
+            routerLink="/customer/book-transport">
+            <i class="fas fa-plus"></i> Book Your First Trip
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary"
+            (click)="clearFilters()" 
+            *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all' || filter.paymentStatus !== 'all'">
+            <i class="fas fa-times"></i> Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trips List -->
+    <div *ngIf="filteredTrips.length > 0" class="trips-list">
+      <div class="results-header mb-3">
+        <span class="results-count">
+          Showing {{ filteredTrips.length }} of {{ historyTrips.length }} trips
+        </span>
+      </div>
+
+      <!-- Trip Cards -->
+      <div class="trips-grid">
+        <div 
+          *ngFor="let trip of filteredTrips" 
+          class="trip-card"
+          [class]="getStatusClass(trip.status)">
+          
+          <!-- Card Header -->
+          <div class="card-header">
+            <div class="trip-info">
+              <h5 class="booking-number">{{ trip.bookingNumber }}</h5>
+              <small class="trip-date text-muted">
+                <i class="far fa-calendar"></i>
+                {{ formatDate(trip.completionDate) }}
+              </small>
+            </div>
+            <div class="trip-status">
+              <span class="status-badge" [class]="getStatusClass(trip.status)">
+                <i [class]="getStatusIcon(trip.status)"></i>
+                {{ getStatusText(trip.status) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Route Information -->
+          <div class="route-section">
+            <div class="route-points">
+              <div class="route-point pickup">
+                <div class="point-marker">
+                  <i class="fas fa-circle"></i>
+                </div>
+                <div class="point-details">
+                  <h6 class="location-name">{{ trip.pickupLocation }}</h6>
+                  <small class="location-time">{{ formatDateTime(trip.travelDate) }}</small>
+                </div>
+              </div>
+              
+              <div class="route-connector">
+                <div class="connector-line"></div>
+                <div class="route-stats">
+                  <span class="distance">{{ formatDistance(trip.distance) }}</span>
+                  <span class="duration">{{ formatDuration(trip.duration) }}</span>
+                </div>
+              </div>
+              
+              <div class="route-point dropoff">
+                <div class="point-marker">
+                  <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="point-details">
+                  <h6 class="location-name">{{ trip.dropLocation }}</h6>
+                  <small class="location-time" *ngIf="trip.status === 'completed'">
+                    {{ formatDateTime(trip.completionDate) }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trip Details -->
+          <div class="trip-details">
+            <div class="row g-3">
+              <!-- Driver Info -->
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <label>Driver</label>
+                  <div class="driver-info">
+                    <img 
+                      [src]="trip.driver.profileImage || 'https://via.placeholder.com/30x30/6c757d/ffffff?text=D'" 
+                      [alt]="trip.driver.name"
+                      class="driver-avatar">
+                    <span class="driver-name">{{ trip.driver.name }}</span>
+                    <div class="driver-rating" *ngIf="trip.driver.rating">
+                      <i class="fas fa-star"></i>
+                      <span>{{ trip.driver.rating }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vehicle Info -->
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <label>Vehicle</label>
+                  <div class="vehicle-info">
+                    <span class="vehicle-number">{{ trip.vehicle.registrationNumber }}</span>
+                    <small class="vehicle-model">{{ trip.vehicle.make }} {{ trip.vehicle.model }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Amount -->
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <label>Total Amount</label>
+                  <div class="amount-info">
+                    <span class="amount">{{ formatCurrency(trip.totalAmount) }}</span>
+                    <span 
+                      class="payment-status" 
+                      [class]="getPaymentStatusClass(trip.paymentStatus)">
+                      <i [class]="getPaymentStatusIcon(trip.paymentStatus)"></i>
+                      {{ trip.paymentStatus | titlecase }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rating (if available) -->
+              <div class="col-md-6" *ngIf="trip.ratings && trip.status === 'completed'">
+                <div class="detail-item">
+                  <label>Your Rating</label>
+                  <div class="rating-info">
+                    <div class="stars">
+                      <i *ngFor="let star of generateStars(trip.ratings.serviceRating)" [class]="star"></i>
+                    </div>
+                    <span class="rating-value">{{ trip.ratings.serviceRating }}/5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="actions-section">
+            <div class="primary-actions">
+              <button 
+                type="button" 
+                class="btn btn-sm btn-primary"
+                (click)="openTripDetails(trip)">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+
+              <button 
+                type="button" 
+                class="btn btn-sm btn-outline-primary"
+                (click)="downloadInvoice(trip)"
+                *ngIf="trip.invoice && trip.status === 'completed'">
+                <i class="fas fa-download"></i> Invoice
+              </button>
+
+              <button 
+                type="button" 
+                class="btn btn-sm btn-success"
+                (click)="bookSimilarTrip(trip)"
+                *ngIf="trip.status === 'completed'">
+                <i class="fas fa-redo"></i> Book Again
+              </button>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div class="dropdown">
+              <button 
+                class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                type="button" 
+                data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li *ngIf="trip.status === 'completed'">
+                  <button class="dropdown-item" (click)="contactDriver(trip)">
+                    <i class="fas fa-phone me-2"></i> Contact Driver
+                  </button>
+                </li>
+                <li *ngIf="trip.status === 'completed' && (!trip.ratings || !trip.ratings.serviceRating)">
+                  <button class="dropdown-item" (click)="rateTrip(trip)">
+                    <i class="fas fa-star me-2"></i> Rate Trip
+                  </button>
+                </li>
+                <li>
+                  <button class="dropdown-item" (click)="shareTrip(trip)">
+                    <i class="fas fa-share me-2"></i> Share Trip
+                  </button>
+                </li>
+                <li>
+                  <button class="dropdown-item" (click)="reportIssue(trip)">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Report Issue
+                  </button>
+                </li>
+                <li *ngIf="trip.invoice">
+                  <hr class="dropdown-divider">
+                </li>
+                <li *ngIf="trip.invoice">
+                  <button class="dropdown-item" (click)="downloadInvoice(trip)">
+                    <i class="fas fa-file-pdf me-2"></i> Download Invoice
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Feedback Section (for cancelled trips) -->
+          <div *ngIf="trip.feedback && trip.status === 'cancelled'" class="feedback-section">
+            <div class="feedback-card">
+              <i class="fas fa-info-circle me-2"></i>
+              <span>{{ trip.feedback }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trip Details Modal -->
+<div class="modal fade" 
+     [class.show]="showTripModal" 
+     [style.display]="showTripModal ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="selectedTrip">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-route me-2"></i>
+          Trip Details - {{ selectedTrip.bookingNumber }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeTripModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Trip Status -->
+        <div class="trip-status-section mb-4">
+          <div class="status-card">
+            <span class="status-badge large" [class]="getStatusClass(selectedTrip.status)">
+              <i [class]="getStatusIcon(selectedTrip.status)"></i>
+              {{ getStatusText(selectedTrip.status) }}
+            </span>
+            <span class="completion-date">
+              Completed on {{ formatDateTime(selectedTrip.completionDate) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Route Details -->
+        <div class="route-details-section mb-4">
+          <h6 class="section-title">Route Information</h6>
+          <div class="route-card">
+            <div class="route-item pickup">
+              <div class="location-marker pickup">
+                <i class="fas fa-circle"></i>
+              </div>
+              <div class="location-details">
+                <h6>Pickup Location</h6>
+                <p class="location-name">{{ selectedTrip.pickupLocation }}</p>
+                <small class="location-address">{{ selectedTrip.pickupAddress }}</small>
+                <div class="location-time">
+                  <i class="far fa-clock me-1"></i>
+                  {{ formatDateTime(selectedTrip.travelDate) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="route-divider">
+              <div class="route-line"></div>
+              <div class="route-summary">
+                <span class="distance">{{ formatDistance(selectedTrip.distance) }}</span>
+                <span class="duration">{{ formatDuration(selectedTrip.duration) }}</span>
+              </div>
+            </div>
+
+            <div class="route-item dropoff">
+              <div class="location-marker dropoff">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="location-details">
+                <h6>Drop Location</h6>
+                <p class="location-name">{{ selectedTrip.dropLocation }}</p>
+                <small class="location-address">{{ selectedTrip.dropAddress }}</small>
+                <div class="location-time" *ngIf="selectedTrip.status === 'completed'">
+                  <i class="far fa-clock me-1"></i>
+                  {{ formatDateTime(selectedTrip.completionDate) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="payment-section mb-4">
+          <h6 class="section-title">Payment Information</h6>
+          <div class="payment-card">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="payment-item">
+                  <label>Total Amount</label>
+                  <span class="amount">{{ formatCurrency(selectedTrip.totalAmount) }}</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="payment-item">
+                  <label>Payment Method</label>
+                  <span>{{ selectedTrip.paymentMethod }}</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="payment-item">
+                  <label>Payment Status</label>
+                  <span 
+                    class="payment-status" 
+                    [class]="getPaymentStatusClass(selectedTrip.paymentStatus)">
+                    <i [class]="getPaymentStatusIcon(selectedTrip.paymentStatus)"></i>
+                    {{ selectedTrip.paymentStatus | titlecase }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="payment-item">
+                  <label>Booking Date</label>
+                  <span>{{ formatDateTime(selectedTrip.bookingDate) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver & Vehicle Information -->
+        <div class="driver-vehicle-section mb-4">
+          <h6 class="section-title">Driver & Vehicle Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="driver-card detailed">
+                <img 
+                  [src]="selectedTrip.driver.profileImage || 'https://via.placeholder.com/80x80/6c757d/ffffff?text=D'" 
+                  [alt]="selectedTrip.driver.name"
+                  class="driver-avatar-large">
+                <div class="driver-info">
+                  <h6>{{ selectedTrip.driver.name }}</h6>
+                  <div class="driver-rating mb-2">
+                    <i class="fas fa-star text-warning"></i>
+                    <span>{{ selectedTrip.driver.rating }}</span>
+                  </div>
+                  <small class="phone-number">
+                    <i class="fas fa-phone me-1"></i>
+                    {{ selectedTrip.driver.phone }}
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="vehicle-card detailed">
+                <div class="vehicle-icon">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <div class="vehicle-info">
+                  <h6>{{ selectedTrip.vehicle.make }} {{ selectedTrip.vehicle.model }}</h6>
+                  <p class="registration-number">{{ selectedTrip.vehicle.registrationNumber }}</p>
+                  <small class="vehicle-type">{{ selectedTrip.vehicle.type }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rating & Feedback -->
+        <div *ngIf="selectedTrip.ratings || selectedTrip.feedback" class="rating-section mb-4">
+          <h6 class="section-title">Your Rating & Feedback</h6>
+          
+          <div *ngIf="selectedTrip.ratings" class="rating-card">
+            <div class="rating-details">
+              <div class="rating-item">
+                <label>Service Rating</label>
+                <div class="rating-display">
+                  <div class="stars">
+                    <i *ngFor="let star of generateStars(selectedTrip.ratings.serviceRating)" [class]="star"></i>
+                  </div>
+                  <span class="rating-value">{{ selectedTrip.ratings.serviceRating }}/5</span>
+                </div>
+              </div>
+              <div class="rating-item">
+                <label>Driver Rating</label>
+                <div class="rating-display">
+                  <div class="stars">
+                    <i *ngFor="let star of generateStars(selectedTrip.ratings.driverRating)" [class]="star"></i>
+                  </div>
+                  <span class="rating-value">{{ selectedTrip.ratings.driverRating }}/5</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="selectedTrip.ratings.comment" class="rating-comment">
+              <label>Your Comment</label>
+              <p>{{ selectedTrip.ratings.comment }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="selectedTrip.feedback && !selectedTrip.ratings" class="feedback-display">
+            <label>Feedback</label>
+            <p>{{ selectedTrip.feedback }}</p>
+          </div>
+        </div>
+
+        <!-- Invoice Information -->
+        <div *ngIf="selectedTrip.invoice" class="invoice-section">
+          <h6 class="section-title">Invoice Information</h6>
+          <div class="invoice-card">
+            <div class="invoice-info">
+              <div class="invoice-details">
+                <p class="invoice-id">Invoice ID: {{ selectedTrip.invoice.id }}</p>
+                <small class="invoice-date">
+                  Generated on {{ formatDateTime(selectedTrip.invoice.generatedDate) }}
+                </small>
+              </div>
+              <button 
+                type="button" 
+                class="btn btn-sm btn-primary"
+                (click)="downloadInvoice(selectedTrip)">
+                <i class="fas fa-download"></i> Download
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTripModal()">Close</button>
+        <button 
+          type="button" 
+          class="btn btn-success"
+          (click)="bookSimilarTrip(selectedTrip); closeTripModal()"
+          *ngIf="selectedTrip.status === 'completed'">
+          <i class="fas fa-redo"></i> Book Similar Trip
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-outline-primary"
+          (click)="contactDriver(selectedTrip)"
+          *ngIf="selectedTrip.status === 'completed'">
+          <i class="fas fa-phone"></i> Contact Driver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div 
+  class="modal-backdrop fade"
+  [class.show]="showTripModal || showInvoiceModal"
+  *ngIf="showTripModal || showInvoiceModal"
+  (click)="closeTripModal(); closeInvoiceModal()">
+</div>

@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, throwError, map } from 'rxjs';
 import { LoginRequest, SignupRequest, JwtResponse, MessageResponse, User, AuthState } from '../models/auth.model';
 import { EnvironmentService } from '../core/services/environment.service';
+import { GeolocationService } from '../services/geolocation.service';
+import { DriverService } from '../features/driver/driver.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +22,9 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private envService: EnvironmentService
+    private envService: EnvironmentService,
+    private geolocationService: GeolocationService,
+    private driverService: DriverService
   ) {
     this.loadStoredAuth();
   }
@@ -119,6 +123,9 @@ export class AuthService {
           user,
           token: response.token
         });
+
+        // Best-effort geolocation update for driver users
+        this.attemptDriverLocationSync(response);
       }),
       catchError(error => {
         console.error('🔐 Auth: Login error:', error);
@@ -263,5 +270,38 @@ export class AuthService {
       ...error,
       userMessage: errorMessage
     }));
+  }
+
+  /**
+   * If the authenticated user is a driver, request geolocation (when supported) and
+   * send coordinates to the backend. This is intentionally best-effort and non-blocking.
+   */
+  private attemptDriverLocationSync(response: JwtResponse): void {
+    const roles = response.roles || [];
+    const isDriver = roles.some(role => role?.toLowerCase().includes('driver'));
+    if (!isDriver || !this.geolocationService.isSupported()) {
+      return;
+    }
+
+    (async () => {
+      try {
+        const permission = await this.geolocationService.requestPermission();
+
+        if (permission === 'denied' || permission === 'unsupported') {
+          console.info('Geolocation permission denied or unsupported for driver.');
+          // TODO: surface UI prompt via dedicated location component if desired.
+          return;
+        }
+
+        // For 'prompt', a permission dialog will appear when we call getCurrentPosition
+        const coords = await this.geolocationService.getCurrentPosition(10000);
+  this.driverService.updateDriverLocation(response.id.toString(), coords).subscribe({
+          next: () => console.log('Driver location synced with backend.'),
+          error: err => console.warn('Driver location sync failed:', err)
+        });
+      } catch (error) {
+        console.warn('Geolocation attempt failed:', error);
+      }
+    })();
   }
 }

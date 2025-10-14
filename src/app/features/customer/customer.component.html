@@ -1,3 +1,4 @@
+<!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
   
   <!-- Top Navigation Bar -->
@@ -25,7 +26,7 @@
         
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=VO" alt="Vehicle customer">
+            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
           </div>
           <div class="user-info">
             <span class="user-name">customer User</span>
@@ -59,73 +60,88 @@
     <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
       <nav class="sidebar-nav">
         <ul class="nav-menu">
-          <li class="nav-item" *ngFor="let item of menuItems">
-            <a href="#" class="nav-link" [class.active]="activeSection === item.key" (click)="setActiveSection(item.key)">
-              <span class="nav-text">{{ item.label }}</span>
-            </a>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/dashboard" routerLinkActive="active">
+              <i class="fas fa-tachometer-alt nav-icon"></i>
+              <span class="nav-text">Dashboard</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/book-transport" routerLinkActive="active">
+              <i class="fas fa-plus-circle nav-icon"></i>
+              <span class="nav-text">Book Transport</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/bookings" routerLinkActive="active">
+              <i class="fas fa-list nav-icon"></i>
+              <span class="nav-text">My Bookings</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/trips" routerLinkActive="active">
+              <i class="fas fa-route nav-icon"></i>
+              <span class="nav-text">My Trips</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/tracking" routerLinkActive="active">
+              <i class="fas fa-map-marker-alt nav-icon"></i>
+              <span class="nav-text">Track Shipment</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/transport-history" routerLinkActive="active">
+              <i class="fas fa-history nav-icon"></i>
+              <span class="nav-text">Transport History</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/payments" routerLinkActive="active">
+              <i class="fas fa-credit-card nav-icon"></i>
+              <span class="nav-text">Payment History</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/wallet" routerLinkActive="active">
+              <i class="fas fa-wallet nav-icon"></i>
+              <span class="nav-text">Wallet</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/messages" routerLinkActive="active">
+              <i class="fas fa-envelope nav-icon"></i>
+              <span class="nav-text">Messages</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/notifications" routerLinkActive="active">
+              <i class="fas fa-bell nav-icon"></i>
+              <span class="nav-text">Notifications</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/profile" routerLinkActive="active">
+              <i class="fas fa-user nav-icon"></i>
+              <span class="nav-text">Profile</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" routerLink="/customer/support" routerLinkActive="active">
+              <i class="fas fa-headset nav-icon"></i>
+              <span class="nav-text">Support</span>
+            </button>
           </li>
         </ul>
       </nav>
     </aside>
 
     <!-- Dashboard Content -->
+    <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <section class="content-section" *ngIf="activeSection === 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title">customer Dashboard</h1>
-        </div>
-
-        <!-- Stats -->
-        <!-- <div class="stats-grid">
-          <div class="stat-card">
-            <h3 class="stat-value">{{ vehicleCount }}</h3>
-            <p class="stat-label">Total Vehicles</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">{{ activeTrips }}</h3>
-            <p class="stat-label">Active Trips</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ walletBalance }}</h3>
-            <p class="stat-label">Wallet Balance</p>
-          </div>
-          <div class="stat-card">
-            <h3 class="stat-value">₹{{ monthlyEarnings }}</h3>
-            <p class="stat-label">Monthly Earnings</p>
-          </div>
-        </div> -->
-
-        <!-- Document Alerts -->
-        <!-- <div class="table-card">
-          <h3 class="table-title">Document Alerts</h3>
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Document</th>
-                <th>Vehicle</th>
-                <th>Days to Expiry</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let alert of documentAlerts">
-                <td>{{ alert.documentType }}</td>
-                <td>{{ alert.vehicleNumber }}</td>
-                <td>{{ alert.daysToExpiry }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div> -->
-      </section>
-
-      <!-- Other sections -->
-      <section class="content-section" *ngIf="activeSection !== 'dashboard'">
-        <div class="section-header">
-          <h1 class="section-title" style="text-transform: capitalize;">{{ activeSection }}</h1>
-          <p class="section-subtitle">Content for {{ activeSection }} section</p>
-        </div>
-        <div class="placeholder-content">
-          <p>This section is under development.</p>
-        </div>
+      <!-- Router outlet for all child components -->
+      <section class="content-section">
+        <router-outlet></router-outlet>
       </section>
     </main>
   </div>

@@ -8,33 +8,23 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./owner.component.scss']
 })
 export class OwnerComponent implements OnInit {
+  
+  // Sidebar state
   sidebarCollapsed: boolean = false;
+  
+  // Active section state
   activeSection: string = 'dashboard';
+  
+  // User dropdown state
   showUserDropdown: boolean = false;
+  // Dashboard stats
+  vehicleCount: number = 12;
+  activeTrips: number = 5;
+  walletBalance: number = 25000;
+  monthlyEarnings: number = 85000;
 
-  menuItems = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'fleet', label: 'Fleet Management' },
-  { key: 'vehicles', label: 'Manage Vehicles' },
-  { key: 'drivers', label: 'Manage Drivers' },
-  { key: 'bookings', label: 'Bookings' },
-  { key: 'wallet', label: 'Wallet' },
-  { key: 'earnings', label: 'Earnings' },
-  { key: 'maintenance', label: 'Maintenance' },
-  { key: 'analytics', label: 'Analytics' },
-  { key: 'notifications', label: 'Notifications' },
-  { key: 'tracking', label: 'Tracking' },
- // { key: 'reports', label: 'Reports' },
-  //{ key: 'settings', label: 'Settings' }
-];
-
-
-  vehicleCount = 12;
-  activeTrips = 5;
-  walletBalance = 25000;
-  monthlyEarnings = 85000;
-
-  documentAlerts = [
+  // Document alerts
+  documentAlerts: any[] = [
     { documentType: 'Insurance', daysToExpiry: 15, vehicleNumber: 'MH-12-AB-1234' },
     { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
   ];
@@ -61,6 +51,14 @@ export class OwnerComponent implements OnInit {
 
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  /**
+   * Set the active section for navigation
+   */
+  setActiveSection(section: string): void {
+    this.activeSection = section;
+    console.log('Active section changed to:', section);
   }
 
   navigateToSection(section: string): void {

@@ -1,6 +1,7 @@
 import { NgModule, isDevMode } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth.interceptor';
+import { TokenInterceptor } from './core/token.interceptor';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
@@ -66,7 +67,7 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     VehicleComponent,
     VehicleDialogComponent,
     AssignVehicleComponent,
-    HistoryDialogComponent,
+  HistoryDialogComponent,
   ],
   imports: [
     MatProgressSpinnerModule,
@@ -101,6 +102,11 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
       multi: true
     }
   ],

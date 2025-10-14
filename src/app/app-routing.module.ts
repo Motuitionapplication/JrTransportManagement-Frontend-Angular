@@ -5,7 +5,6 @@ import { UnauthorizedComponent } from './features/unauthorized/unauthorized.comp
 
 const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  { path: '', redirectTo: '/auth/login', pathMatch: 'full' },
   
   // Authentication routes
   {
@@ -48,7 +47,7 @@ const routes: Routes = [
   
   // Error routes
   { path: 'unauthorized', component: UnauthorizedComponent },
-  { path: '**', redirectTo: '/auth/login' }
+  { path: '**', redirectTo: '/dashboard' }
 ];
 
 @NgModule({

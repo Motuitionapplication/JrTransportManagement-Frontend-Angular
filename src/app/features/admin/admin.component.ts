@@ -9,9 +9,13 @@ import { User } from 'src/app/models/auth.model';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  ownerName: string = 'Owner Name';
   
   // Sidebar state
   sidebarCollapsed: boolean = false;
+  
+  // Active section state
+  activeSection: string = 'dashboard';
   
   // User dropdown state
   showUserDropdown: boolean = false;
