@@ -31,6 +31,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 @NgModule({
   declarations: [
     OwnerComponent,
@@ -56,15 +57,15 @@ import { MatTableModule } from '@angular/material/table';
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
-     OwnerRoutingModule ,
-         MatFormFieldModule,
+    OwnerRoutingModule,
+    MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-  MatDialogModule,
-  MatTableModule,
-  MatCheckboxModule,
-   AgGridModule
-  
-  ]
+    MatDialogModule,
+    MatTableModule,
+    MatCheckboxModule,
+    AgGridModule,
+    MatProgressSpinnerModule
+]
 })
 export class OwnerModule {}

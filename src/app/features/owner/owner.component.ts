@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-owner',
   templateUrl: './owner.component.html',
-  styleUrls: ['./owner.component.scss']
+  styleUrls: ['./owner.component.scss'],
 })
 export class OwnerComponent implements OnInit {
   // Dashboard stats
@@ -15,21 +15,45 @@ export class OwnerComponent implements OnInit {
   activeTrips = 5;
   walletBalance = 25000;
   monthlyEarnings = 85000;
-  showUserMenu = false;
-  showMobileMenu = false;
-  // Document alerts
-  documentAlerts: any[] = [
-    { documentType: 'Insurance', daysToExpiry: 15, vehicleNumber: 'MH-12-AB-1234' },
-    { documentType: 'Registration', daysToExpiry: 30, vehicleNumber: 'MH-12-CD-5678' }
-  ];
 
-  sidebarCollapsed = false;
+  // UI State Management - CLEANED UP VERSION
+  sidebarCollapsed = false; // Single source of truth for sidebar state
+  dropdownOpen = false;
   activeSection: string = 'dashboard';
+
+  // User data
   user: User | null = null;
 
-  dropdownOpen = false;
+  // Document alerts
+  documentAlerts: any[] = [
+    {
+      documentType: 'Insurance',
+      daysToExpiry: 15,
+      vehicleNumber: 'MH-12-AB-1234',
+    },
+    {
+      documentType: 'Registration',
+      daysToExpiry: 30,
+      vehicleNumber: 'MH-12-CD-5678',
+    },
+  ];
 
-  constructor(public authService: AuthService,
+  // Menu items configuration
+
+  menuItems = [
+    { label: 'Dashboard', route: 'dashboard', icon: '📊' },
+    { label: 'Vehicles', route: 'vehicles', icon: '🚗' },
+    { label: 'Drivers', route: 'drivers', icon: '👨‍✈️' },
+    { label: 'Bookings', route: 'bookings', icon: '📅' },
+    { label: 'Earnings', route: 'earnings', icon: '💰' },
+    { label: 'Maintenance', route: 'maintenance', icon: '🛠️' },
+    { label: 'Tracking', route: 'tracking', icon: '📍' },
+    { label: 'Analytics', route: 'analytics', icon: '📈' },
+    { label: 'Notifications', route: 'notifications', icon: '🔔' },
+  ];
+
+  constructor(
+    public authService: AuthService,
     private ownerService: OwnerService,
     private elRef: ElementRef,
     private router: Router
@@ -37,56 +61,169 @@ export class OwnerComponent implements OnInit {
 
   ngOnInit(): void {
     console.log('Owner component initialized');
+    this.loadUserData();
+    this.handleWindowResize();
+  }
+
+  // --- User Data Management ---
+  private loadUserData(): void {
     this.ownerService.getUser().subscribe({
       next: (data) => {
         this.user = data;
+        console.log('User data loaded:', data);
       },
       error: (err) => {
         console.error('Error fetching user:', err);
-      }
+      },
     });
   }
 
-  // --- Dropdown ---
+  getUserInitials(): string {
+    if (!this.user) return 'OU';
+    const first = this.user.firstName
+      ? this.user.firstName.charAt(0).toUpperCase()
+      : '';
+    const last = this.user.lastName
+      ? this.user.lastName.charAt(0).toUpperCase()
+      : '';
+    return first + last || 'OU';
+  }
+
+  // --- Sidebar Management - FIXED VERSION ---
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    console.log(
+      'Sidebar toggled:',
+      this.sidebarCollapsed ? 'collapsed' : 'expanded'
+    );
+
+    // Store preference in localStorage
+    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed.toString());
+  }
+
+  private handleWindowResize(): void {
+    // Auto-collapse sidebar on mobile devices
+    if (window.innerWidth <= 1024) {
+      this.sidebarCollapsed = true;
+    } else {
+      // Restore sidebar state from localStorage on desktop
+      const savedState = localStorage.getItem('sidebarCollapsed');
+      if (savedState !== null) {
+        this.sidebarCollapsed = savedState === 'true';
+      }
+    }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(event: any): void {
+    this.handleWindowResize();
+  }
+
+  // --- Dropdown Management ---
   toggleDropdown(event?: MouseEvent): void {
-    if (event) event.stopPropagation();
+    if (event) {
+      event.stopPropagation();
+    }
     this.dropdownOpen = !this.dropdownOpen;
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    if (!this.elRef.nativeElement.contains(event.target)) {
+    const target = event.target as HTMLElement;
+
+    // Close dropdown if clicking outside
+    if (!this.elRef.nativeElement.contains(target)) {
       this.dropdownOpen = false;
+    }
+
+    // Close sidebar on mobile when clicking outside
+    if (window.innerWidth <= 1024 && !this.sidebarCollapsed) {
+      const sidebar = this.elRef.nativeElement.querySelector('.sidebar');
+      const menuToggle = this.elRef.nativeElement.querySelector('.menu-toggle');
+
+      if (
+        sidebar &&
+        !sidebar.contains(target) &&
+        !menuToggle.contains(target)
+      ) {
+        this.sidebarCollapsed = true;
+      }
     }
   }
 
-   logout(): void {
-    this.showUserMenu = false;
-    this.authService.logout();
-    console.log('👋 User logged out');
-    this.router.navigate(['/dashboard']);
-  }
-  // --- User Avatar ---
-  getUserInitials(): string {
-    if (!this.user) return '';
-    const first = this.user.firstName ? this.user.firstName.charAt(0).toUpperCase() : '';
-    const last = this.user.lastName ? this.user.lastName.charAt(0).toUpperCase() : '';
-    return first + last;
-  }
-
-  // --- Navigation stubs ---
-  toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
-
+  // --- Navigation Methods ---
   setActiveSection(section: string): void {
     this.activeSection = section;
+    console.log('Active section set to:', section);
+
+    // Auto-collapse sidebar on mobile after navigation
+    if (window.innerWidth <= 1024) {
+      this.sidebarCollapsed = true;
+    }
   }
 
-  manageVehicles(): void { console.log('Navigate to vehicle management'); }
-  trackVehicles(): void { console.log('Navigate to vehicle tracking'); }
-  manageDrivers(): void { console.log('Navigate to driver management'); }
-  viewBookings(): void { console.log('Navigate to bookings'); }
-  manageWallet(): void { console.log('Navigate to wallet'); }
-  viewReports(): void { console.log('Navigate to reports'); }
+  navigateToSection(route: string): void {
+    this.router.navigate([route]);
+
+    // Extract section name from route
+    const section = route.split('/').pop() || 'dashboard';
+    this.setActiveSection(section);
+  }
+
+  // --- Authentication ---
+  logout(): void {
+    this.dropdownOpen = false;
+    console.log('👋 User logging out...');
+
+    this.authService.logout();
+    this.router.navigate(['/dashboard']);
+  }
+
+  // --- Quick Action Methods ---
+  manageVehicles(): void {
+    console.log('Navigate to vehicle management');
+    this.navigateToSection('/owner/vehicles');
+  }
+
+  trackVehicles(): void {
+    console.log('Navigate to vehicle tracking');
+    this.navigateToSection('/owner/tracking');
+  }
+
+  manageDrivers(): void {
+    console.log('Navigate to driver management');
+    this.navigateToSection('/owner/drivers');
+  }
+
+  viewBookings(): void {
+    console.log('Navigate to bookings');
+    this.navigateToSection('/owner/bookings');
+  }
+
+  manageWallet(): void {
+    console.log('Navigate to wallet');
+    this.navigateToSection('/owner/earnings');
+  }
+
+  viewReports(): void {
+    console.log('Navigate to reports');
+    this.navigateToSection('/owner/analytics');
+  }
+
+  // --- Utility Methods ---
+  getNotificationCount(): number {
+    return this.documentAlerts.length;
+  }
+
+  hasExpiredDocuments(): boolean {
+    return this.documentAlerts.some((alert) => alert.daysToExpiry <= 7);
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  }
 }

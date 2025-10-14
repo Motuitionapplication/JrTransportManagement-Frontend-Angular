@@ -1,6 +1,19 @@
 <div class="owner-layout">
   <!-- Sidebar -->
-  <app-sidebar></app-sidebar>
+  <div class="sidebar" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-header">
+      <h2 *ngIf="!sidebarCollapsed">Menu</h2>
+    </div>
+
+    <ul class="menu-list">
+      <li *ngFor="let item of menuItems" routerLinkActive="active">
+        <a [routerLink]="item.route">
+          <span class="icon">{{ item.icon }}</span>
+          <span *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
 
   <!-- Main content -->
   <div class="owner-content">
@@ -21,7 +34,6 @@
 
         <!-- Actions -->
         <div class="navbar-actions">
-
           <!-- Search bar -->
           <div class="search-bar">
             <input type="text" placeholder="Search bookings, vehicles..." class="search-input">
@@ -66,7 +78,6 @@
               </ul>
             </div>
           </div>
-
         </div>
       </div>
     </nav>
@@ -75,6 +86,5 @@
     <div class="page-content">
       <router-outlet></router-outlet>
     </div>
-
   </div>
 </div>

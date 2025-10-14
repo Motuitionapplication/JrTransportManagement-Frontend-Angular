@@ -1,1 +1,747 @@
-<p>bookings works!</p>
+<div class="booking-container">
+  <!-- Header -->
+  <div class="booking-header">
+    <h1 class="page-title">Create New Booking</h1>
+    <p class="page-subtitle">Fill in the details to book your cargo transport</p>
+  </div>
+<!-- Auto-Save Status Bar (Add after booking-header) -->
+<!-- Fixed Auto-Save Status Bar (Always visible with conditional elements) -->
+<div class="auto-save-status">
+  <div class="auto-save-indicator">
+    <i class="fas fa-save" [class.text-success]="autoSaveEnabled" [class.text-muted]="!autoSaveEnabled"></i>
+    <span *ngIf="autoSaveEnabled && lastSavedTime">
+      Last saved: {{ getLastSavedTimeFormatted() }}
+    </span>
+    <span *ngIf="autoSaveEnabled && !lastSavedTime">
+      Auto-save enabled
+    </span>
+    <span *ngIf="!autoSaveEnabled" class="text-muted">
+      Auto-save disabled
+    </span>
+  </div>
+  <div class="auto-save-controls">
+    <!-- Manual Save Button - Always visible -->
+    <button 
+      type="button" 
+      class="btn btn-link btn-sm" 
+      (click)="saveFormManually()"
+      title="Save now">
+      <i class="fas fa-save"></i> Save Now
+    </button>
+    
+    <!-- Auto-save Toggle Button - Always visible -->
+    <button 
+      type="button" 
+      class="btn btn-link btn-sm" 
+      (click)="toggleAutoSave()"
+      [title]="autoSaveEnabled ? 'Disable auto-save' : 'Enable auto-save'">
+      <i class="fas fa-toggle-on text-success" *ngIf="autoSaveEnabled"></i>
+      <i class="fas fa-toggle-off text-muted" *ngIf="!autoSaveEnabled"></i>
+      <span class="ml-1">{{ autoSaveEnabled ? 'Auto-save ON' : 'Auto-save OFF' }}</span>
+    </button>
+    
+    <!-- Clear Draft Button - Show only when draft exists -->
+    <button 
+      type="button" 
+      class="btn btn-link btn-sm text-danger" 
+      (click)="clearDraftManually()"
+      *ngIf="hasSavedDraft || lastSavedTime"
+      title="Clear saved draft">
+      <i class="fas fa-trash"></i> Clear Draft
+    </button>
+  </div>
+</div>
+
+
+<!-- Draft Restore Dialog -->
+<div class="draft-restore-overlay" *ngIf="showDraftRestoreDialog">
+  <div class="draft-restore-modal">
+    <div class="modal-header">
+      <i class="fas fa-file-alt"></i>
+      <h3>Restore Previous Draft</h3>
+    </div>
+    <div class="modal-content">
+      <p>We found a previously saved draft of your booking form.</p>
+      <p *ngIf="lastSavedTime">
+        <strong>Last saved:</strong> {{ lastSavedTime | date:'medium' }}
+      </p>
+      <p>Would you like to continue where you left off?</p>
+    </div>
+    <div class="modal-actions">
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="restoreSavedDraft()">
+        <i class="fas fa-undo"></i> Restore Draft
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        (click)="discardSavedDraft()">
+        <i class="fas fa-trash"></i> Start Fresh
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Rest of your existing HTML template... -->
+
+  <!-- Progress Steps -->
+  <div class="progress-steps">
+    <div class="steps-container">
+      <div *ngFor="let step of steps" 
+           class="step-item"
+           [class.active]="step.isActive"
+           [class.completed]="step.isCompleted"
+           (click)="goToStep(step.number)">
+        <div class="step-circle">
+          <span *ngIf="!step.isCompleted">{{ step.number }}</span>
+          <i *ngIf="step.isCompleted" class="fas fa-check"></i>
+        </div>
+        <span class="step-title">{{ step.title }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Form -->
+  <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="booking-form">
+    
+    <!-- Step 1: Cargo Details -->
+    <div class="form-step" *ngIf="currentStep === 1">
+      <div class="step-content">
+        <h2 class="step-heading">Cargo Information</h2>
+        
+        <div formGroupName="cargoDetails" class="form-section">
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="description">Cargo Description *</label>
+              <textarea 
+                id="description"
+                formControlName="description"
+                placeholder="Describe your cargo in detail..."
+                rows="3"
+                [class.error]="isFieldInvalid('cargoDetails.description')">
+              </textarea>
+              <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.description')">
+                {{ getFieldError('cargoDetails.description') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cargoType">Cargo Type *</label>
+              <select 
+                id="cargoType"
+                formControlName="type"
+                [class.error]="isFieldInvalid('cargoDetails.type')">
+                <option *ngFor="let type of cargoTypes" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="weight">Weight (kg) *</label>
+              <input 
+                type="number"
+                id="weight"
+                formControlName="weight"
+                placeholder="0.0"
+                step="0.1"
+                min="0.1"
+                [class.error]="isFieldInvalid('cargoDetails.weight')">
+              <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.weight')">
+                {{ getFieldError('cargoDetails.weight') }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Fixed: Added formGroupName="dimensions" wrapper -->
+          <div formGroupName="dimensions" class="dimensions-section">
+            <h4 class="subsection-title">Dimensions (meters) *</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="length">Length (m) *</label>
+                <input 
+                  type="number"
+                  id="length"
+                  formControlName="length"
+                  placeholder="0.0"
+                  step="0.1"
+                  min="0.1"
+                  [class.error]="isFieldInvalid('cargoDetails.dimensions.length')">
+                <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.dimensions.length')">
+                  {{ getFieldError('cargoDetails.dimensions.length') }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="width">Width (m) *</label>
+                <input 
+                  type="number"
+                  id="width"
+                  formControlName="width"
+                  placeholder="0.0"
+                  step="0.1"
+                  min="0.1"
+                  [class.error]="isFieldInvalid('cargoDetails.dimensions.width')">
+                <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.dimensions.width')">
+                  {{ getFieldError('cargoDetails.dimensions.width') }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="height">Height (m) *</label>
+                <input 
+                  type="number"
+                  id="height"
+                  formControlName="height"
+                  placeholder="0.0"
+                  step="0.1"
+                  min="0.1"
+                  [class.error]="isFieldInvalid('cargoDetails.dimensions.height')">
+                <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.dimensions.height')">
+                  {{ getFieldError('cargoDetails.dimensions.height') }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="value">Declared Value (₹) *</label>
+              <input 
+                type="number"
+                id="value"
+                formControlName="value"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                [class.error]="isFieldInvalid('cargoDetails.value')">
+              <span class="error-message" *ngIf="isFieldInvalid('cargoDetails.value')">
+                {{ getFieldError('cargoDetails.value') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="specialInstructions">Special Instructions</label>
+              <textarea 
+                id="specialInstructions"
+                formControlName="specialInstructions"
+                placeholder="Any special handling instructions..."
+                rows="2">
+              </textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Route & Schedule -->
+    <div class="form-step" *ngIf="currentStep === 2">
+      <div class="step-content">
+        <h2 class="step-heading">Pickup & Delivery Details</h2>
+        
+        <!-- Pickup Details -->
+        <div class="form-section">
+          <h3 class="section-title">Pickup Information</h3>
+          <div formGroupName="pickupDetails">
+            <div formGroupName="address" class="address-section">
+              <div class="form-row">
+                <div class="form-group full-width">
+                  <label for="pickupStreet">Street Address *</label>
+                  <input 
+                    type="text"
+                    id="pickupStreet"
+                    formControlName="street"
+                    placeholder="Enter pickup address"
+                    [class.error]="isFieldInvalid('pickupDetails.address.street')">
+                  <span class="error-message" *ngIf="isFieldInvalid('pickupDetails.address.street')">
+                    {{ getFieldError('pickupDetails.address.street') }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="pickupCity">City *</label>
+                  <input 
+                    type="text"
+                    id="pickupCity"
+                    formControlName="city"
+                    placeholder="City"
+                    [class.error]="isFieldInvalid('pickupDetails.address.city')">
+                </div>
+
+                <div class="form-group">
+                  <label for="pickupState">State *</label>
+                  <input 
+                    type="text"
+                    id="pickupState"
+                    formControlName="state"
+                    placeholder="State"
+                    [class.error]="isFieldInvalid('pickupDetails.address.state')">
+                </div>
+
+                <div class="form-group">
+                  <label for="pickupPincode">Pincode *</label>
+                  <input 
+                    type="text"
+                    id="pickupPincode"
+                    formControlName="pincode"
+                    placeholder="000000"
+                    maxlength="6"
+                    [class.error]="isFieldInvalid('pickupDetails.address.pincode')">
+                </div>
+              </div>
+            </div>
+
+            <!-- Fixed: Changed to contactPerson -->
+            <div formGroupName="contactPerson" class="contact-section">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="pickupContactName">Contact Person *</label>
+                  <input 
+                    type="text"
+                    id="pickupContactName"
+                    formControlName="name"
+                    placeholder="Contact person name"
+                    [class.error]="isFieldInvalid('pickupDetails.contactPerson.name')">
+                </div>
+
+                <div class="form-group">
+                  <label for="pickupContactPhone">Phone Number *</label>
+                  <input 
+                    type="tel"
+                    id="pickupContactPhone"
+                    formControlName="phoneNumber"
+                    placeholder="9876543210"
+                    maxlength="10"
+                    [class.error]="isFieldInvalid('pickupDetails.contactPerson.phoneNumber')">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="pickupDate">Pickup Date *</label>
+                <input 
+                  type="date"
+                  id="pickupDate"
+                  formControlName="scheduledDate"
+                  [min]="todayDate"
+                  [class.error]="isFieldInvalid('pickupDetails.scheduledDate')">
+              </div>
+
+              <div class="form-group">
+                <label for="pickupTime">Pickup Time *</label>
+                <input 
+                  type="time"
+                  id="pickupTime"
+                  formControlName="scheduledTime"
+                  [class.error]="isFieldInvalid('pickupDetails.scheduledTime')">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="pickupInstructions">Pickup Instructions</label>
+                <textarea 
+                  id="pickupInstructions"
+                  formControlName="instructions"
+                  placeholder="Any special pickup instructions..."
+                  rows="2">
+                </textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Details -->
+        <div class="form-section">
+          <h3 class="section-title">Delivery Information</h3>
+          <div formGroupName="deliveryDetails">
+            <div formGroupName="address" class="address-section">
+              <div class="form-row">
+                <div class="form-group full-width">
+                  <label for="deliveryStreet">Street Address *</label>
+                  <input 
+                    type="text"
+                    id="deliveryStreet"
+                    formControlName="street"
+                    placeholder="Enter delivery address"
+                    [class.error]="isFieldInvalid('deliveryDetails.address.street')">
+                  <span class="error-message" *ngIf="isFieldInvalid('deliveryDetails.address.street')">
+                    {{ getFieldError('deliveryDetails.address.street') }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="deliveryCity">City *</label>
+                  <input 
+                    type="text"
+                    id="deliveryCity"
+                    formControlName="city"
+                    placeholder="City"
+                    [class.error]="isFieldInvalid('deliveryDetails.address.city')">
+                </div>
+
+                <div class="form-group">
+                  <label for="deliveryState">State *</label>
+                  <input 
+                    type="text"
+                    id="deliveryState"
+                    formControlName="state"
+                    placeholder="State"
+                    [class.error]="isFieldInvalid('deliveryDetails.address.state')">
+                </div>
+
+                <div class="form-group">
+                  <label for="deliveryPincode">Pincode *</label>
+                  <input 
+                    type="text"
+                    id="deliveryPincode"
+                    formControlName="pincode"
+                    placeholder="000000"
+                    maxlength="6"
+                    [class.error]="isFieldInvalid('deliveryDetails.address.pincode')">
+                </div>
+              </div>
+            </div>
+
+            <!-- Fixed: Changed to contactPerson -->
+            <div formGroupName="contactPerson" class="contact-section">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="deliveryContactName">Contact Person *</label>
+                  <input 
+                    type="text"
+                    id="deliveryContactName"
+                    formControlName="name"
+                    placeholder="Contact person name"
+                    [class.error]="isFieldInvalid('deliveryDetails.contactPerson.name')">
+                </div>
+
+                <div class="form-group">
+                  <label for="deliveryContactPhone">Phone Number *</label>
+                  <input 
+                    type="tel"
+                    id="deliveryContactPhone"
+                    formControlName="phoneNumber"
+                    placeholder="9876543210"
+                    maxlength="10"
+                    [class.error]="isFieldInvalid('deliveryDetails.contactPerson.phoneNumber')">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="deliveryDate">Expected Delivery Date *</label>
+                <input 
+                  type="date"
+                  id="deliveryDate"
+                  formControlName="scheduledDate"
+                  [min]="getFormControl('pickupDetails.scheduledDate')?.value"
+                  [class.error]="isFieldInvalid('deliveryDetails.scheduledDate')">
+              </div>
+
+              <div class="form-group">
+                <label for="deliveryTime">Preferred Time *</label>
+                <input 
+                  type="time"
+                  id="deliveryTime"
+                  formControlName="scheduledTime"
+                  [class.error]="isFieldInvalid('deliveryDetails.scheduledTime')">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="deliveryInstructions">Delivery Instructions</label>
+                <textarea 
+                  id="deliveryInstructions"
+                  formControlName="instructions"
+                  placeholder="Any special delivery instructions..."
+                  rows="2">
+                </textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Customer & Payment Details -->
+    <div class="form-step" *ngIf="currentStep === 3">
+      <div class="step-content">
+        <h2 class="step-heading">Customer & Payment Information</h2>
+        
+        <!-- Customer Details -->
+        <div class="form-section">
+          <h3 class="section-title">Customer Information</h3>
+          <div formGroupName="customerDetails">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="customerId">Customer ID *</label>
+                <input 
+                  type="text"
+                  id="customerId"
+                  formControlName="customerId"
+                  placeholder="Enter customer ID"
+                  [class.error]="isFieldInvalid('customerDetails.customerId')">
+                <span class="error-message" *ngIf="isFieldInvalid('customerDetails.customerId')">
+                  {{ getFieldError('customerDetails.customerId') }}
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="customerEmail">Email *</label>
+                <input 
+                  type="email"
+                  id="customerEmail"
+                  formControlName="email"
+                  placeholder="customer@example.com"
+                  [class.error]="isFieldInvalid('customerDetails.email')">
+                <span class="error-message" *ngIf="isFieldInvalid('customerDetails.email')">
+                  {{ getFieldError('customerDetails.email') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="customerPhone">Phone Number *</label>
+                <input 
+                  type="tel"
+                  id="customerPhone"
+                  formControlName="phone"
+                  placeholder="9876543210"
+                  maxlength="10"
+                  [class.error]="isFieldInvalid('customerDetails.phone')">
+                <span class="error-message" *ngIf="isFieldInvalid('customerDetails.phone')">
+                  {{ getFieldError('customerDetails.phone') }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estimated Pricing -->
+        <div class="pricing-summary">
+          <h3 class="section-title">Estimated Pricing</h3>
+          <div class="pricing-details">
+            <div class="pricing-item">
+              <span>Base Fare:</span>
+              <span>{{ formatCurrency(calculateEstimatedFare() * 0.7) }}</span>
+            </div>
+            <div class="pricing-item">
+              <span>GST (18%):</span>
+              <span>{{ formatCurrency(calculateEstimatedFare() * 0.15) }}</span>
+            </div>
+            <div class="pricing-item">
+              <span>Service Charge:</span>
+              <span>{{ formatCurrency(calculateEstimatedFare() * 0.1) }}</span>
+            </div>
+            <div class="pricing-item">
+              <span>Insurance:</span>
+              <span>{{ formatCurrency(calculateEstimatedFare() * 0.05) }}</span>
+            </div>
+            <div class="pricing-total">
+              <span>Total Amount:</span>
+              <span>{{ formatCurrency(calculateEstimatedFare()) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="form-section" formGroupName="paymentDetails">
+          <h3 class="section-title">Payment Method</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="paymentMethod">Select Payment Method *</label>
+              <select 
+                id="paymentMethod"
+                formControlName="method"
+                [class.error]="isFieldInvalid('paymentDetails.method')">
+                <option *ngFor="let method of paymentMethods" [value]="method.value">
+                  {{ method.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <div class="terms-section">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox"
+                    formControlName="termsAccepted"
+                    [class.error]="isFieldInvalid('paymentDetails.termsAccepted')">
+                  <span class="checkmark"></span>
+                  I accept the <a href="/terms" target="_blank">Terms and Conditions</a> *
+                </label>
+                <span class="error-message" *ngIf="isFieldInvalid('paymentDetails.termsAccepted')">
+                  You must accept the terms and conditions
+                </span>
+              </div>
+
+              <div class="privacy-section">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox"
+                    formControlName="privacyAccepted"
+                    [class.error]="isFieldInvalid('paymentDetails.privacyAccepted')">
+                  <span class="checkmark"></span>
+                  I accept the <a href="/privacy" target="_blank">Privacy Policy</a> *
+                </label>
+                <span class="error-message" *ngIf="isFieldInvalid('paymentDetails.privacyAccepted')">
+                  You must accept the privacy policy
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Review & Confirm -->
+    <div class="form-step" *ngIf="currentStep === 4">
+      <div class="step-content">
+        <h2 class="step-heading">Review Your Booking</h2>
+        
+        <!-- Booking Summary -->
+        <div class="booking-summary">
+          <div class="summary-section">
+            <h3>Cargo Details</h3>
+            <div class="summary-content">
+              <p><strong>Description:</strong> {{ getFormControl('cargoDetails.description')?.value }}</p>
+              <p><strong>Type:</strong> {{ getFormControl('cargoDetails.type')?.value }}</p>
+              <p><strong>Weight:</strong> {{ getFormControl('cargoDetails.weight')?.value }} kg</p>
+              <!-- Fixed: Use nested dimensions path -->
+              <p><strong>Dimensions:</strong> 
+                {{ getFormControl('cargoDetails.dimensions.length')?.value }} × 
+                {{ getFormControl('cargoDetails.dimensions.width')?.value }} × 
+                {{ getFormControl('cargoDetails.dimensions.height')?.value }} m
+              </p>
+              <p><strong>Value:</strong> {{ formatCurrency(getFormControl('cargoDetails.value')?.value || 0) }}</p>
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <h3>Route Information</h3>
+            <div class="summary-content">
+              <div class="route-info">
+                <div class="pickup-info">
+                  <h4>Pickup</h4>
+                  <p>{{ getFormControl('pickupDetails.address.street')?.value }}, 
+                     {{ getFormControl('pickupDetails.address.city')?.value }}, 
+                     {{ getFormControl('pickupDetails.address.state')?.value }} - 
+                     {{ getFormControl('pickupDetails.address.pincode')?.value }}</p>
+                  <!-- Fixed: Use contactPerson instead of contact -->
+                  <p><strong>Contact:</strong> 
+                     {{ getFormControl('pickupDetails.contactPerson.name')?.value }} 
+                     ({{ getFormControl('pickupDetails.contactPerson.phoneNumber')?.value }})</p>
+                  <p><strong>Date:</strong> 
+                     {{ getFormControl('pickupDetails.scheduledDate')?.value }} at 
+                     {{ getFormControl('pickupDetails.scheduledTime')?.value }}</p>
+                </div>
+                
+                <div class="delivery-info">
+                  <h4>Delivery</h4>
+                  <p>{{ getFormControl('deliveryDetails.address.street')?.value }}, 
+                     {{ getFormControl('deliveryDetails.address.city')?.value }}, 
+                     {{ getFormControl('deliveryDetails.address.state')?.value }} - 
+                     {{ getFormControl('deliveryDetails.address.pincode')?.value }}</p>
+                  <!-- Fixed: Use contactPerson instead of contact -->
+                  <p><strong>Contact:</strong> 
+                     {{ getFormControl('deliveryDetails.contactPerson.name')?.value }} 
+                     ({{ getFormControl('deliveryDetails.contactPerson.phoneNumber')?.value }})</p>
+                  <p><strong>Date:</strong> 
+                     {{ getFormControl('deliveryDetails.scheduledDate')?.value }} at 
+                     {{ getFormControl('deliveryDetails.scheduledTime')?.value }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <h3>Customer Information</h3>
+            <div class="summary-content">
+              <p><strong>Customer ID:</strong> {{ getFormControl('customerDetails.customerId')?.value }}</p>
+              <p><strong>Email:</strong> {{ getFormControl('customerDetails.email')?.value }}</p>
+              <p><strong>Phone:</strong> {{ getFormControl('customerDetails.phone')?.value }}</p>
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <h3>Payment Information</h3>
+            <div class="summary-content">
+              <p><strong>Payment Method:</strong> {{ getFormControl('paymentDetails.method')?.value }}</p>
+              <p><strong>Total Amount:</strong> {{ formatCurrency(calculateEstimatedFare()) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Navigation -->
+    <div class="form-navigation">
+      <button 
+        type="button" 
+        class="btn btn-secondary" 
+        *ngIf="currentStep > 1"
+        (click)="previousStep()">
+        <i class="fas fa-arrow-left"></i> Previous
+      </button>
+      
+      <div class="nav-spacer"></div>
+      
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        *ngIf="currentStep < totalSteps"
+        (click)="nextStep()"
+        [disabled]="!isCurrentStepValid()">
+        Next <i class="fas fa-arrow-right"></i>
+      </button>
+      
+      <button 
+        type="submit" 
+        class="btn btn-success" 
+        *ngIf="currentStep === totalSteps"
+        [disabled]="!bookingForm.valid || isLoading">
+        <i class="fas fa-spinner fa-spin" *ngIf="isLoading"></i>
+        <i class="fas fa-check" *ngIf="!isLoading"></i>
+        {{ isLoading ? 'Creating Booking...' : 'Confirm Booking' }}
+      </button>
+    </div>
+  </form>
+
+  <!-- Success Message -->
+  <div class="success-overlay" *ngIf="showSuccessMessage">
+    <div class="success-modal">
+      <div class="success-header">
+        <i class="fas fa-check-circle"></i>
+        <h2>Booking Created Successfully!</h2>
+      </div>
+      <div class="success-content">
+        <p><strong>Booking Number:</strong> {{ currentBooking?.bookingNumber }}</p>
+        <p>Your booking has been created and is pending confirmation.</p>
+        <p>You will receive updates via SMS and email.</p>
+      </div>
+      <div class="success-actions">
+        <button class="btn btn-primary" (click)="closeSuccessMessage()">
+          <i class="fas fa-plus"></i> Create Another Booking
+        </button>
+        <button class="btn btn-secondary" (click)="closeSuccessMessage()">
+          <i class="fas fa-eye"></i> View Booking Details
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
