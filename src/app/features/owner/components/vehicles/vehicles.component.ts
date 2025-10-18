@@ -58,57 +58,57 @@ export class VehiclesComponent implements OnInit {
 
   // Column definitions
   columnDefs: ColDef[] = [
-{
-    headerName: 'S.No.',
-    field: '_sNo',
-    width: 80,
-    sortable: false,
-    filter: false,
-    pinned: 'left',
-    flex: 0 // Don't flex
-  },
-  {
-    headerName: 'Vehicle Number',
-    field: 'vehicleNumber',
-    width: 180,
-    pinned: 'left',
-    flex: 0 // Don't flex
-  },
-  {
-    headerName: 'Type',
-    field: 'vehicleType',
-    width: 120,
-    flex: 0 // Don't flex
-  },
-  {
-    headerName: 'Manufacturer',
-    field: 'manufacturer',
-    width: 150
-  },
-  {
-    headerName: 'Model',
-    field: 'model',
-    width: 130
-  },
-  {
-    headerName: 'Year',
-    field: 'year',
-    width: 80,        // Reduced from 100 to 80
-    maxWidth: 90,     // Add max width
-    minWidth: 70,     // Add min width
-    flex: 0,          // Disable flex for fixed width
-    type: 'numericColumn',
-    cellStyle: { textAlign: 'center' } // Center align the year
-  },
-  {
-    headerName: 'Capacity (Tons)',
-    field: 'capacity',
-    width: 160,
-    type: 'numericColumn',
-    valueFormatter: (params: any) => {
-      return params.value ? `${params.value} Tons` : '';
-    }
-  },
+    {
+      headerName: 'S.No.',
+      field: '_sNo',
+      width: 80,
+      sortable: false,
+      filter: false,
+      pinned: 'left',
+      flex: 0 // Don't flex
+    },
+    {
+      headerName: 'Vehicle Number',
+      field: 'vehicleNumber',
+      width: 180,
+      pinned: 'left',
+      flex: 0 // Don't flex
+    },
+    {
+      headerName: 'Type',
+      field: 'vehicleType',
+      width: 120,
+      flex: 0 // Don't flex
+    },
+    {
+      headerName: 'Manufacturer',
+      field: 'manufacturer',
+      width: 150
+    },
+    {
+      headerName: 'Model',
+      field: 'model',
+      width: 130
+    },
+    {
+      headerName: 'Year',
+      field: 'year',
+      width: 80, // Reduced from 100 to 80
+      maxWidth: 90, // Add max width
+      minWidth: 70, // Add min width
+      flex: 0, // Disable flex for fixed width
+      type: 'numericColumn',
+      cellStyle: { textAlign: 'center' } // Center align the year
+    },
+    {
+      headerName: 'Capacity (Tons)',
+      field: 'capacity',
+      width: 160,
+      type: 'numericColumn',
+      valueFormatter: (params: any) => {
+        return params.value ? `${params.value} Tons` : '';
+      }
+    },
     {
       headerName: 'Status',
       field: 'status',
@@ -281,7 +281,7 @@ export class VehiclesComponent implements OnInit {
     });
   }
 
-  // FIXED: Load vehicles data
+  // Load vehicles data
   loadVehicles(): void {
     console.log('Loading vehicles...');
     
@@ -307,7 +307,7 @@ export class VehiclesComponent implements OnInit {
     }
   }
 
-  // FIXED: Fetch vehicles by owner
+  // Fetch vehicles by owner
   fetchVehiclesByOwner(ownerId: string): void {
     console.log('Fetching vehicles for owner:', ownerId);
     
@@ -339,7 +339,7 @@ export class VehiclesComponent implements OnInit {
     });
   }
 
-  // IMPROVED: Load sample data for demonstration
+  // Load sample data for demonstration
   loadSampleData(): void {
     console.log('Loading sample data...');
     
@@ -569,42 +569,42 @@ export class VehiclesComponent implements OnInit {
     }
   }
 
-onSubmitVehicleForm(): void {
-  if (this.vehicleForm.valid) {
-    this.isFormLoading = true;
-    this.formError = null;
+  onSubmitVehicleForm(): void {
+    if (this.vehicleForm.valid) {
+      this.isFormLoading = true;
+      this.formError = null;
 
-    // Prepare payload
-    const formValue = this.vehicleForm.value;
-    const vehiclePayload = {
-      ...formValue.basicInfo,
-      ...formValue.documents,
-      ...formValue.fareAndDetails,
-      owner: { id: this.ownerId }
-    };
+      // Prepare payload
+      const formValue = this.vehicleForm.value;
+      const vehiclePayload = {
+        ...formValue.basicInfo,
+        ...formValue.documents,
+        ...formValue.fareAndDetails,
+        owner: { id: this.ownerId }
+      };
 
-    console.log('Vehicle payload:', vehiclePayload);
+      console.log('Vehicle payload:', vehiclePayload);
 
-    // ENABLE THIS - Replace the setTimeout with actual API call:
-    this.vehicleService.saveVehicle(vehiclePayload).subscribe({
-      next: (response) => {
-        this.isFormLoading = false;
-        this.showSuccess('Vehicle added successfully!');
-        this.closeAddVehicleForm();
-        if (this.ownerId) {
-          this.fetchVehiclesByOwner(this.ownerId);
+      // ENABLE THIS - Replace the setTimeout with actual API call:
+      this.vehicleService.saveVehicle(vehiclePayload).subscribe({
+        next: (response) => {
+          this.isFormLoading = false;
+          this.showSuccess('Vehicle added successfully!');
+          this.closeAddVehicleForm();
+          if (this.ownerId) {
+            this.fetchVehiclesByOwner(this.ownerId);
+          }
+        },
+        error: (error) => {
+          this.isFormLoading = false;
+          this.formError = 'Failed to add vehicle. Please try again.';
+          console.error('Error adding vehicle:', error);
         }
-      },
-      error: (error) => {
-        this.isFormLoading = false;
-        this.formError = 'Failed to add vehicle. Please try again.';
-        console.error('Error adding vehicle:', error);
-      }
-    });
-  } else {
-    this.markCurrentStepGroupAsTouched();
+      });
+    } else {
+      this.markCurrentStepGroupAsTouched();
+    }
   }
-}
 
   // Update existing method to use progressive form
   openAddVehicleDialog(): void {
@@ -622,25 +622,180 @@ onSubmitVehicleForm(): void {
     this.showSuccess('Vehicle edit feature coming soon!');
   }
 
+  // ENHANCED DELETE FUNCTIONALITY - Replace existing deleteVehicle method
   deleteVehicle(vehicleData: any): void {
-    this.confirmMessage = `Are you sure you want to delete vehicle "${vehicleData.vehicleNumber}"? This action cannot be undone.`;
+    console.log('Delete vehicle requested:', vehicleData);
+    
+    // Validate vehicle data
+    if (!vehicleData || !vehicleData.id) {
+      this.showError('Invalid vehicle data. Cannot delete.');
+      return;
+    }
+
+    // Optional: Check if vehicle can be deleted
+    if (vehicleData.status === 'IN_TRANSIT') {
+      this.showError('Cannot delete vehicle that is currently in transit. Please wait for the trip to complete.');
+      return;
+    }
+
+    // Show confirmation dialog with detailed information
+    this.confirmMessage = `Are you sure you want to delete the following vehicle?
+    
+Vehicle Number: ${vehicleData.vehicleNumber}
+Type: ${vehicleData.vehicleType || 'N/A'}
+Manufacturer: ${vehicleData.manufacturer || 'N/A'}
+Model: ${vehicleData.model || 'N/A'}
+
+⚠️ This action cannot be undone and will permanently remove all vehicle data including documents and booking history.`;
+
     this.showCustomConfirm = true;
     this.pendingAction = () => this.executeDeleteVehicle(vehicleData);
   }
 
+  // ENHANCED Execute Delete with Real API Integration
   private executeDeleteVehicle(vehicleData: any): void {
-    console.log('Deleting vehicle:', vehicleData);
+    console.log('Executing delete for vehicle:', vehicleData);
     
-    // Remove from sample data
-    this.vehiclesForGrid = this.vehiclesForGrid.filter(vehicle => vehicle.id !== vehicleData.id);
-    
-    // Update serial numbers
-    this.vehiclesForGrid.forEach((vehicle, index) => {
-      vehicle._sNo = index + 1;
+    // Show loading state
+    this.isLoading = true;
+    if (this.gridApi) {
+      this.gridApi.showLoadingOverlay();
+    }
+
+    // Call the real API - Replace with actual API call when ready
+    this.vehicleService.deleteVehicle(vehicleData.id).subscribe({
+      next: (response) => {
+        console.log('✅ Vehicle deleted successfully from backend:', response);
+        this.isLoading = false;
+        
+        // Hide loading overlay
+        if (this.gridApi) {
+          this.gridApi.hideOverlay();
+        }
+        
+        // Show success message with vehicle details
+        this.showSuccess(`Vehicle "${vehicleData.vehicleNumber}" has been deleted successfully`);
+        
+        // Refresh data from backend to ensure consistency
+        if (this.ownerId) {
+          console.log('Refreshing vehicle list after delete...');
+          this.fetchVehiclesByOwner(this.ownerId);
+        } else {
+          // Fallback: remove from local grid data
+          this.removeVehicleFromGrid(vehicleData.id);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error deleting vehicle:', error);
+        this.isLoading = false;
+        
+        // Hide loading overlay
+        if (this.gridApi) {
+          this.gridApi.hideOverlay();
+        }
+        
+        // Handle different error scenarios with specific messages
+        this.handleDeleteError(error, vehicleData);
+      }
     });
+
+    // TEMPORARY: For demo purposes, if API is not ready, use local deletion
+    // Remove this setTimeout when API is integrated
+    /*
+    setTimeout(() => {
+      console.log('Demo: Deleting vehicle locally');
+      this.isLoading = false;
+      if (this.gridApi) {
+        this.gridApi.hideOverlay();
+      }
+      this.removeVehicleFromGrid(vehicleData.id);
+      this.showSuccess(`Vehicle "${vehicleData.vehicleNumber}" deleted successfully (Demo mode)`);
+    }, 1000);
+    */
+  }
+
+  // Enhanced Error Handling for Delete Operations
+  private handleDeleteError(error: any, vehicleData: any): void {
+    let errorMessage = 'Failed to delete vehicle. Please try again.';
+    let errorTitle = 'Delete Failed';
     
-    this.updateGridData();
-    this.showSuccess('Vehicle deleted successfully');
+    console.error('Delete error details:', error);
+    
+    switch (error.status) {
+      case 401:
+        errorTitle = 'Authentication Required';
+        errorMessage = 'Your session has expired. Please log in again to delete vehicles.';
+        break;
+        
+      case 403:
+        errorTitle = 'Permission Denied';
+        errorMessage = 'You do not have permission to delete this vehicle. Contact your administrator.';
+        break;
+        
+      case 404:
+        errorTitle = 'Vehicle Not Found';
+        errorMessage = `Vehicle "${vehicleData.vehicleNumber}" not found. It may have been deleted already.`;
+        // Remove from local grid since it doesn't exist on server
+        this.removeVehicleFromGrid(vehicleData.id);
+        break;
+        
+      case 400:
+        errorTitle = 'Cannot Delete';
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else {
+          errorMessage = 'Cannot delete vehicle. It may have active bookings or assignments.';
+        }
+        break;
+        
+      case 409:
+        errorTitle = 'Conflict';
+        errorMessage = 'Vehicle has dependent records and cannot be deleted. Please remove all bookings first.';
+        break;
+        
+      case 500:
+        errorTitle = 'Server Error';
+        errorMessage = 'Internal server error occurred. Please try again later or contact support.';
+        break;
+        
+      case 0:
+        errorTitle = 'Connection Error';
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        break;
+        
+      default:
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        break;
+    }
+    
+    // Show detailed error message
+    this.showError(`${errorTitle}: ${errorMessage}`);
+  }
+
+  // Helper method to remove vehicle from local grid (fallback)
+  private removeVehicleFromGrid(vehicleId: string): void {
+    console.log('Removing vehicle from local grid:', vehicleId);
+    
+    const initialCount = this.vehiclesForGrid.length;
+    this.vehiclesForGrid = this.vehiclesForGrid.filter(vehicle => vehicle.id !== vehicleId);
+    
+    if (this.vehiclesForGrid.length < initialCount) {
+      console.log('Vehicle removed from local grid');
+      
+      // Update serial numbers
+      this.vehiclesForGrid.forEach((vehicle, index) => {
+        vehicle._sNo = index + 1;
+      });
+      
+      // Update grid display
+      this.updateGridData();
+    } else {
+      console.log('Vehicle not found in local grid');
+    }
   }
 
   // Confirmation modal methods
