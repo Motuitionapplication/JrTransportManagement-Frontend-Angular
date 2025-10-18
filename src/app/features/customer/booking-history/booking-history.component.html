@@ -1,0 +1,17 @@
+<div class="booking-history-container">
+  <h2 class="title">My Booking History</h2>
+
+  <div class="spinner-container" *ngIf="isLoading">
+    <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+    <p>Loading your bookings...</p>
+  </div>
+
+  <div class="no-bookings" *ngIf="!isLoading && bookings.length === 0">
+    <p>No booking history found.</p>
+  </div>
+
+  <div class="booking-list" *ngIf="!isLoading && bookings.length > 0">
+    <div class="booking-card" *ngFor="let booking of bookings">
+      </div>
+  </div>
+</div>
