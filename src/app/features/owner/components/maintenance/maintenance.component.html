@@ -1,0 +1,331 @@
+<div class="maintenance-container">
+  <div class="header-section">
+    <h2 class="page-title">Maintenance Management</h2>
+    <div class="actions">
+      <button class="btn btn-outline-primary" (click)="generateMaintenanceReport()">
+        <i class="fas fa-chart-bar"></i>
+        Generate Report
+      </button>
+      <button class="btn btn-primary" (click)="scheduleMaintenanceservice()">
+        <i class="fas fa-plus"></i>
+        Schedule Service
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ maintenanceStats.total }}</div>
+        <div class="stat-label">Total Records</div>
+      </div>
+      <div class="stat-icon total">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ maintenanceStats.scheduled }}</div>
+        <div class="stat-label">Scheduled</div>
+      </div>
+      <div class="stat-icon scheduled">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ maintenanceStats.overdue }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+      <div class="stat-icon overdue">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ maintenanceStats.upcomingWeek }}</div>
+        <div class="stat-label">This Week</div>
+      </div>
+      <div class="stat-icon upcoming">
+        <i class="fas fa-clock"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ formatCurrency(maintenanceStats.totalCostThisMonth) }}</div>
+        <div class="stat-label">This Month Cost</div>
+      </div>
+      <div class="stat-icon cost">
+        <i class="fas fa-rupee-sign"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'all'"
+      (click)="setActiveTab('all')">
+      All Records ({{ maintenanceStats.total }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'scheduled'"
+      (click)="setActiveTab('scheduled')">
+      Scheduled ({{ maintenanceStats.scheduled }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'in-progress'"
+      (click)="setActiveTab('in-progress')">
+      In Progress ({{ maintenanceStats.inProgress }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'completed'"
+      (click)="setActiveTab('completed')">
+      Completed ({{ maintenanceStats.completed }})
+    </button>
+  </div>
+
+  <!-- Maintenance Records List -->
+  <div class="maintenance-list">
+    <div class="maintenance-card" *ngFor="let record of filteredMaintenanceRecords">
+      <div class="maintenance-header">
+        <div class="record-info">
+          <div class="record-title">
+            <i class="fas" [ngClass]="getCategoryIcon(record.category)"></i>
+            {{ record.title }}
+          </div>
+          <div class="record-id">#{{ record.id }}</div>
+        </div>
+        
+        <div class="record-badges">
+          <span 
+            class="priority-badge" 
+            [style.background-color]="getPriorityColor(record.priority)">
+            {{ record.priority | titlecase }}
+          </span>
+          <span 
+            class="status-badge" 
+            [style.background-color]="getStatusColor(isOverdue(record.scheduledDate, record.status) ? 'overdue' : record.status)">
+            {{ isOverdue(record.scheduledDate, record.status) ? 'Overdue' : (record.status | titlecase) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="maintenance-body">
+        <div class="vehicle-info">
+          <div class="vehicle-plate">
+            <i class="fas fa-car"></i>
+            {{ record.vehiclePlate }}
+          </div>
+          <div class="maintenance-type">
+            <i class="fas fa-tag"></i>
+            {{ record.type | titlecase }} Maintenance
+          </div>
+        </div>
+
+        <div class="description">
+          {{ record.description }}
+        </div>
+
+        <div class="maintenance-details">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">Scheduled Date</div>
+              <div class="detail-value">{{ record.scheduledDate | date:'MMM dd, yyyy' }}</div>
+            </div>
+            
+            <div class="detail-item" *ngIf="record.completedDate">
+              <div class="detail-label">Completed Date</div>
+              <div class="detail-value">{{ record.completedDate | date:'MMM dd, yyyy HH:mm' }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Service Provider</div>
+              <div class="detail-value">{{ record.serviceProvider }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Estimated Cost</div>
+              <div class="detail-value">{{ formatCurrency(record.estimatedCost) }}</div>
+            </div>
+
+            <div class="detail-item" *ngIf="record.actualCost">
+              <div class="detail-label">Actual Cost</div>
+              <div class="detail-value cost-value">{{ formatCurrency(record.actualCost) }}</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Mileage</div>
+              <div class="detail-value">{{ record.mileageAtService | number }} km</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="detail-label">Labor Hours</div>
+              <div class="detail-value">{{ record.laborHours }}h</div>
+            </div>
+
+            <div class="detail-item" *ngIf="record.warrantyPeriod">
+              <div class="detail-label">Warranty</div>
+              <div class="detail-value">{{ record.warrantyPeriod }} days</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="parts-section" *ngIf="record.partsRequired.length > 0">
+          <h4>Parts Required</h4>
+          <div class="parts-list">
+            <span class="part-tag" *ngFor="let part of record.partsRequired">
+              {{ part }}
+            </span>
+          </div>
+        </div>
+
+        <div class="next-service" *ngIf="record.nextServiceDue">
+          <div class="next-service-info">
+            <i class="fas fa-calendar-plus"></i>
+            <span>Next Service Due: {{ record.nextServiceDue | date:'MMM dd, yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="notes" *ngIf="record.notes">
+          <div class="notes-header">
+            <i class="fas fa-sticky-note"></i>
+            Notes
+          </div>
+          <div class="notes-content">{{ record.notes }}</div>
+        </div>
+      </div>
+
+      <div class="maintenance-actions">
+        <button 
+          class="action-btn view-btn" 
+          (click)="viewMaintenanceDetails(record.id)"
+          title="View Details">
+          <i class="fas fa-eye"></i>
+        </button>
+        
+        <button 
+          class="action-btn edit-btn" 
+          (click)="editMaintenance(record.id)"
+          title="Edit Record">
+          <i class="fas fa-edit"></i>
+        </button>
+
+        <button 
+          class="action-btn contact-btn" 
+          (click)="contactServiceProvider(record.serviceProviderContact)"
+          title="Contact Service Provider">
+          <i class="fas fa-phone"></i>
+        </button>
+
+        <button 
+          class="action-btn complete-btn" 
+          (click)="markAsCompleted(record.id)"
+          title="Mark as Completed"
+          *ngIf="record.status === 'in-progress'">
+          <i class="fas fa-check"></i>
+        </button>
+
+        <div class="dropdown" *ngIf="record.status !== 'completed'">
+          <button class="action-btn more-btn dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li *ngIf="record.status === 'scheduled'">
+              <a class="dropdown-item" (click)="markAsCompleted(record.id)">
+                <i class="fas fa-play"></i> Start Service
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" (click)="editMaintenance(record.id)">
+                <i class="fas fa-edit"></i> Edit Details
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item text-danger" (click)="cancelMaintenance(record.id)">
+                <i class="fas fa-times"></i> Cancel Service
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-records" *ngIf="filteredMaintenanceRecords.length === 0">
+      <i class="fas fa-tools"></i>
+      <h3>No maintenance records found</h3>
+      <p>No maintenance records match the current filter criteria.</p>
+      <button class="btn btn-primary" (click)="scheduleMaintenanceservice()">
+        <i class="fas fa-plus"></i>
+        Schedule First Service
+      </button>
+    </div>
+  </div>
+
+  <!-- Service Providers Section -->
+  <div class="service-providers-section">
+    <div class="section-header">
+      <h3>Service Providers</h3>
+      <button class="btn btn-outline-primary" (click)="addServiceProvider()">
+        <i class="fas fa-plus"></i>
+        Add Provider
+      </button>
+    </div>
+
+    <div class="providers-grid">
+      <div class="provider-card" *ngFor="let provider of serviceProviders">
+        <div class="provider-header">
+          <div class="provider-name">{{ provider.name }}</div>
+          <div class="provider-badges">
+            <span class="badge preferred" *ngIf="provider.isPreferred">Preferred</span>
+            <span class="badge contracted" *ngIf="provider.contractedRates">Contracted Rates</span>
+          </div>
+        </div>
+
+        <div class="provider-details">
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              {{ provider.contact }}
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              {{ provider.email }}
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ provider.address }}
+            </div>
+          </div>
+
+          <div class="specialties">
+            <div class="specialties-label">Specialties:</div>
+            <div class="specialties-list">
+              <span class="specialty-tag" *ngFor="let specialty of provider.specialties">
+                {{ specialty }}
+              </span>
+            </div>
+          </div>
+
+          <div class="provider-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star" *ngFor="let star of [1,2,3,4,5]" 
+                 [class.filled]="star <= provider.rating"></i>
+            </div>
+            <span class="rating-value">{{ provider.rating }}/5</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,116 @@
+<div class="fleet-management-container">
+  <div class="page-header">
+    <h1 class="page-title">Fleet Management</h1>
+    <button class="btn btn-primary" (click)="addNewFleet()">
+      <i class="fas fa-plus"></i> Add New Fleet
+    </button>
+  </div>
+
+  <!-- Fleet Overview Cards -->
+  <div class="fleet-overview">
+    <div class="overview-card" *ngFor="let fleet of fleetData">
+      <div class="fleet-header">
+        <h3 class="fleet-name">{{ fleet.name }}</h3>
+        <span class="fleet-id">{{ fleet.id }}</span>
+      </div>
+      
+      <div class="fleet-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ fleet.totalVehicles }}</span>
+          <span class="stat-label">Total Vehicles</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ fleet.activeVehicles }}</span>
+          <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ fleet.maintenanceVehicles }}</span>
+          <span class="stat-label">Maintenance</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">₹{{ fleet.totalEarnings | number }}</span>
+          <span class="stat-label">Total Earnings</span>
+        </div>
+      </div>
+
+      <div class="fleet-progress">
+        <div class="progress-info">
+          <span>Monthly Target Progress</span>
+          <span>{{ (fleet.totalEarnings / fleet.monthlyTarget * 100) | number:'1.0-0' }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="fleet.totalEarnings / fleet.monthlyTarget * 100"></div>
+        </div>
+      </div>
+
+      <div class="fleet-actions">
+        <button class="btn btn-outline" (click)="viewFleetDetails(fleet.id)">View Details</button>
+        <button class="btn btn-outline" (click)="editFleet(fleet.id)">Edit</button>
+        <button class="btn btn-danger-outline" (click)="deleteFleet(fleet.id)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Vehicles Table -->
+  <div class="fleet-vehicles-section">
+    <div class="section-header">
+      <h2>Fleet Vehicles</h2>
+      <div class="filter-controls">
+        <select class="form-select">
+          <option value="">All Fleets</option>
+          <option value="FL001">City Transport Fleet</option>
+          <option value="FL002">Logistics Fleet</option>
+        </select>
+        <select class="form-select">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Vehicle ID</th>
+            <th>Plate Number</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Driver</th>
+            <th>Last Service</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let vehicle of vehicles">
+            <td>{{ vehicle.id }}</td>
+            <td>{{ vehicle.plateNumber }}</td>
+            <td>{{ vehicle.type }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="vehicle.status.toLowerCase()">
+                {{ vehicle.status }}
+              </span>
+            </td>
+            <td>{{ vehicle.driver }}</td>
+            <td>{{ vehicle.lastService | date }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="btn-icon" title="Edit">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon" title="Assign to Fleet">
+                  <i class="fas fa-link"></i>
+                </button>
+                <button class="btn-icon" title="Track">
+                  <i class="fas fa-map-marker-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

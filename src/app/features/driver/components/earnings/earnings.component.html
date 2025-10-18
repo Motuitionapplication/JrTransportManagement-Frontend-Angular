@@ -1,0 +1,252 @@
+<div class="earnings-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">My Earnings</h1>
+    <p class="page-subtitle">Track your income and payment history</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading earnings data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading">
+    <!-- Earnings Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card total">
+        <div class="card-header">
+          <span class="card-icon">💰</span>
+          <h3>Total Earnings</h3>
+        </div>
+        <div class="card-value">{{ formatCurrency(summary.totalEarnings) }}</div>
+        <div class="card-subtitle">Before commission</div>
+      </div>
+
+      <div class="summary-card net">
+        <div class="card-header">
+          <span class="card-icon">💵</span>
+          <h3>Net Earnings</h3>
+        </div>
+        <div class="card-value">{{ formatCurrency(summary.netEarnings) }}</div>
+        <div class="card-subtitle">After commission</div>
+      </div>
+
+      <div class="summary-card average">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h3>Average Per Trip</h3>
+        </div>
+        <div class="card-value">{{ formatCurrency(summary.averagePerTrip) }}</div>
+        <div class="card-subtitle">{{ summary.totalTrips }} trips total</div>
+      </div>
+
+      <div class="summary-card top-day">
+        <div class="card-header">
+          <span class="card-icon">⭐</span>
+          <h3>Best Day</h3>
+        </div>
+        <div class="card-value">{{ formatCurrency(summary.topEarningDay.amount) }}</div>
+        <div class="card-subtitle">{{ formatDate(summary.topEarningDay.date) }}</div>
+      </div>
+    </div>
+
+    <!-- Weekly Performance Chart -->
+    <div class="weekly-performance">
+      <div class="section-header">
+        <h2>Weekly Performance</h2>
+        <button class="export-btn" (click)="exportEarnings()">
+          📊 Export Data
+        </button>
+      </div>
+
+      <div class="weeks-container">
+        <div *ngFor="let week of weeklyStats" class="week-card">
+          <div class="week-header">
+            <h4>{{ formatDate(week.weekStart) }} - {{ formatDate(week.weekEnd) }}</h4>
+            <div class="week-stats">
+              <span class="week-earnings">{{ formatCurrency(week.totalEarnings) }}</span>
+              <span class="week-trips">{{ week.totalTrips }} trips</span>
+            </div>
+          </div>
+          
+          <div class="daily-chart">
+            <div *ngFor="let day of week.dailyBreakdown" class="day-bar">
+              <div class="bar-container">
+                <div 
+                  class="bar-fill" 
+                  [style.height.%]="(day.earnings / week.totalEarnings * 100) || 0">
+                </div>
+              </div>
+              <div class="day-label">{{ day.day.substring(0, 3) }}</div>
+              <div class="day-earnings">{{ formatCurrency(day.earnings) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Start Date</label>
+          <input 
+            type="date" 
+            [(ngModel)]="dateRange.start"
+            (change)="applyFilters()"
+            class="filter-input">
+        </div>
+
+        <div class="filter-group">
+          <label>End Date</label>
+          <input 
+            type="date" 
+            [(ngModel)]="dateRange.end"
+            (change)="applyFilters()"
+            class="filter-input">
+        </div>
+
+        <div class="filter-group">
+          <label>Payment Status</label>
+          <select 
+            [(ngModel)]="paymentStatus"
+            (change)="applyFilters()"
+            class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select 
+            [(ngModel)]="sortBy"
+            (change)="applySorting()"
+            class="filter-select">
+            <option value="date">Date</option>
+            <option value="earnings">Earnings</option>
+            <option value="customer">Customer</option>
+          </select>
+        </div>
+
+        <div class="filter-actions">
+          <button class="clear-btn" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Earnings List -->
+    <div class="earnings-list">
+      <div class="list-header">
+        <h2>Recent Earnings</h2>
+        <div class="total-showing">
+          Showing {{ filteredEarnings.length }} of {{ earnings.length }} earnings
+        </div>
+      </div>
+
+      <!-- No Earnings State -->
+      <div *ngIf="filteredEarnings.length === 0" class="no-earnings">
+        <div class="no-earnings-icon">💳</div>
+        <h3>No earnings found</h3>
+        <p>No earnings match your current filter criteria. Try adjusting your filters or complete more trips.</p>
+      </div>
+
+      <!-- Earnings Cards -->
+      <div *ngIf="filteredEarnings.length > 0" class="earnings-grid">
+        <div 
+          *ngFor="let earning of filteredEarnings" 
+          class="earning-card"
+          [class]="getPaymentStatusClass(earning.paymentStatus)">
+          
+          <div class="earning-header">
+            <div class="trip-info">
+              <strong class="trip-id">{{ earning.tripId }}</strong>
+              <div class="customer-name">{{ earning.customerName }}</div>
+            </div>
+            
+            <div class="earning-status">
+              <div class="status-badge" [class]="getPaymentStatusClass(earning.paymentStatus)">
+                {{ earning.paymentStatus | titlecase }}
+              </div>
+              <div class="earning-date">{{ formatDate(earning.date) }}</div>
+            </div>
+          </div>
+
+          <div class="earning-breakdown">
+            <div class="breakdown-item">
+              <span class="breakdown-label">Base Fare:</span>
+              <span class="breakdown-value">{{ formatCurrency(earning.baseFare) }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">Distance:</span>
+              <span class="breakdown-value">{{ formatCurrency(earning.distanceCharge) }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">Time:</span>
+              <span class="breakdown-value">{{ formatCurrency(earning.timeCharge) }}</span>
+            </div>
+            <div *ngIf="earning.tips > 0" class="breakdown-item tips">
+              <span class="breakdown-label">Tips:</span>
+              <span class="breakdown-value">{{ formatCurrency(earning.tips) }}</span>
+            </div>
+            <div *ngIf="earning.bonuses > 0" class="breakdown-item bonus">
+              <span class="breakdown-label">Bonus:</span>
+              <span class="breakdown-value">{{ formatCurrency(earning.bonuses) }}</span>
+            </div>
+          </div>
+
+          <div class="earning-summary">
+            <div class="summary-row total">
+              <span class="summary-label">Total Earnings:</span>
+              <span class="summary-value">{{ formatCurrency(earning.totalEarnings) }}</span>
+            </div>
+            <div class="summary-row commission">
+              <span class="summary-label">Commission (20%):</span>
+              <span class="summary-value">-{{ formatCurrency(earning.commission) }}</span>
+            </div>
+            <div class="summary-row net">
+              <span class="summary-label">Net Earnings:</span>
+              <span class="summary-value">{{ formatCurrency(earning.netEarnings) }}</span>
+            </div>
+          </div>
+
+          <div class="trip-details">
+            <div class="detail-item">
+              <span class="detail-icon">📏</span>
+              <span class="detail-text">{{ earning.tripDistance }} km</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-icon">⏱️</span>
+              <span class="detail-text">{{ formatTime(earning.tripDuration) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-icon">💳</span>
+              <span class="detail-text">{{ earning.paymentMethod }}</span>
+            </div>
+          </div>
+
+          <div class="earning-actions">
+            <button 
+              class="action-btn view-btn" 
+              (click)="viewTripDetails(earning.tripId)">
+              <span class="btn-icon">👁️</span>
+              View Trip
+            </button>
+            
+            <button 
+              *ngIf="earning.paymentStatus === 'pending'"
+              class="action-btn request-btn" 
+              (click)="requestPayment(earning.id)">
+              <span class="btn-icon">💰</span>
+              Request Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

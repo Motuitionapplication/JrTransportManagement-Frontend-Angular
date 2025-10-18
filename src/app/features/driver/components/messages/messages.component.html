@@ -1,0 +1,496 @@
+<!-- Loading State -->
+<div class="messages-container" *ngIf="loading">
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading your messages...</p>
+  </div>
+</div>
+
+<!-- Main Messages Interface -->
+<div class="messages-container" *ngIf="!loading">
+  <!-- Page Header with Stats -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <button class="sidebar-toggle" (click)="toggleSidebar()" [class.active]="!sidebarCollapsed">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="page-title">Messages</h1>
+      </div>
+      
+      <!-- stats-summary removed from page header; it will be shown inside the messages sidebar -->
+    </div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <div class="messages-layout" [class.sidebar-collapsed]="sidebarCollapsed" [class.show-chat]="!!selectedConversation">
+    
+    <!-- Sidebar: Conversations List -->
+    <div class="messages-sidebar" [class.collapsed]="sidebarCollapsed">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              placeholder="Search conversations..." 
+              class="search-input"
+              [(ngModel)]="activeFilters.searchQuery"
+              (input)="applyFilters()">
+          </div>
+        </div>
+
+        <!-- Quick Filters -->
+        <div class="quick-filters">
+          <select 
+            class="filter-select"
+            [(ngModel)]="activeFilters.conversationType"
+            (change)="applyFilters()">
+            <option *ngFor="let type of conversationTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          
+          <button class="new-message-btn" (click)="startNewConversation()">
+            <i class="fas fa-plus"></i>
+            New
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages stats inserted inside the sidebar so it visually belongs to the messages panel -->
+      <div class="messages-stats">
+        <div class="stat-item">
+          <span class="stat-number">{{ messageStats.totalConversations }}</span>
+          <span class="stat-label">Conversations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number unread">{{ messageStats.unreadMessages }}</span>
+          <span class="stat-label">Unread</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number support">{{ messageStats.activeSupport }}</span>
+          <span class="stat-label">Support</span>
+        </div>
+        <div class="stat-item urgent" *ngIf="messageStats.pendingEmergency > 0">
+          <span class="stat-number">{{ messageStats.pendingEmergency }}</span>
+          <span class="stat-label">Emergency</span>
+        </div>
+      </div>
+
+      <!-- Conversations List -->
+      <div class="conversations-list">
+        <div 
+          *ngFor="let conversation of filteredConversations" 
+          class="conversation-item"
+          [class.selected]="selectedConversation?.id === conversation.id"
+          [class.unread]="conversation.unreadCount > 0"
+          [class.pinned]="conversation.pinned"
+          [class.muted]="conversation.muted"
+          (click)="selectConversation(conversation)">
+          
+          <div class="conversation-avatar">
+            <span class="avatar-icon">{{ getConversationIcon(conversation.conversationType) }}</span>
+            <div class="online-indicator" *ngIf="conversation.conversationType === 'support'"></div>
+          </div>
+
+          <div class="conversation-content">
+            <div class="conversation-header">
+              <div class="conversation-title">
+                <span class="title-text">{{ conversation.title }}</span>
+                <i class="fas fa-thumbtack pin-icon" *ngIf="conversation.pinned"></i>
+                <i class="fas fa-volume-mute mute-icon" *ngIf="conversation.muted"></i>
+              </div>
+              <span class="conversation-time">{{ formatMessageTime(conversation.lastMessage.timestamp) }}</span>
+            </div>
+
+            <div class="last-message">
+              <div class="message-preview">
+                <i class="message-type-icon fas fa-file" *ngIf="conversation.lastMessage.messageType === 'file'"></i>
+                <i class="message-type-icon fas fa-image" *ngIf="conversation.lastMessage.messageType === 'image'"></i>
+                <i class="message-type-icon fas fa-map-marker-alt" *ngIf="conversation.lastMessage.messageType === 'location'"></i>
+                <span class="message-text">{{ conversation.lastMessage.content }}</span>
+              </div>
+              
+              <div class="conversation-meta">
+                <div class="message-status">
+                  <span 
+                    class="priority-indicator"
+                    *ngIf="conversation.lastMessage.priority !== 'normal'"
+                    [style.color]="getPriorityColor(conversation.lastMessage.priority)">
+                    <i class="fas fa-exclamation-circle" *ngIf="conversation.lastMessage.priority === 'urgent'"></i>
+                    <i class="fas fa-exclamation-triangle" *ngIf="conversation.lastMessage.priority === 'high'"></i>
+                  </span>
+                  
+                  <span class="unread-count" *ngIf="conversation.unreadCount > 0">
+                    {{ conversation.unreadCount }}
+                  </span>
+                </div>
+
+                <div class="conversation-type">
+                  <span class="type-badge" [class]="'type-' + conversation.conversationType">
+                    {{ conversation.conversationType }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conversation Actions -->
+          <div class="conversation-actions" (click)="$event.stopPropagation()">
+            <button 
+              class="action-btn"
+              (click)="pinConversation(conversation.id)"
+              [class.active]="conversation.pinned"
+              title="Pin conversation">
+              <i class="fas fa-thumbtack"></i>
+            </button>
+            <button 
+              class="action-btn"
+              (click)="muteConversation(conversation.id)"
+              [class.active]="conversation.muted"
+              title="Mute notifications">
+              <i class="fas fa-volume-mute"></i>
+            </button>
+            <button 
+              class="action-btn"
+              (click)="archiveConversation(conversation.id)"
+              title="Archive conversation">
+              <i class="fas fa-archive"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- No Conversations State -->
+        <div class="no-conversations" *ngIf="filteredConversations.length === 0">
+          <div class="no-conversations-icon">💬</div>
+          <h3>No conversations found</h3>
+          <p>Try adjusting your filters or start a new conversation.</p>
+          <button class="start-conversation-btn" (click)="startNewConversation()">
+            <i class="fas fa-plus"></i>
+            Start New Conversation
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="chat-main" *ngIf="selectedConversation">
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <button class="back-btn" (click)="selectedConversation = null; sidebarCollapsed = false" *ngIf="sidebarCollapsed">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+
+        <div class="chat-info">
+          <div class="chat-avatar">
+            {{ getConversationIcon(selectedConversation.conversationType) }}
+          </div>
+          <div class="chat-details">
+            <h3 class="chat-title">{{ selectedConversation.title }}</h3>
+            <p class="chat-subtitle">
+              <span class="participant-count">
+                {{ selectedConversation.participantNames.length }} participants
+              </span>
+              <span class="separator">•</span>
+              <span class="conversation-type">{{ selectedConversation.conversationType }}</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="chat-actions">
+          <button class="chat-action-btn" (click)="toggleMessageDetails()" title="Message details">
+            <i class="fas fa-info-circle"></i>
+          </button>
+          <button class="chat-action-btn" title="Call support" *ngIf="selectedConversation.conversationType === 'support'">
+            <i class="fas fa-phone"></i>
+          </button>
+          <button class="chat-action-btn" title="More options">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="messages-area" #messagesContainer>
+        <div class="messages-content">
+          <!-- Date Separators and Messages -->
+          <div *ngFor="let message of messages; let i = index">
+            
+            <!-- Date Separator -->
+            <div class="date-separator" *ngIf="shouldShowDateSeparator(i)">
+              <span class="date-text">{{ getDateSeparatorText(message.timestamp) }}</span>
+            </div>
+
+            <!-- Message -->
+            <div 
+              class="message-wrapper"
+              [class.own-message]="isOwnMessage(message)"
+              [class.system-message]="message.messageType === 'system'">
+              
+              <div class="message-bubble" [class]="'priority-' + message.priority">
+                
+                <!-- Reply Context -->
+                <div class="reply-context" *ngIf="message.replyTo">
+                  <div class="reply-line"></div>
+                  <div class="reply-content">
+                    <span class="reply-author">Replying to previous message</span>
+                  </div>
+                </div>
+
+                <!-- Message Content -->
+                <div class="message-content">
+                  
+                  <!-- Text Message -->
+                  <div class="message-text" *ngIf="message.messageType === 'text'">
+                    {{ message.content }}
+                  </div>
+
+                  <!-- Image Message -->
+                  <div class="message-media" *ngIf="message.messageType === 'image' && message.attachments">
+                    <div class="media-grid">
+                      <div 
+                        *ngFor="let attachment of message.attachments" 
+                        class="media-item"
+                        (click)="viewAttachment(attachment)">
+                        <img [src]="attachment.url" [alt]="attachment.name" class="message-image">
+                        <div class="image-overlay">
+                          <i class="fas fa-expand"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- File Attachments -->
+                  <div class="message-files" *ngIf="message.attachments && message.messageType === 'file'">
+                    <div 
+                      *ngFor="let attachment of message.attachments" 
+                      class="file-attachment">
+                      <div class="file-icon">
+                        <i class="fas fa-file" *ngIf="attachment.type === 'document'"></i>
+                        <i class="fas fa-file-image" *ngIf="attachment.type === 'image'"></i>
+                        <i class="fas fa-file-video" *ngIf="attachment.type === 'video'"></i>
+                        <i class="fas fa-file-audio" *ngIf="attachment.type === 'audio'"></i>
+                      </div>
+                      <div class="file-info">
+                        <div class="file-name">{{ attachment.name }}</div>
+                        <div class="file-size">{{ formatFileSize(attachment.size) }}</div>
+                      </div>
+                      <div class="file-actions">
+                        <button class="file-action-btn" (click)="viewAttachment(attachment)">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="file-action-btn" (click)="downloadAttachment(attachment)">
+                          <i class="fas fa-download"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Location Message -->
+                  <div class="message-location" *ngIf="message.messageType === 'location'">
+                    <div class="location-content">
+                      <i class="fas fa-map-marker-alt"></i>
+                      <span>{{ message.content }}</span>
+                    </div>
+                    <button class="location-btn">View on Map</button>
+                  </div>
+
+                  <!-- System Message -->
+                  <div class="system-message-content" *ngIf="message.messageType === 'system'">
+                    <i class="fas fa-info-circle"></i>
+                    <span>{{ message.content }}</span>
+                  </div>
+
+                </div>
+
+                <!-- Message Footer -->
+                <div class="message-footer" *ngIf="message.messageType !== 'system'">
+                  <div class="message-meta">
+                    <span class="message-time">{{ formatMessageTime(message.timestamp) }}</span>
+                    <span class="message-status" *ngIf="isOwnMessage(message)">
+                      <i class="fas fa-check" *ngIf="!message.delivered"></i>
+                      <i class="fas fa-check-double" [class.read]="message.read" *ngIf="message.delivered"></i>
+                    </span>
+                    <span class="edited-indicator" *ngIf="message.edited">edited</span>
+                  </div>
+
+                  <!-- Message Actions -->
+                  <div class="message-actions" *ngIf="isActionableMessage(message)">
+                    <button class="message-action-btn" (click)="replyToMessage(message)" title="Reply">
+                      <i class="fas fa-reply"></i>
+                    </button>
+                    <button 
+                      class="message-action-btn" 
+                      (click)="markAsImportant(message)" 
+                      title="Mark as important"
+                      [class.active]="message.priority === 'high'">
+                      <i class="fas fa-star"></i>
+                    </button>
+                    <button 
+                      class="message-action-btn delete" 
+                      (click)="deleteMessage(message.id)" 
+                      title="Delete message"
+                      *ngIf="isOwnMessage(message)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message Author (for group chats) -->
+              <div class="message-author" *ngIf="!isOwnMessage(message) && selectedConversation.isGroup">
+                <span class="author-name">{{ message.senderName }}</span>
+                <span class="author-role">{{ message.senderType }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typing Indicator -->
+          <div class="typing-indicator" *ngIf="isTyping">
+            <div class="typing-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="typing-text">Someone is typing...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Input Area -->
+      <div class="message-input-area">
+        
+        <!-- Reply Context -->
+        <div class="reply-preview" *ngIf="replyingTo">
+          <div class="reply-preview-content">
+            <div class="reply-preview-header">
+              <span class="reply-label">Replying to {{ replyingTo.senderName }}</span>
+              <button class="cancel-reply-btn" (click)="cancelReply()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="reply-preview-message">{{ replyingTo.content }}</div>
+          </div>
+        </div>
+
+        <!-- Selected Files Preview -->
+        <div class="selected-files" *ngIf="selectedFiles.length > 0">
+          <div class="files-preview">
+            <div 
+              *ngFor="let file of selectedFiles; let i = index" 
+              class="file-preview">
+              <div class="file-preview-content">
+                <i class="fas fa-file file-preview-icon"></i>
+                <div class="file-preview-info">
+                  <span class="file-preview-name">{{ file.name }}</span>
+                  <span class="file-preview-size">{{ formatFileSize(file.size) }}</span>
+                </div>
+                <button class="remove-file-btn" (click)="removeSelectedFile(i)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Controls -->
+        <div class="input-controls">
+          <div class="input-wrapper">
+            
+            <!-- Attachment Button -->
+            <button class="input-action-btn" (click)="openFileSelector()" title="Attach file">
+              <i class="fas fa-paperclip"></i>
+            </button>
+
+            <!-- Message Input -->
+            <textarea 
+              #messageInput
+              class="message-input"
+              placeholder="Type your message..."
+              [(ngModel)]="newMessageContent"
+              (keydown.enter)="onEnterKeydown($event)"
+              rows="1">
+            </textarea>
+
+            <!-- Send Button -->
+            <button 
+              class="send-btn" 
+              (click)="sendMessage()"
+              [disabled]="!newMessageContent.trim() && selectedFiles.length === 0"
+              title="Send message">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- File Input (Hidden) -->
+        <input 
+          #fileInput
+          type="file" 
+          multiple 
+          class="file-input" 
+          (change)="onFileSelected($event)"
+          style="display: none;">
+      </div>
+    </div>
+
+    <!-- No Conversation Selected -->
+    <div class="no-chat-selected" *ngIf="!selectedConversation">
+      <div class="no-chat-content">
+        <div class="no-chat-icon">💬</div>
+        <h3>Select a conversation</h3>
+        <p>Choose a conversation from the sidebar to start messaging.</p>
+        <button class="start-conversation-btn" (click)="startNewConversation()">
+          <i class="fas fa-plus"></i>
+          Start New Conversation
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Attachment Preview Modal -->
+<div class="modal-overlay" *ngIf="showAttachmentPreview" (click)="closeAttachmentPreview()">
+  <div class="attachment-modal" (click)="$event.stopPropagation()" *ngIf="selectedAttachment">
+    <div class="attachment-modal-header">
+      <h3>{{ selectedAttachment.name }}</h3>
+      <button class="close-btn" (click)="closeAttachmentPreview()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="attachment-modal-content">
+      <!-- Image Preview -->
+      <img 
+        *ngIf="selectedAttachment.type === 'image'" 
+        [src]="selectedAttachment.url" 
+        [alt]="selectedAttachment.name"
+        class="attachment-preview-image">
+      
+      <!-- File Preview -->
+      <div class="file-preview-content" *ngIf="selectedAttachment.type !== 'image'">
+        <div class="file-preview-icon">
+          <i class="fas fa-file-alt" *ngIf="selectedAttachment.type === 'document'"></i>
+          <i class="fas fa-file-video" *ngIf="selectedAttachment.type === 'video'"></i>
+          <i class="fas fa-file-audio" *ngIf="selectedAttachment.type === 'audio'"></i>
+        </div>
+        <div class="file-preview-info">
+          <h4>{{ selectedAttachment.name }}</h4>
+          <p>Size: {{ formatFileSize(selectedAttachment.size) }}</p>
+          <p>Type: {{ selectedAttachment.mimeType }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="attachment-modal-actions">
+      <button class="modal-btn download" (click)="downloadAttachment(selectedAttachment)">
+        <i class="fas fa-download"></i>
+        Download
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,673 @@
+.earnings-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+// Page Header
+.page-header {
+  margin-bottom: 2rem;
+  
+  .page-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+  }
+  
+  .page-subtitle {
+    color: #718096;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #10b981;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: #6b7280;
+    font-size: 1.1rem;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    
+    .card-icon {
+      font-size: 1.5rem;
+    }
+    
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+  }
+  
+  .card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+  
+  // Card-specific styling
+  &.total {
+    border-left: 4px solid #3b82f6;
+    .card-value { color: #3b82f6; }
+  }
+  
+  &.net {
+    border-left: 4px solid #10b981;
+    .card-value { color: #10b981; }
+  }
+  
+  &.average {
+    border-left: 4px solid #8b5cf6;
+    .card-value { color: #8b5cf6; }
+  }
+  
+  &.top-day {
+    border-left: 4px solid #f59e0b;
+    .card-value { color: #f59e0b; }
+  }
+}
+
+// Weekly Performance Section
+.weekly-performance {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+  
+  .export-btn {
+    padding: 0.75rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.weeks-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.week-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+    
+    .week-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      
+      .week-earnings {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #10b981;
+      }
+      
+      .week-trips {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+    }
+  }
+}
+
+.daily-chart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  height: 120px;
+}
+
+.day-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  
+  .bar-container {
+    flex: 1;
+    width: 100%;
+    max-width: 30px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    
+    .bar-fill {
+      width: 100%;
+      background: linear-gradient(180deg, #10b981, #059669);
+      border-radius: 4px;
+      min-height: 2px;
+      transition: height 0.5s ease;
+    }
+  }
+  
+  .day-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+  
+  .day-earnings {
+    font-size: 0.7rem;
+    color: #374151;
+    font-weight: 600;
+  }
+}
+
+// Filters Section
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  
+  label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.filter-input, .filter-select {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+.filter-actions {
+  display: flex;
+  align-items: end;
+  
+  .clear-btn {
+    padding: 0.75rem 1.5rem;
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background: #e5e7eb;
+      border-color: #9ca3af;
+    }
+  }
+}
+
+// Earnings List
+.earnings-list {
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .total-showing {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// No Earnings State
+.no-earnings {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  
+  .no-earnings-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  
+  h3 {
+    color: #374151;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  p {
+    color: #6b7280;
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+// Earnings Grid
+.earnings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+// Earning Card
+.earning-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  // Payment status styling
+  &.status-paid {
+    border-left: 4px solid #10b981;
+  }
+  
+  &.status-pending {
+    border-left: 4px solid #f59e0b;
+  }
+  
+  &.status-processing {
+    border-left: 4px solid #3b82f6;
+  }
+}
+
+// Card Header
+.earning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  
+  .trip-info {
+    .trip-id {
+      font-size: 1.1rem;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    
+    .customer-name {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+  }
+  
+  .earning-status {
+    text-align: right;
+    
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      
+      &.status-paid {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      
+      &.status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      
+      &.status-processing {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+    }
+    
+    .earning-date {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// Earning Breakdown
+.earning-breakdown {
+  margin-bottom: 1rem;
+  
+  .breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+    
+    .breakdown-label {
+      color: #6b7280;
+    }
+    
+    .breakdown-value {
+      color: #1f2937;
+      font-weight: 500;
+    }
+    
+    &.tips {
+      .breakdown-value {
+        color: #059669;
+      }
+    }
+    
+    &.bonus {
+      .breakdown-value {
+        color: #7c3aed;
+      }
+    }
+  }
+}
+
+// Earning Summary
+.earning-summary {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  margin-bottom: 1rem;
+  
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    
+    .summary-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .summary-value {
+      font-weight: 600;
+    }
+    
+    &.total {
+      .summary-label, .summary-value {
+        color: #374151;
+      }
+    }
+    
+    &.commission {
+      .summary-label, .summary-value {
+        color: #dc2626;
+      }
+    }
+    
+    &.net {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 0.5rem;
+      margin-top: 0.5rem;
+      
+      .summary-label, .summary-value {
+        color: #059669;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+// Trip Details
+.trip-details {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    
+    .detail-icon {
+      font-size: 1rem;
+    }
+    
+    .detail-text {
+      color: #374151;
+      font-weight: 500;
+    }
+  }
+}
+
+// Action Buttons
+.earning-actions {
+  display: flex;
+  gap: 0.75rem;
+  
+  .action-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    
+    .btn-icon {
+      font-size: 1rem;
+    }
+    
+    &.view-btn {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      
+      &:hover {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+      }
+    }
+    
+    &.request-btn {
+      background: #f59e0b;
+      color: white;
+      
+      &:hover {
+        background: #d97706;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .earnings-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    margin-bottom: 1.5rem;
+    
+    .page-title {
+      font-size: 1.75rem;
+    }
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .summary-card {
+    padding: 1.5rem;
+    
+    .card-value {
+      font-size: 2rem;
+    }
+  }
+  
+  .weeks-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .earnings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .earning-actions {
+    flex-direction: column;
+    
+    .action-btn {
+      flex: none;
+    }
+  }
+  
+  .trip-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

@@ -1,0 +1,255 @@
+<div class="trips-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <h1 class="page-title">My Trips</h1>
+    <p class="page-subtitle">Track and manage your ongoing and completed trips</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-row">
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label for="statusFilter">Status</label>
+        <select 
+          id="statusFilter" 
+          [(ngModel)]="filter.status" 
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="filter-group">
+        <label for="dateFilter">Date Range</label>
+        <select 
+          id="dateFilter" 
+          [(ngModel)]="filter.dateRange" 
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Search Filter -->
+      <div class="filter-group search-group">
+        <label for="searchFilter">Search</label>
+        <input 
+          id="searchFilter"
+          type="text" 
+          [(ngModel)]="filter.searchTerm" 
+          (input)="applyFilters()"
+          placeholder="Search by trip number, customer, location..."
+          class="search-input">
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="filter-actions">
+        <button 
+          type="button" 
+          (click)="clearFilters()" 
+          class="clear-btn">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading your trips...</p>
+  </div>
+
+  <!-- Trips List -->
+  <div *ngIf="!isLoading" class="trips-list">
+    <!-- No Trips Message -->
+    <div *ngIf="filteredTrips.length === 0" class="no-trips">
+      <div class="no-trips-icon">🚛</div>
+      <h3>No Trips Found</h3>
+      <p *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all'">
+        Try adjusting your filters to see more trips.
+      </p>
+      <p *ngIf="!filter.searchTerm && filter.status === 'all' && filter.dateRange === 'all'">
+        You don't have any trips yet. New trips will appear here.
+      </p>
+    </div>
+
+    <!-- Trips Grid -->
+    <div *ngIf="filteredTrips.length > 0" class="trips-grid">
+      <div 
+        *ngFor="let trip of filteredTrips" 
+        class="trip-card"
+        [class]="getStatusColor(trip.status)">
+        
+        <!-- Card Header -->
+        <div class="trip-header">
+          <div class="trip-number">
+            <strong>{{ trip.tripNumber }}</strong>
+            <small>{{ trip.bookingNumber }}</small>
+          </div>
+          <div class="trip-status">
+            <span class="status-badge" [class]="getStatusColor(trip.status)">
+              {{ getStatusText(trip.status) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div *ngIf="trip.status === 'in-transit' || trip.status === 'started'" class="progress-section">
+          <div class="progress-label">Trip Progress</div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="trip.progress"></div>
+          </div>
+          <div class="progress-text">{{ trip.progress }}% Complete</div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="customer-info">
+          <h3 class="customer-name">{{ trip.customerName }}</h3>
+          <div class="customer-contact">
+            <span class="phone">📞 {{ trip.customerPhone }}</span>
+          </div>
+        </div>
+
+        <!-- Trip Route -->
+        <div class="trip-route">
+          <div class="route-info">
+            <div class="pickup">
+              <span class="route-icon">🔵</span>
+              <div class="route-details">
+                <span class="route-label">From:</span>
+                <span class="route-value">{{ trip.pickupLocation }}</span>
+              </div>
+            </div>
+            <div class="route-line"></div>
+            <div class="drop">
+              <span class="route-icon">🔴</span>
+              <div class="route-details">
+                <span class="route-label">To:</span>
+                <span class="route-value">{{ trip.dropLocation }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Current Location -->
+          <div *ngIf="trip.currentLocation && trip.status === 'in-transit'" class="current-location">
+            <span class="location-icon">📍</span>
+            <span class="location-text">Currently at: {{ trip.currentLocation }}</span>
+          </div>
+        </div>
+
+        <!-- Trip Details -->
+        <div class="trip-details">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Vehicle:</span>
+              <span class="detail-value">{{ trip.vehicleNumber }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Distance:</span>
+              <span class="detail-value">{{ trip.distance }} km</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Duration:</span>
+              <span class="detail-value">{{ trip.estimatedDuration }}h estimated</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Cargo:</span>
+              <span class="detail-value">{{ trip.cargoDetails }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Weight:</span>
+              <span class="detail-value">{{ trip.weight }}kg</span>
+            </div>
+            <div class="detail-item earnings">
+              <span class="detail-label">Earnings:</span>
+              <span class="detail-value">₹{{ trip.earnings | number }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div *ngIf="trip.specialInstructions" class="special-instructions">
+          <div class="instructions-label">Special Instructions:</div>
+          <div class="instructions-text">{{ trip.specialInstructions }}</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="trip-actions">
+          <!-- Assigned Status Actions -->
+          <div *ngIf="trip.status === 'assigned'" class="action-group">
+            <button 
+              type="button"
+              (click)="startTrip(trip)"
+              class="action-btn start-btn">
+              Start Trip
+            </button>
+          </div>
+
+          <!-- In Progress Actions -->
+          <div *ngIf="trip.status === 'started' || trip.status === 'in-transit'" class="action-group">
+            <button 
+              type="button"
+              (click)="updateLocation(trip)"
+              class="action-btn location-btn">
+              Update Location
+            </button>
+            <button 
+              type="button"
+              (click)="completeTrip(trip)"
+              class="action-btn complete-btn">
+              Complete Trip
+            </button>
+          </div>
+
+          <!-- Common Actions -->
+          <div class="common-actions">
+            <button 
+              type="button"
+              (click)="callCustomer(trip)"
+              class="action-btn call-btn"
+              title="Call Customer">
+              📞
+            </button>
+            <button 
+              type="button"
+              (click)="getDirections(trip)"
+              class="action-btn directions-btn"
+              title="Get Directions">
+              🗺️
+            </button>
+            <button 
+              type="button"
+              (click)="viewTripDetails(trip)"
+              class="action-btn details-btn"
+              title="View Details">
+              👁️
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div *ngIf="!isLoading && filteredTrips.length > 0" class="trips-summary">
+    <div class="summary-item">
+      <span class="summary-label">Total Trips:</span>
+      <span class="summary-value">{{ filteredTrips.length }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total Earnings:</span>
+      <span class="summary-value">₹{{ getTotalEarnings() | number }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Active Trips:</span>
+      <span class="summary-value">{{ (filteredTrips | json | slice:0:0).length }}</span>
+    </div>
+  </div>
+</div>

@@ -8,123 +8,89 @@
 </button>
 
 <div class="dashboard-container">
-    <aside class="sidebar" [class.collapsed]="isSidebarCollapsed" [class.mobile-open]="isMobileMenuOpen">
-        <div class="sidebar-header">
-            <div class="user-section">
-                <div class="user-avatar">{{ userInitials }}</div>
-                <div class="user-info">
-                    <div class="user-name">{{ userFullName }}</div>
-                    <div class="user-role">{{ userRole }}</div>
-                </div>
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isSidebarCollapsed" [class.mobile-open]="isMobileMenuOpen">
+    <div class="sidebar-header">
+      <div class="user-section">
+        <div class="user-avatar" (click)="triggerProfileUpload()" style="cursor:pointer;">
+          <img *ngIf="profileImageUrl" [src]="profileImageUrl" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+          <span *ngIf="!profileImageUrl">SA</span>
+        </div>
+        <input #profileInput type="file" accept="image/*" (change)="onProfileImageChange($event)" style="display:none;" />
+        <div class="user-info">
+          <div class="user-name">{{ userFullName }}</div>
+          <div class="user-role">{{ userRole }}</div>
+        </div>
+      </div>
+      <button class="collapse-btn" (click)="toggleSidebar()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <!-- User Management Parent with 3 children -->
+        <li class="nav-item">
+          <div class="nav-parent" [class.expanded]="userMenuOpen" (click)="toggleUserMenu()">
+            <div class="nav-parent-content">
+              <span class="nav-icon"></span>
+              <span class="nav-text">User Management</span>
             </div>
-            <button class="collapse-btn" (click)="toggleSidebar()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
-        </div>
+            <span class="nav-arrow">▼</span>
+          </div>
+          <ul class="nav-children" [class.expanded]="userMenuOpen">
+            <li><a routerLink="admin-management" class="nav-link" (click)="hideWelcome()">Admin Management</a></li>
+            <li><a routerLink="owner-management" class="nav-link" (click)="hideWelcome()">Owner Management</a></li>
+            <li><a routerLink="customer-management" class="nav-link" (click)="hideWelcome()">Customer Management</a></li>
+          </ul>
+        </li>
+        <li class="nav-item"><a routerLink="approval-management" class="nav-link" (click)="hideWelcome()">Approval Management</a></li>
+        <li class="nav-item"><a routerLink="vehicle-management" class="nav-link" (click)="hideWelcome()">Vehicle Management</a></li>
+        <li class="nav-item"><a routerLink="consignment-management" class="nav-link" (click)="hideWelcome()">Consignment Management</a></li>
+        <li class="nav-item"><a routerLink="payment-management" class="nav-link" (click)="hideWelcome()">Payment Management</a></li>
+        <li class="nav-item"><a routerLink="fare-management" class="nav-link" (click)="hideWelcome()">Fare Management</a></li>
+        <li class="nav-item"><a routerLink="complaint-management" class="nav-link" (click)="hideWelcome()">Complaint Management</a></li>
+        <li class="nav-item"><a routerLink="term-management" class="nav-link" (click)="hideWelcome()">Term Management</a></li>
+        <li class="nav-item"><a routerLink="wallet-management" class="nav-link" (click)="hideWelcome()">Wallet Management</a></li>
+        <li class="nav-item"><a routerLink="analytics" class="nav-link" (click)="hideWelcome()">Analytics</a></li>
+      </ul>
+    </nav>
 
-        <nav class="sidebar-nav">
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <div class="nav-parent" [class.expanded]="userMenuOpen" (click)="toggleUserMenu()">
-                        <div class="nav-parent-content">
-                            <span class="nav-icon"></span>
-                            <span class="nav-text">User Management</span>
-                        </div>
-                        <span class="nav-arrow">▼</span>
-                    </div>
-                    <ul class="nav-children" [class.expanded]="userMenuOpen">
-                        <li><a routerLink="admin-management" class="nav-link" (click)="hideWelcome()">Admin Management</a></li>
-                        <li><a routerLink="owner-management" class="nav-link" (click)="hideWelcome()">Owner Management</a></li>
-                        <li><a routerLink="customer-management" class="nav-link" (click)="hideWelcome()">Customer Management</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="approval-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Approval Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="vehicle-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Vehicle Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="consignment-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Consignment Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="payment-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Payment Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="fare-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Fare Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="complaint-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Complaint Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="term-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Term Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="wallet-management" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Wallet Management</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a routerLink="analytics" class="nav-link" (click)="hideWelcome()">
-                        <span class="nav-icon"></span>
-                        <span class="nav-text">Analytics</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+    <!-- Signout -->
+    <!-- <div class="signout-section">
+      <button class="signout-btn" (click)="signOut()">
+        <span>🚪</span>
+        <span class="signout-text">Sign Out</span>
+      </button>
+    </div> -->
+  </aside>
 
-    <!-- signout-section moved to the end of the sidebar -->
+  <!-- Right Side -->
+  <div class="right-container">
+    <!-- Topbar -->
+    <app-topbar></app-topbar>
 
-        <div class="signout-section">
-            <button class="signout-btn" (click)="signOut()">
-                <span>🚪</span>
-                <span class="signout-text">Sign Out</span>
-            </button>
-        </div>
-    </aside>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Welcome -->
+      <div class="welcome-section" *ngIf="showWelcome">
+        <h1 class="welcome-title">Welcome, Super Admin!</h1>
+        <p class="welcome-text">
+          You have full access to manage users, vehicles, payments, analytics, and system settings.<br>
+          Use the sidebar to get started.
+        </p>
+        <button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
+      </div>
 
-    <main class="main-content" [class.sidebar-collapsed]="isSidebarCollapsed">
-        <div class="welcome-section" *ngIf="showWelcome">
-            <!-- <div class="super-admin-badge">
-                <span style="font-size:1.5em;">🛡️</span> Super Admin
-            </div> -->
-            <h1 class="welcome-title">
-                <span class="welcome-icon"></span>
-                <span>Welcome, Super Admin!</span>
-            </h1>
-            <p class="welcome-text">
-                You have full access to manage users, vehicles, payments, analytics, and system settings.<br>
-                Use the sidebar to get started.
-            </p>
-            <button class="cta-btn" (click)="hideWelcome()">Go to Dashboard</button>
-        </div>
-        
-        <div class="content-area" *ngIf="!showWelcome">
-            <router-outlet></router-outlet>
-        </div>
+      <!-- Router Content -->
+      <div class="content-area" *ngIf="!showWelcome">
+        <router-outlet></router-outlet>
+      </div>
     </main>
+  </div>
 </div>
+
+

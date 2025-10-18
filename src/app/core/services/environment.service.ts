@@ -62,6 +62,9 @@ export class EnvironmentService {
    * Log environment information to console
    */
   private logEnvironmentInfo(): void {
+    if (environment.production) {
+      return;
+    }
     console.log(`
 🌍 Environment: ${this.getEnvironmentName()}
 🔗 API URL: ${this.getApiUrl()}

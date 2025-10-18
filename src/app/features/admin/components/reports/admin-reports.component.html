@@ -1,0 +1,289 @@
+<div class="reports-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1><i class="fas fa-chart-line"></i> Reports & Analytics</h1>
+      <p class="subtitle">Business intelligence and performance analytics</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="generateDetailedReport()">
+        <mat-icon>assignment</mat-icon>
+        Generate Report
+      </button>
+      <button mat-raised-button color="accent" (click)="scheduleReport()">
+        <mat-icon>schedule</mat-icon>
+        Schedule Report
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-row">
+        <!-- Report Type Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Report Type</mat-label>
+          <mat-select [(value)]="selectedReportType" (selectionChange)="onReportTypeChange()">
+            <mat-option *ngFor="let type of reportTypes" [value]="type.value">
+              {{ type.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Date Range Filters -->
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onDateRangeChange()">
+          <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onDateRangeChange()">
+          <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Export Options -->
+        <div class="export-buttons">
+          <button mat-stroked-button (click)="exportReport('pdf')">
+            <mat-icon>picture_as_pdf</mat-icon>
+            Export PDF
+          </button>
+          <button mat-stroked-button (click)="exportReport('excel')">
+            <mat-icon>table_chart</mat-icon>
+            Export Excel
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Key Performance Indicators -->
+  <div class="kpi-section">
+    <h2 class="section-title">Key Performance Indicators</h2>
+    <div class="kpi-grid">
+      <mat-card class="kpi-card" *ngFor="let kpi of kpis">
+        <mat-card-content>
+          <div class="kpi-content">
+            <div class="kpi-header">
+              <h3 class="kpi-title">{{ kpi.title }}</h3>
+              <div class="kpi-trend" [class]="getTrendColorClass(kpi.trend)">
+                <i [class]="getTrendIcon(kpi.trend)"></i>
+              </div>
+            </div>
+            <div class="kpi-value">{{ kpi.value }}</div>
+            <div class="kpi-description">{{ kpi.description }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Business Metrics Grid -->
+  <div class="metrics-section">
+    <h2 class="section-title">Business Metrics</h2>
+    <div class="metrics-grid">
+      <!-- Total Bookings Card -->
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-calendar-alt"></i>
+            Total Bookings
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatNumber(reportData.totalBookings) }}</div>
+          <div class="metric-breakdown">
+            <div class="breakdown-item completed">
+              <span class="label">Completed:</span>
+              <span class="value">{{ formatNumber(reportData.completedBookings) }} ({{ completionRate }}%)</span>
+            </div>
+            <div class="breakdown-item cancelled">
+              <span class="label">Cancelled:</span>
+              <span class="value">{{ formatNumber(reportData.cancelledBookings) }} ({{ cancellationRate }}%)</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Revenue Card -->
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-rupee-sign"></i>
+            Revenue Analysis
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatCurrency(reportData.totalRevenue) }}</div>
+          <div class="metric-breakdown">
+            <div class="breakdown-item">
+              <span class="label">This Month:</span>
+              <span class="value">{{ formatCurrency(reportData.monthlyRevenue) }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">Profit Margin:</span>
+              <span class="value">{{ reportData.profitMargin }}%</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Fleet Utilization Card -->
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-truck"></i>
+            Fleet & Operations
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatNumber(reportData.totalKilometers) }} km</div>
+          <div class="metric-breakdown">
+            <div class="breakdown-item">
+              <span class="label">Active Drivers:</span>
+              <span class="value">{{ formatNumber(reportData.activeDrivers) }}</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">Fuel Costs:</span>
+              <span class="value">{{ formatCurrency(reportData.fuelCosts) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Customer Metrics Card -->
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-users"></i>
+            Customer Metrics
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatNumber(reportData.activeCustomers) }}</div>
+          <div class="metric-breakdown">
+            <div class="breakdown-item">
+              <span class="label">Active Customers</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="label">Avg. Revenue/Customer:</span>
+              <span class="value">{{ formatCurrency(reportData.totalRevenue / reportData.activeCustomers) }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <h2 class="section-title">Performance Charts</h2>
+    <div class="charts-grid">
+      <!-- Revenue Trend Chart -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Monthly Revenue Trend</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <div class="chart-placeholder">
+              <i class="fas fa-chart-line"></i>
+              <p>Revenue trend chart will be displayed here</p>
+              <small>Chart library integration pending</small>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Bookings Distribution Chart -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Bookings Distribution</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <div class="chart-placeholder">
+              <i class="fas fa-chart-pie"></i>
+              <p>Bookings distribution pie chart</p>
+              <small>Chart library integration pending</small>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Top Performance Tables -->
+  <div class="top-performance-section">
+    <h2 class="section-title">Top Performance</h2>
+    <div class="performance-grid">
+      
+      <!-- Top Routes -->
+      <mat-card class="performance-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-route"></i>
+            Top Routes
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-list">
+            <div class="performance-item" *ngFor="let route of topMetrics.topRoutes; let i = index">
+              <div class="rank">{{ i + 1 }}</div>
+              <div class="details">
+                <div class="name">{{ route.route }}</div>
+                <div class="stats">{{ route.bookings }} bookings • {{ formatCurrency(route.revenue) }}</div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Top Drivers -->
+      <mat-card class="performance-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-user-tie"></i>
+            Top Drivers
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-list">
+            <div class="performance-item" *ngFor="let driver of topMetrics.topDrivers; let i = index">
+              <div class="rank">{{ i + 1 }}</div>
+              <div class="details">
+                <div class="name">{{ driver.name }}</div>
+                <div class="stats">{{ driver.trips }} trips • ⭐{{ driver.rating }} • {{ formatCurrency(driver.earnings) }}</div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Top Customers -->
+      <mat-card class="performance-card">
+        <mat-card-header>
+          <mat-card-title>
+            <i class="fas fa-crown"></i>
+            Top Customers
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="performance-list">
+            <div class="performance-item" *ngFor="let customer of topMetrics.topCustomers; let i = index">
+              <div class="rank">{{ i + 1 }}</div>
+              <div class="details">
+                <div class="name">{{ customer.name }}</div>
+                <div class="stats">{{ customer.bookings }} bookings • {{ formatCurrency(customer.spending) }}</div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

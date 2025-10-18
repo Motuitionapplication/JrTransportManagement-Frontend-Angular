@@ -1,0 +1,560 @@
+<div class="tracking-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Live Tracking</h1>
+      <p class="page-subtitle">Track your active shipments in real-time</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn btn-outline-primary me-2" 
+        (click)="manualRefresh()"
+        [disabled]="isLoading">
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i> Refresh
+      </button>
+      <div class="auto-refresh-indicator">
+        <small class="text-muted">
+          <i class="fas fa-clock"></i>
+          Last updated: {{ formatTime(lastRefreshTime) }}
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-section">
+    <div class="stats-cards row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="stat-card active-shipments">
+          <div class="card-icon">
+            <i class="fas fa-shipping-fast"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ activeShipments.length }}</h3>
+            <p class="card-label">Active Shipments</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card in-transit">
+          <div class="card-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ getInTransitCount() }}</h3>
+            <p class="card-label">In Transit</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card delivery-today">
+          <div class="card-icon">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ getDeliveryTodayCount() }}</h3>
+            <p class="card-label">Delivery Today</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card overdue">
+          <div class="card-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ getOverdueCount() }}</h3>
+            <p class="card-label">Overdue</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="searchInput" class="form-label">Search Shipments</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input 
+                type="text" 
+                id="searchInput"
+                class="form-control" 
+                placeholder="Search by booking number, location..."
+                [(ngModel)]="filter.searchTerm"
+                (input)="applyFilters()">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label for="statusFilter" class="form-label">Status</label>
+            <select 
+              id="statusFilter"
+              class="form-select" 
+              [(ngModel)]="filter.status"
+              (change)="applyFilters()">
+              <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="dateFilter" class="form-label">Delivery</label>
+            <select 
+              id="dateFilter"
+              class="form-select" 
+              [(ngModel)]="filter.dateRange"
+              (change)="applyFilters()">
+              <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary w-100"
+              (click)="clearFilters()">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading tracking information...</p>
+    </div>
+  </div>
+
+  <!-- Tracking List -->
+  <div *ngIf="!isLoading" class="tracking-section">
+    <!-- No Shipments Message -->
+    <div *ngIf="filteredShipments.length === 0" class="no-shipments">
+      <div class="text-center py-5">
+        <div class="no-shipments-icon">
+          <i class="fas fa-search-location fa-4x text-muted"></i>
+        </div>
+        <h3 class="mt-3">No Active Shipments Found</h3>
+        <p class="text-muted" *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all'">
+          Try adjusting your filters to see more shipments.
+        </p>
+        <p class="text-muted" *ngIf="!filter.searchTerm && filter.status === 'all' && filter.dateRange === 'all'">
+          You don't have any active shipments to track right now.
+        </p>
+        <button 
+          type="button" 
+          class="btn btn-primary mt-3" 
+          routerLink="/customer/book-transport">
+          <i class="fas fa-plus"></i> Book New Shipment
+        </button>
+      </div>
+    </div>
+
+    <!-- Shipments Grid -->
+    <div *ngIf="filteredShipments.length > 0" class="shipments-grid">
+      <div 
+        *ngFor="let shipment of filteredShipments" 
+        class="shipment-card"
+        [class]="getStatusClass(shipment.currentStatus)">
+        
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="shipment-info">
+            <h5 class="booking-number mb-1">{{ shipment.bookingNumber }}</h5>
+            <small class="trip-number text-muted">{{ shipment.tripNumber }}</small>
+          </div>
+          <div class="shipment-status">
+            <span class="status-badge" [class]="getStatusClass(shipment.currentStatus)">
+              <i [class]="getStatusIcon(shipment.currentStatus)"></i>
+              {{ getStatusText(shipment.currentStatus) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+          <div class="progress-header">
+            <span class="progress-text">Journey Progress</span>
+            <span class="progress-percentage">{{ shipment.route.progress.toFixed(0) }}%</span>
+          </div>
+          <div class="progress mb-2">
+            <div 
+              class="progress-bar progress-bar-striped progress-bar-animated" 
+              [style.width.%]="shipment.route.progress"
+              role="progressbar">
+            </div>
+          </div>
+          <div class="location-info">
+            <small class="text-muted">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ shipment.currentLocation.address }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Route Information -->
+        <div class="route-section">
+          <div class="route-points">
+            <div class="route-point pickup">
+              <div class="point-marker">
+                <i class="fas fa-circle"></i>
+              </div>
+              <div class="point-details">
+                <h6 class="location-name">{{ shipment.pickupLocation }}</h6>
+                <small class="location-address">{{ shipment.pickupAddress }}</small>
+              </div>
+            </div>
+            
+            <div class="route-connector">
+              <div class="connector-line"></div>
+              <div class="route-stats">
+                <span class="distance">{{ formatDistance(shipment.route.distance) }}</span>
+                <span class="duration">{{ formatDuration(shipment.route.estimatedDuration) }}</span>
+              </div>
+            </div>
+            
+            <div class="route-point dropoff">
+              <div class="point-marker">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="point-details">
+                <h6 class="location-name">{{ shipment.dropLocation }}</h6>
+                <small class="location-address">{{ shipment.dropAddress }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Information -->
+        <div class="delivery-section">
+          <div class="delivery-time">
+            <div class="time-info">
+              <span class="time-label">Expected Delivery:</span>
+              <span class="delivery-date">{{ formatDateTime(shipment.estimatedDelivery) }}</span>
+            </div>
+            <div class="delivery-status">
+              <span 
+                class="status-indicator" 
+                [class]="getDeliveryTimeStatus(shipment).class">
+                {{ getDeliveryTimeStatus(shipment).text }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Information -->
+        <div class="driver-section">
+          <div class="driver-card">
+            <img 
+              [src]="shipment.driver.profileImage || 'https://via.placeholder.com/40x40/6c757d/ffffff?text=D'" 
+              [alt]="shipment.driver.name"
+              class="driver-avatar">
+            <div class="driver-details">
+              <h6 class="driver-name">{{ shipment.driver.name }}</h6>
+              <div class="driver-info">
+                <div class="driver-rating">
+                  <i class="fas fa-star"></i>
+                  <span>{{ shipment.driver.rating }}</span>
+                </div>
+                <small class="vehicle-info">{{ shipment.vehicle.registrationNumber }}</small>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-success"
+              (click)="callDriver(shipment)">
+              <i class="fas fa-phone"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions-section">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-primary me-2"
+            (click)="openTrackingDetails(shipment)">
+            <i class="fas fa-info-circle"></i> Details
+          </button>
+
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline-primary me-2"
+            (click)="openMapView(shipment)">
+            <i class="fas fa-map"></i> Map
+          </button>
+
+          <div class="dropdown d-inline-block">
+            <button 
+              class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+              type="button" 
+              data-bs-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" (click)="shareTracking(shipment)">
+                  <i class="fas fa-share me-2"></i> Share Tracking
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" (click)="getDirections(shipment)">
+                  <i class="fas fa-directions me-2"></i> Get Directions
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" (click)="callDriver(shipment)">
+                  <i class="fas fa-phone me-2"></i> Call Driver
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tracking Details Modal -->
+<div class="modal fade" 
+     [class.show]="showTrackingModal" 
+     [style.display]="showTrackingModal ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="selectedShipment">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-truck me-2"></i>
+          Tracking Details - {{ selectedShipment.bookingNumber }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeTrackingModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Current Status -->
+        <div class="current-status-section mb-4">
+          <div class="status-card">
+            <div class="status-header">
+              <span class="status-badge large" [class]="getStatusClass(selectedShipment.currentStatus)">
+                <i [class]="getStatusIcon(selectedShipment.currentStatus)"></i>
+                {{ getStatusText(selectedShipment.currentStatus) }}
+              </span>
+              <span class="last-update">
+                Updated {{ getTimeAgo(selectedShipment.currentLocation.timestamp) }}
+              </span>
+            </div>
+            <div class="progress mt-3">
+              <div 
+                class="progress-bar progress-bar-striped progress-bar-animated" 
+                [style.width.%]="selectedShipment.route.progress"
+                role="progressbar">
+                {{ selectedShipment.route.progress.toFixed(0) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Location -->
+        <div class="location-section mb-4">
+          <h6 class="section-title">Current Location</h6>
+          <div class="location-card">
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            <span>{{ selectedShipment.currentLocation.address }}</span>
+          </div>
+          <small class="text-muted">
+            Last updated: {{ formatDateTime(selectedShipment.currentLocation.timestamp) }}
+          </small>
+        </div>
+
+        <!-- Delivery Information -->
+        <div class="delivery-info-section mb-4">
+          <h6 class="section-title">Delivery Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="info-item">
+                <label>Expected Delivery</label>
+                <span>{{ formatDateTime(selectedShipment.estimatedDelivery) }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label>Status</label>
+                <span [class]="getDeliveryTimeStatus(selectedShipment).class">
+                  {{ getDeliveryTimeStatus(selectedShipment).text }}
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label>Distance</label>
+                <span>{{ formatDistance(selectedShipment.route.distance) }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="info-item">
+                <label>Duration</label>
+                <span>{{ formatDuration(selectedShipment.route.estimatedDuration) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status History -->
+        <div class="history-section mb-4">
+          <h6 class="section-title">Status History</h6>
+          <div class="timeline">
+            <div 
+              *ngFor="let status of selectedShipment.statusHistory; let last = last" 
+              class="timeline-item"
+              [class.active]="last">
+              <div class="timeline-marker">
+                <i [class]="status.icon || 'fas fa-circle'"></i>
+              </div>
+              <div class="timeline-content">
+                <h6 class="status-title">{{ status.status }}</h6>
+                <p class="status-description">{{ status.description }}</p>
+                <small class="status-time">
+                  <i class="far fa-clock me-1"></i>
+                  {{ formatDateTime(status.timestamp) }}
+                  <span *ngIf="status.location" class="ms-2">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    {{ status.location }}
+                  </span>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver & Vehicle Info -->
+        <div class="driver-vehicle-section">
+          <h6 class="section-title">Driver & Vehicle Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="driver-card modal">
+                <img 
+                  [src]="selectedShipment.driver.profileImage || 'https://via.placeholder.com/60x60/6c757d/ffffff?text=D'" 
+                  [alt]="selectedShipment.driver.name"
+                  class="driver-avatar-large">
+                <div class="driver-info">
+                  <h6>{{ selectedShipment.driver.name }}</h6>
+                  <div class="driver-rating mb-2">
+                    <i class="fas fa-star text-warning"></i>
+                    <span>{{ selectedShipment.driver.rating }}</span>
+                  </div>
+                  <small class="phone-number">{{ selectedShipment.driver.phone }}</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="vehicle-card">
+                <h6>{{ selectedShipment.vehicle.make }} {{ selectedShipment.vehicle.model }}</h6>
+                <p class="registration-number">{{ selectedShipment.vehicle.registrationNumber }}</p>
+                <small class="vehicle-type">{{ selectedShipment.vehicle.type }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div *ngIf="selectedShipment.specialInstructions" class="instructions-section mt-4">
+          <h6 class="section-title">Special Instructions</h6>
+          <div class="instructions-card">
+            <i class="fas fa-info-circle me-2"></i>
+            {{ selectedShipment.specialInstructions }}
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTrackingModal()">Close</button>
+        <button 
+          type="button" 
+          class="btn btn-success"
+          (click)="callDriver(selectedShipment)">
+          <i class="fas fa-phone"></i> Call Driver
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="openMapView(selectedShipment); closeTrackingModal()">
+          <i class="fas fa-map"></i> View on Map
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map Modal -->
+<div class="modal fade" 
+     [class.show]="showMapModal" 
+     [style.display]="showMapModal ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="selectedShipment">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-map me-2"></i>
+          Live Map - {{ selectedShipment.bookingNumber }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeMapModal()"></button>
+      </div>
+      <div class="modal-body p-0">
+        <!-- Map Container -->
+        <div class="map-container">
+          <div class="map-placeholder">
+            <div class="text-center py-5">
+              <i class="fas fa-map fa-4x text-muted mb-3"></i>
+              <h5>Interactive Map View</h5>
+              <p class="text-muted">
+                Real-time map integration will show vehicle location, route, and estimated arrival time.
+              </p>
+              <div class="map-info">
+                <div class="current-location">
+                  <strong>Current Location:</strong><br>
+                  {{ selectedShipment.currentLocation.address }}
+                </div>
+              </div>
+              <button 
+                type="button" 
+                class="btn btn-primary mt-3"
+                (click)="getDirections(selectedShipment)">
+                <i class="fas fa-directions"></i> Get Directions
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeMapModal()">Close</button>
+        <button 
+          type="button" 
+          class="btn btn-success"
+          (click)="callDriver(selectedShipment)">
+          <i class="fas fa-phone"></i> Call Driver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div 
+  class="modal-backdrop fade"
+  [class.show]="showTrackingModal || showMapModal"
+  *ngIf="showTrackingModal || showMapModal"
+  (click)="closeAllModals()">
+</div>
