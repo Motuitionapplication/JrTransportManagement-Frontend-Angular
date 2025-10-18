@@ -99,6 +99,23 @@ export class GeolocationService {
     };
   }
 
+  /** Observable wrapper around a single geolocation read */
+  public getCurrentPosition$(timeoutMs = 10000): Observable<{ latitude: number; longitude: number }> {
+    return new Observable(observer => {
+      this.requestLocationOnce(timeoutMs)
+        .then(position => {
+          observer.next({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          observer.complete();
+        })
+        .catch(error => {
+          observer.error(error instanceof Error ? error : new Error(String(error)));
+        });
+    });
+  }
+
   /**
    * Start watching position; returns watch id or null if not available.
    * Caller must call stopWatchingPosition with the returned id.
