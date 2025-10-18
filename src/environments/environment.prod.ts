@@ -1,30 +1,21 @@
-// Auto-detect environment based on hostname  
-function getApiUrl(): string {
-  // Production build always uses cloud backend
-  return 'https://jrtransportmanagementbackend.onrender.com/api';
-}
-
-function isLocalEnvironment(): boolean {
-  // Production build is never considered local
-  return false;
-}
+const PRODUCTION_API_URL = 'https://jrtransportmanagementbackend.onrender.com/api';
 
 export const environment = {
   production: true,
-  apiUrl: getApiUrl(),
-  isLocal: isLocalEnvironment(),
+  apiUrl: PRODUCTION_API_URL,
+  isLocal: false,
   apiTimeout: 20000,
   cacheTimeout: 600000, // 10 minutes
   
-  // Database Configuration for Production
+  // Database Configuration for Production  
   database: {
-    host: 'your-render-postgres-host.com', // Replace with your actual Render PostgreSQL host
+    host: 'dpg-d3l6rgd6ubrc73940ps0-a.oregon-postgres.render.com',
     port: 5432,
-    database: 'your_database_name', // Replace with your actual database name
-    username: 'your_username', // Replace with your actual username
-    password: 'your_password', // Replace with your actual password
+    database: 'jrtransportdb',
+    username: 'root',
+    password: 'WNrHHUj9SDiu8tLrnXaT4mqt89UuVylt',
     ssl: true, // Render requires SSL
-    connectionString: 'your_full_connection_string' // Replace with your actual connection string
+    connectionString: 'postgresql://root:WNrHHUj9SDiu8tLrnXaT4mqt89UuVylt@dpg-d3l6rgd6ubrc73940ps0-a.oregon-postgres.render.com:5432/jrtransportdb'
   },
   
   features: {

@@ -12,6 +12,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DriverRoutingModule } from './driver-routing.module';
 import { DriverComponent } from './driver.component';
@@ -42,8 +43,8 @@ import { LocationPromptComponent } from '../../components/location-prompt/locati
     DocumentsComponent,
     MessagesComponent,
     MyTruckComponent,
-    SupportComponent
-    , LocationPromptComponent
+    SupportComponent,
+    LocationPromptComponent,
   ],
   imports: [
     CommonModule,
@@ -58,10 +59,9 @@ import { LocationPromptComponent } from '../../components/location-prompt/locati
     MatListModule,
     MatSelectModule,
     MatInputModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatSnackBarModule,
   ],
-  exports: [
-    DriverComponent
-  ]
+  exports: [DriverComponent],
 })
-export class DriverModule { }
+export class DriverModule {}

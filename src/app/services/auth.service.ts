@@ -63,16 +63,19 @@ export class AuthService {
   private loadStoredAuth(): void {
     try {
       const token = localStorage.getItem(this.TOKEN_KEY);
-      const userStr = localStorage.getItem(this.USER_KEY);
-      
-      if (token && userStr) {
-        const user = JSON.parse(userStr);
+      const storedUserRaw = localStorage.getItem(this.USER_KEY);
+      const user = this.parseStoredUser();
+
+      if (token && user) {
         this.authStateSubject.next({
           isLoggedIn: true,
           user,
           token
         });
         console.log('🔐 Auth: Loaded stored authentication state');
+      } else if (token || storedUserRaw) {
+        // Stored state is incomplete; clear any partial remnants
+        this.logout();
       }
     } catch (error) {
       console.error('🔐 Auth: Error loading stored authentication:', error);
@@ -202,7 +205,24 @@ export class AuthService {
 
   // Get current user
   getCurrentUser(): User | null {
-    return this.authStateSubject.value.user;
+    const current = this.authStateSubject.value.user;
+    if (current && current.id !== undefined && current.id !== null) {
+      return current;
+    }
+
+    const recoveredUser = this.parseStoredUser();
+    const storedToken = localStorage.getItem(this.TOKEN_KEY);
+
+    if (recoveredUser) {
+      this.authStateSubject.next({
+        isLoggedIn: !!storedToken,
+        user: recoveredUser,
+        token: storedToken
+      });
+      return recoveredUser;
+    }
+
+    return null;
   }
 
   // Check if user is logged in
@@ -272,6 +292,38 @@ export class AuthService {
     }));
   }
 
+  private parseStoredUser(): User | null {
+    const userStr = localStorage.getItem(this.USER_KEY);
+    if (!userStr) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(userStr);
+      const rawId = parsed?.id;
+      const id = typeof rawId === 'number' ? rawId : parseInt(rawId, 10);
+
+      if (Number.isNaN(id) || id === undefined || id === null) {
+        return null;
+      }
+
+      const user: User = {
+        id,
+        username: parsed.username ?? '',
+        email: parsed.email ?? '',
+        firstName: parsed.firstName ?? '',
+        lastName: parsed.lastName ?? '',
+        phoneNumber: parsed.phoneNumber ?? undefined,
+        roles: Array.isArray(parsed.roles) ? parsed.roles : []
+      };
+
+      return user;
+    } catch (error) {
+      console.error('🔐 Auth: Failed to parse stored user from localStorage', error);
+      return null;
+    }
+  }
+
   /**
    * If the authenticated user is a driver, request geolocation (when supported) and
    * send coordinates to the backend. This is intentionally best-effort and non-blocking.
@@ -295,7 +347,7 @@ export class AuthService {
 
         // For 'prompt', a permission dialog will appear when we call getCurrentPosition
         const coords = await this.geolocationService.getCurrentPosition(10000);
-  this.driverService.updateDriverLocation(response.id.toString(), coords).subscribe({
+        this.driverService.updateDriverLocation(response.id.toString(), coords).subscribe({
           next: () => console.log('Driver location synced with backend.'),
           error: err => console.warn('Driver location sync failed:', err)
         });
