@@ -1,4 +1,3 @@
-// admin-dashboard.component.scss
 .dashboard-container {
   display: flex;
   flex-direction: column;
@@ -134,12 +133,12 @@
             .user-name {
               font-weight: 600;
               font-size: 0.9rem;
-              color: #fff;
+              color: white;
             }
             
             .user-role {
               font-size: 0.75rem;
-              color: #cbd5e1;
+              color: #eff0f1;
             }
           }
 
@@ -216,8 +215,8 @@
               font-size: inherit !important;
 
               &:hover {
-                background: rgba(255,255,255,0.08) !important;
-                color: #fff;
+                background: rgba(255, 255, 255, 0.1);
+                color: #ffffff;
               }
 
               &.active {

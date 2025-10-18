@@ -1,7 +1,7 @@
 // src/app/services/customer.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject, switchMap } from 'rxjs';
 import { Customer } from '../../models/customer.model';
 import { EnvironmentService } from '../../core/services/environment.service';
 import { CustomerCreateDto } from 'src/app/models/customer-create-dto';
@@ -48,4 +48,43 @@ export class CustomerService {
   addCustomer(dto: CustomerCreateDto): Observable<Customer> {
     return this.http.put<Customer>(this.apiUrl, dto);
   }
+  getCustomerIdByUserId(userId: string): Observable<string> {
+  return this.http.get(`${this.apiUrl}/custid`, {
+    params: { userid: userId },
+    responseType: 'text' // because backend returns ResponseEntity<String>
+  });
+}
+
+updateCustomerByUserId(userId: string, updatedCustomer: Customer): Observable<any> {
+  return this.getCustomerIdByUserId(userId).pipe(
+    switchMap((customerId: string) =>
+      this.http.put(`${this.apiUrl}/${customerId}`, updatedCustomer)
+    )
+  );
+}
+private customerUpdated = new Subject<void>();
+customerUpdated$ = this.customerUpdated.asObservable();
+
+refreshProfile(userId: string): void {
+  this.getCustomerByUserId(userId).subscribe(customer => {
+    // Save in localStorage if needed
+    localStorage.setItem('customerName', customer.profile.firstName + ' ' + customer.profile.lastName);
+    // Notify others
+    this.customerUpdated.next();
+  });
+}
+ updateCustomerPassword(customerId: string, payload: { oldPassword: string; newPassword: string }): Observable<string> {
+    return this.http.put(`${this.apiUrl}/${customerId}/password`, payload, {
+      responseType: 'text' // backend returns a plain string
+    });
+  }
+   createBooking(customerId: string, bookingRequest: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${customerId}/booking`, bookingRequest);
+  }
+  getBookingHistory(customerId: string): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/${customerId}/booking-history`);
+}
+
+
+
 }

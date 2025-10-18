@@ -1,0 +1,62 @@
+<div class="booking-card">
+  <h2>Create New Booking</h2>
+
+  <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+
+    <fieldset formGroupName="pickupLocation">
+      <legend>Pickup Location</legend>
+      <input placeholder="Street" formControlName="street">
+      <input placeholder="City" formControlName="city">
+      <input placeholder="State" formControlName="state">
+      <input placeholder="Pincode" formControlName="pincode">
+      <input placeholder="Country" formControlName="country">
+    </fieldset>
+
+    <fieldset formGroupName="dropOffLocation">
+      <legend>Drop-off Location</legend>
+      <input placeholder="Street" formControlName="street">
+      <input placeholder="City" formControlName="city">
+      <input placeholder="State" formControlName="state">
+      <input placeholder="Pincode" formControlName="pincode">
+      <input placeholder="Country" formControlName="country">
+    </fieldset>
+
+    <!-- ✅ Date + Time on the same row -->
+    <div class="date-time-row">
+      <label>
+        Pickup Date
+        <input type="date" formControlName="pickupDate">
+      </label>
+      <label>
+        Pickup Time
+        <input type="text" placeholder="e.g. 11:00 AM - 01:00 PM" formControlName="pickupTime">
+      </label>
+    </div>
+
+    <fieldset formGroupName="truckRequirements">
+      <legend>Truck Requirements</legend>
+      <label for="vehicleType">Vehicle Type</label>
+      <select id="vehicleType" formControlName="vehicleType">
+        <option value="">-- Select Vehicle Type --</option>
+        <option value="TRUCK">Truck</option>
+        <option value="VAN">Van</option>
+        <option value="TRAILER">Trailer</option>
+        <option value="CONTAINER">Container</option>
+        <option value="PICKUP">Pickup</option>
+      </select>
+
+      <input type="number" placeholder="Cargo Weight (Kg)" formControlName="cargoWeightKg">
+      <input type="number" placeholder="Cargo Length (m)" formControlName="cargoLengthMeters">
+      <input type="number" placeholder="Cargo Width (m)" formControlName="cargoWidthMeters">
+      <input type="number" placeholder="Cargo Height (m)" formControlName="cargoHeightMeters">
+    </fieldset>
+
+    <button type="submit" [disabled]="!bookingForm.valid || loading">
+      {{ loading ? 'Processing...' : 'Submit Booking' }}
+    </button>
+  </form>
+
+  <div class="spinner-container" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
+  </div>
+</div>
