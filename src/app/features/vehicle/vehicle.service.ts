@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { EnvironmentService } from 'src/app/core/services/environment.service';
 import { AuthService } from 'src/app/services/auth.service';
 export interface Vehicle {
@@ -33,9 +33,9 @@ export class VehicleService {
     this.apiUrl = `${this.envService.getApiUrl()}/vehicles`;
   }
 
-  getvehiclesbyOwner(id: string) {
-    return this.http.get<any[]>(`${this.apiUrl}/owner/${id}`);
-  }
+  // getvehiclesbyOwner(id: string) {
+  //   return this.http.get<any[]>(`${this.apiUrl}/owner/${id}`);
+  // }
   saveVehicle(vehicle: Vehicle): Observable<Vehicle> {
     return this.http.post<Vehicle>(this.apiUrl, vehicle);
   }
@@ -43,6 +43,16 @@ export class VehicleService {
   // vehicle.service.ts
 deleteVehicle(vehicleId: string): Observable<void> {
   return this.http.delete<void>(`${this.apiUrl}/${vehicleId}`);
+}
+// In your VehicleService
+getvehiclesbyOwner(ownerId: string): Observable<any[]> {
+  return this.http.get<any[]>(`${this.apiUrl}/owner/${ownerId}`).pipe(
+    tap(data => console.log('Vehicle service response:', data)), // Debug log
+    catchError(error => {
+      console.error('Vehicle service error:', error);
+      return throwError(error);
+    })
+  );
 }
 
 

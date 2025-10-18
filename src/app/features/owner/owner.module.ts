@@ -17,7 +17,7 @@ import { Dashboard1Component } from './components/dashboard1/dashboard1.componen
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { VehiclesComponent } from './components/vehicles/vehicles.component';
 import { DriversComponent } from './components/drivers/drivers.component';
-import { BookingsComponent } from './components/bookings/bookings.component';
+// import { BookingsComponent } from './components/bookings/bookings.component';
 import { EarningsComponent } from './components/earnings/earnings.component';
 import { TrackingComponent } from './components/tracking/tracking.component';
 import { AnalyticsComponent } from './components/analytics/analytics.component';
@@ -39,7 +39,6 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
     SidebarComponent,
     VehiclesComponent,
     DriversComponent,
-    BookingsComponent,
     EarningsComponent,
     TrackingComponent,
     AnalyticsComponent,

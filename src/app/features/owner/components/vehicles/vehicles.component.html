@@ -1,15 +1,15 @@
 <div class="container-fluid">
-  <!-- Header Row 1 - Title Only -->
+  <!-- Title Row -->
   <div class="title-row">
     <div class="title-container">
       <div class="header-icon">
         <i class="fas fa-truck"></i>
       </div>
-      <h1 class="header-title">Vehicle Management</h1>
+      <h2 class="header-title">Vehicle Management</h2>
     </div>
   </div>
 
-  <!-- Header Row 2 - Search and Buttons -->
+  <!-- Controls Row -->
   <div class="controls-row">
     <div class="controls-container">
       <div class="search-section">
@@ -22,44 +22,425 @@
       </div>
       
       <div class="buttons-section">
-        <button class="btn btn-warning action-btn" (click)="openAddVehicleDialog()">
-         <i class="bi bi-truck"></i>Vehicle
+        <button class="action-btn btn-warning" (click)="exportToCSV()">
+          <i class="fas fa-download"></i>
+          Export
         </button>
-        <button class="btn btn-success action-btn" (click)="exportToCSV()">
-          <i class="fas fa-file-excel"></i> Export
+        
+        <button class="action-btn btn-success" (click)="openAddVehicleDialog()">
+          <i class="fas fa-plus"></i>
+          Add Vehicle
         </button>
       </div>
     </div>
-      <!-- Grid Section with Padding -->
-  <div class="grid-wrapper">
-    <div class="grid-container-with-padding">
-      <ag-grid-angular
-        class="ag-theme-alpine grid-container"
-        [rowData]="vehiclesForGrid"
-        [columnDefs]="columnDefs"
-        [defaultColDef]="defaultColDef"
-        [animateRows]="true"
-        [pagination]="true"
-        [paginationPageSize]="20"
-        [suppressRowClickSelection]="true"
-        [overlayLoadingTemplate]="loadingTemplate"
-        [overlayNoRowsTemplate]="noRowsTemplate"
-        (gridReady)="onGridReady($event)">
-      </ag-grid-angular>
+  </div>
+
+  <!-- Progressive Vehicle Form Modal -->
+  <div *ngIf="showAddVehicleForm" class="form-modal-overlay">
+    <div class="progressive-form-container">
+      <!-- Form Header -->
+      <div class="form-header">
+        <div class="form-title">
+          <h3>Add New Vehicle</h3>
+          <button class="close-btn" (click)="closeAddVehicleForm()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+          <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+            <div class="step-number">1</div>
+            <span>Basic Info</span>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+            <div class="step-number">2</div>
+            <span>Documents</span>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step" [class.active]="currentStep >= 3">
+            <div class="step-number">3</div>
+            <span>Fare & Details</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Content -->
+      <form [formGroup]="vehicleForm" class="progressive-form">
+        <!-- Step 1: Basic Information -->
+        <div *ngIf="currentStep === 1" class="form-step">
+          <h4>Basic Vehicle Information</h4>
+          <div formGroupName="basicInfo" class="form-grid">
+            <div class="form-field">
+              <label>Vehicle Number *</label>
+              <input type="text" formControlName="vehicleNumber" 
+                     placeholder="e.g., MH12AB1234" class="form-input">
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.vehicleNumber')?.invalid && vehicleForm.get('basicInfo.vehicleNumber')?.touched">
+                Please enter a valid vehicle number
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Vehicle Type *</label>
+              <select formControlName="vehicleType" class="form-select">
+                <option value="">Select Type</option>
+                <option *ngFor="let type of vehicleTypes" [value]="type">{{type}}</option>
+              </select>
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.vehicleType')?.invalid && vehicleForm.get('basicInfo.vehicleType')?.touched">
+                Please select a vehicle type
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Manufacturer *</label>
+              <input type="text" formControlName="manufacturer" 
+                     placeholder="e.g., Tata Motors" class="form-input">
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.manufacturer')?.invalid && vehicleForm.get('basicInfo.manufacturer')?.touched">
+                Please enter manufacturer name
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Model *</label>
+              <input type="text" formControlName="model" 
+                     placeholder="e.g., LPT 1613" class="form-input">
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.model')?.invalid && vehicleForm.get('basicInfo.model')?.touched">
+                Please enter model name
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Year *</label>
+              <input type="number" formControlName="year" 
+                     [min]="1990" [max]="2025" placeholder="2023" class="form-input">
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.year')?.invalid && vehicleForm.get('basicInfo.year')?.touched">
+                Please enter a valid year (1990-2025)
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Capacity (Tons) *</label>
+              <input type="number" formControlName="capacity" 
+                     step="0.1" min="0" placeholder="12.5" class="form-input">
+              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.capacity')?.invalid && vehicleForm.get('basicInfo.capacity')?.touched">
+                Please enter vehicle capacity
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Status *</label>
+              <select formControlName="status" class="form-select">
+                <option *ngFor="let status of statusOptions" [value]="status">{{status}}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Documents -->
+        <div *ngIf="currentStep === 2" class="form-step">
+          <h4>Vehicle Documents</h4>
+          <div formGroupName="documents" class="documents-section">
+            
+            <!-- Registration -->
+            <div class="document-group" formGroupName="registration">
+              <h5><i class="fas fa-file-alt"></i> Registration Certificate</h5>
+              <div class="form-row">
+                <div class="form-field">
+                  <label>Registration Number *</label>
+                  <input type="text" formControlName="number" 
+                         placeholder="MH12AB123456789012" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.registration.number')?.invalid && vehicleForm.get('documents.registration.number')?.touched">
+                    Registration number is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Expiry Date *</label>
+                  <input type="date" formControlName="expiryDate" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.registration.expiryDate')?.invalid && vehicleForm.get('documents.registration.expiryDate')?.touched">
+                    Expiry date is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Document URL</label>
+                  <input type="url" formControlName="documentUrl" 
+                         placeholder="https://example.com/doc.pdf" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Insurance -->
+            <div class="document-group" formGroupName="insurance">
+              <h5><i class="fas fa-shield-alt"></i> Insurance Policy</h5>
+              <div class="form-row">
+                <div class="form-field">
+                  <label>Policy Number *</label>
+                  <input type="text" formControlName="number" 
+                         placeholder="INS987654321" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.number')?.invalid && vehicleForm.get('documents.insurance.number')?.touched">
+                    Policy number is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Provider *</label>
+                  <input type="text" formControlName="provider" 
+                         placeholder="HDFC ERGO General Insurance" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.provider')?.invalid && vehicleForm.get('documents.insurance.provider')?.touched">
+                    Insurance provider is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Expiry Date *</label>
+                  <input type="date" formControlName="expiryDate" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.expiryDate')?.invalid && vehicleForm.get('documents.insurance.expiryDate')?.touched">
+                    Expiry date is required
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Permit -->
+            <div class="document-group" formGroupName="permit">
+              <h5><i class="fas fa-id-card"></i> Permit Certificate</h5>
+              <div class="form-row">
+                <div class="form-field">
+                  <label>Permit Number *</label>
+                  <input type="text" formControlName="number" 
+                         placeholder="PRM456789123" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.permit.number')?.invalid && vehicleForm.get('documents.permit.number')?.touched">
+                    Permit number is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Expiry Date *</label>
+                  <input type="date" formControlName="expiryDate" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.permit.expiryDate')?.invalid && vehicleForm.get('documents.permit.expiryDate')?.touched">
+                    Expiry date is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Document URL</label>
+                  <input type="url" formControlName="documentUrl" 
+                         placeholder="https://example.com/permit.pdf" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Fitness -->
+            <div class="document-group" formGroupName="fitness">
+              <h5><i class="fas fa-check-circle"></i> Fitness Certificate</h5>
+              <div class="form-row">
+                <div class="form-field">
+                  <label>Certificate Number *</label>
+                  <input type="text" formControlName="number" 
+                         placeholder="FIT789123456" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.fitness.number')?.invalid && vehicleForm.get('documents.fitness.number')?.touched">
+                    Certificate number is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Expiry Date *</label>
+                  <input type="date" formControlName="expiryDate" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.fitness.expiryDate')?.invalid && vehicleForm.get('documents.fitness.expiryDate')?.touched">
+                    Expiry date is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Document URL</label>
+                  <input type="url" formControlName="documentUrl" 
+                         placeholder="https://example.com/fitness.pdf" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Pollution -->
+            <div class="document-group" formGroupName="pollution">
+              <h5><i class="fas fa-leaf"></i> Pollution Certificate</h5>
+              <div class="form-row">
+                <div class="form-field">
+                  <label>Certificate Number *</label>
+                  <input type="text" formControlName="number" 
+                         placeholder="PUC321654987" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.pollution.number')?.invalid && vehicleForm.get('documents.pollution.number')?.touched">
+                    Certificate number is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Expiry Date *</label>
+                  <input type="date" formControlName="expiryDate" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('documents.pollution.expiryDate')?.invalid && vehicleForm.get('documents.pollution.expiryDate')?.touched">
+                    Expiry date is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Document URL</label>
+                  <input type="url" formControlName="documentUrl" 
+                         placeholder="https://example.com/pollution.pdf" class="form-input">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Fare & Details -->
+        <div *ngIf="currentStep === 3" class="form-step">
+          <h4>Fare Details & Additional Information</h4>
+          <div formGroupName="fareAndDetails">
+            
+            <!-- Fare Details -->
+            <div class="section-group" formGroupName="fareDetails">
+              <h5><i class="fas fa-rupee-sign"></i> Fare Information</h5>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Per KM Rate (₹) *</label>
+                  <input type="number" formControlName="perKmRate" 
+                         step="0.1" min="0" placeholder="18.50" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.perKmRate')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.perKmRate')?.touched">
+                    Per KM rate is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Whole Fare (₹) *</label>
+                  <input type="number" formControlName="wholeFare" 
+                         step="0.1" min="0" placeholder="8500.00" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.wholeFare')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.wholeFare')?.touched">
+                    Whole fare is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Sharing Fare (₹) *</label>
+                  <input type="number" formControlName="sharingFare" 
+                         step="0.1" min="0" placeholder="4250.00" class="form-input">
+                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.sharingFare')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.sharingFare')?.touched">
+                    Sharing fare is required
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label>Moving Insurance (₹)</label>
+                  <input type="number" formControlName="movingInsurance" 
+                         step="0.1" min="0" placeholder="750.00" class="form-input">
+                </div>
+                <div class="form-field checkbox-field">
+                  <input type="checkbox" formControlName="gstIncluded" id="gstIncluded">
+                  <label for="gstIncluded">GST Included</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div class="section-group" formGroupName="location">
+              <h5><i class="fas fa-map-marker-alt"></i> Location Details</h5>
+              <div class="form-grid">
+                <div class="form-field full-width">
+                  <label>Current Address</label>
+                  <textarea formControlName="currentAddress" 
+                            rows="2" placeholder="Transport Hub, Andheri East, Mumbai" 
+                            class="form-textarea"></textarea>
+                </div>
+                <div class="form-field">
+                  <label>Latitude</label>
+                  <input type="number" formControlName="currentLatitude" 
+                         step="0.000001" placeholder="19.1136" class="form-input">
+                </div>
+                <div class="form-field">
+                  <label>Longitude</label>
+                  <input type="number" formControlName="currentLongitude" 
+                         step="0.000001" placeholder="72.8697" class="form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="section-group">
+              <h5><i class="fas fa-cogs"></i> Additional Details</h5>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Next Service Date</label>
+                  <input type="date" formControlName="nextServiceDate" class="form-input">
+                </div>
+                <div class="form-field checkbox-field">
+                  <input type="checkbox" formControlName="isActive" id="isActive">
+                  <label for="isActive">Active Status</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Error -->
+        <div *ngIf="formError" class="form-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ formError }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" 
+                  (click)="closeAddVehicleForm()">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          
+          <button type="button" class="btn-secondary" 
+                  *ngIf="currentStep > 1" 
+                  (click)="previousStep()">
+            <i class="fas fa-arrow-left"></i>
+            Previous
+          </button>
+          
+          <button type="button" class="btn-primary" 
+                  *ngIf="currentStep < totalSteps" 
+                  (click)="nextStep()"
+                  [disabled]="!isCurrentStepValid()">
+            Next
+            <i class="fas fa-arrow-right"></i>
+          </button>
+          
+          <button type="button" class="btn-success" 
+                  *ngIf="currentStep === totalSteps" 
+                  (click)="onSubmitVehicleForm()"
+                  [disabled]="isFormLoading || !vehicleForm.valid">
+            <i class="fas fa-save" *ngIf="!isFormLoading"></i>
+            <i class="fas fa-spinner fa-spin" *ngIf="isFormLoading"></i>
+            <span *ngIf="isFormLoading">Saving...</span>
+            <span *ngIf="!isFormLoading">Save Vehicle</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+
+  <!-- Grid Section -->
+  <div class="grid-wrapper">
+    <div class="grid-container-with-padding">
+      <div class="grid-container">
+        <ag-grid-angular
+          class="ag-theme-alpine"
+          [rowData]="vehiclesForGrid"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [animateRows]="true"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          [suppressCellSelection]="true"
+          [loadingOverlayComponent]="loadingTemplate"
+          [noRowsOverlayComponent]="noRowsTemplate"
+          (gridReady)="onGridReady($event)"
+          style="height: 100%; width: 100%;">
+        </ag-grid-angular>
+      </div>
+    </div>
   </div>
 
-
-
-  <!-- Custom Alert Message -->
+  <!-- Custom Alert -->
   <div *ngIf="showCustomMessage" 
        class="custom-alert" 
-       [ngClass]="customMessageIsError ? 'alert-error' : 'alert-success'">
+       [ngClass]="{'alert-success': !customMessageIsError, 'alert-error': customMessageIsError}">
     <div class="alert-content">
-      <i class="fas" [ngClass]="customMessageIsError ? 'fa-exclamation-circle' : 'fa-check-circle'"></i>
-      <span>{{customMessage}}</span>
-      <button type="button" class="alert-close" (click)="showCustomMessage = false">
+      <i class="fas" 
+         [ngClass]="{'fa-check-circle': !customMessageIsError, 'fa-exclamation-circle': customMessageIsError}"></i>
+      <span>{{ customMessage }}</span>
+      <button class="alert-close" (click)="showCustomMessage = false">
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -75,11 +456,17 @@
         </h5>
       </div>
       <div class="modal-body">
-        <p>{{confirmMessage}}</p>
+        <p>{{ confirmMessage }}</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onConfirmNo()">Cancel</button>
-        <button type="button" class="btn btn-danger" (click)="onConfirmYes()">Delete</button>
+        <button class="btn btn-secondary" (click)="onConfirmNo()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button class="btn btn-danger" (click)="onConfirmYes()">
+          <i class="fas fa-trash"></i>
+          Delete
+        </button>
       </div>
     </div>
   </div>

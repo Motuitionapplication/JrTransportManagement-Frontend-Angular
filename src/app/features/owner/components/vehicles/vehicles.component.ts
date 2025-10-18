@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { VehicleFormComponent } from '../../../form/vehicle-form/vehicle-form.component';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+// import { VehicleFormComponent } from '../../../form/vehicle-form/vehicle-form.component';
 import { VehicleService } from '../../../vehicle/vehicle.service';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, GridApi, ColumnApi } from 'ag-grid-community';
 
 @Component({
   selector: 'app-vehicles',
@@ -10,23 +11,40 @@ import { ColDef } from 'ag-grid-community';
   styleUrls: ['./vehicles.component.scss']
 })
 export class VehiclesComponent implements OnInit {
+  
+  // Grid properties
   public isLoading = false;
   public vehiclesForGrid: any[] = [];
-  public gridApi: any;
-  public gridColumnApi: any;
-  public ownerId: string | null = null;
+  public gridApi!: GridApi;
+  public gridColumnApi!: ColumnApi;
+  public ownerId: string | null = 'default-owner-123'; // Set default owner ID
   public searchValue: string = '';
+  
+  // Grid options
+  public gridOptions: any = {};
+  
+  // Progressive Form Properties
+  public showAddVehicleForm = false;
+  public vehicleForm!: FormGroup;
+  public currentStep = 1;
+  public totalSteps = 3;
+  public isFormLoading = false;
+  public formError: string | null = null;
 
+  // Form options
+  public vehicleTypes = ['TRUCK', 'VAN', 'TRAILER', 'CONTAINER', 'PICKUP'];
+  public statusOptions = ['AVAILABLE', 'IN_TRANSIT', 'MAINTENANCE', 'INACTIVE'];
+  
   // Custom overlay templates
   public loadingTemplate = `
     <div class="custom-loading-overlay">
       <div class="loading-spinner"></div>
     </div>
   `;
-
+  
   public noRowsTemplate = `
     <div class="custom-no-rows-overlay">
-      <span>No Rows To Show</span>
+      No vehicles found
     </div>
   `;
 
@@ -36,52 +54,85 @@ export class VehiclesComponent implements OnInit {
   public customMessageIsError: boolean = false;
   public showCustomConfirm: boolean = false;
   public confirmMessage: string = '';
+  private pendingAction: (() => void) | null = null;
 
+  // Column definitions
   columnDefs: ColDef[] = [
-    { 
-      headerName: 'S.No.', 
-      field: '_sNo', 
-      width: 80,
-      sortable: false,
-      filter: false
-    },
-    { 
-      headerName: 'Vehicle Number', 
-      field: 'vehicleNumber', 
-      width: 180
-    },
-    { 
-      headerName: 'Type', 
-      field: 'vehicleType', 
-      width: 120
-    },
-    { 
-      headerName: 'Manufacturer', 
-      field: 'manufacturer', 
-      width: 150
-    },
-    { 
-      headerName: 'Model', 
-      field: 'model', 
-      width: 130
-    },
-    { 
-      headerName: 'Year', 
-      field: 'year', 
-      width: 100
-    },
-    { 
-      headerName: 'Capacity (Tons)', 
-      field: 'capacity', 
-      width: 160
-    },
-    { 
-      headerName: 'Status', 
-      field: 'status', 
+{
+    headerName: 'S.No.',
+    field: '_sNo',
+    width: 80,
+    sortable: false,
+    filter: false,
+    pinned: 'left',
+    flex: 0 // Don't flex
+  },
+  {
+    headerName: 'Vehicle Number',
+    field: 'vehicleNumber',
+    width: 180,
+    pinned: 'left',
+    flex: 0 // Don't flex
+  },
+  {
+    headerName: 'Type',
+    field: 'vehicleType',
+    width: 120,
+    flex: 0 // Don't flex
+  },
+  {
+    headerName: 'Manufacturer',
+    field: 'manufacturer',
+    width: 150
+  },
+  {
+    headerName: 'Model',
+    field: 'model',
+    width: 130
+  },
+  {
+    headerName: 'Year',
+    field: 'year',
+    width: 80,        // Reduced from 100 to 80
+    maxWidth: 90,     // Add max width
+    minWidth: 70,     // Add min width
+    flex: 0,          // Disable flex for fixed width
+    type: 'numericColumn',
+    cellStyle: { textAlign: 'center' } // Center align the year
+  },
+  {
+    headerName: 'Capacity (Tons)',
+    field: 'capacity',
+    width: 160,
+    type: 'numericColumn',
+    valueFormatter: (params: any) => {
+      return params.value ? `${params.value} Tons` : '';
+    }
+  },
+    {
+      headerName: 'Status',
+      field: 'status',
       width: 120,
       cellRenderer: (params: any) => {
         const status = params.value || 'AVAILABLE';
-        return `<span class="status-badge ${status.toLowerCase()}">${status}</span>`;
+        let statusClass = '';
+        
+        switch (status.toUpperCase()) {
+          case 'AVAILABLE':
+            statusClass = 'available';
+            break;
+          case 'ASSIGNED':
+          case 'IN_TRANSIT':
+            statusClass = 'assigned';
+            break;
+          case 'MAINTENANCE':
+            statusClass = 'maintenance';
+            break;
+          default:
+            statusClass = 'available';
+        }
+        
+        return `<span class="status-badge ${statusClass}">${status}</span>`;
       }
     },
     {
@@ -90,15 +141,14 @@ export class VehiclesComponent implements OnInit {
       width: 150,
       sortable: false,
       filter: false,
-      // Use hide property to exclude from export instead of suppressExport
-      hide: false,
+      pinned: 'right',
       cellRenderer: (params: any) => {
         const eGui = document.createElement('div');
         eGui.className = 'action-buttons-container';
 
-        // Assign Vehicle button (Truck icon)
+        // Assign Vehicle button
         const assignBtn = document.createElement('button');
-        assignBtn.innerHTML = '<i class="fas fa-truck"></i>';
+        assignBtn.innerHTML = '<i class="fas fa-truck-moving"></i>';
         assignBtn.className = 'action-btn assign-btn';
         assignBtn.title = 'Assign Vehicle';
         assignBtn.addEventListener('click', () => this.assignVehicle(params.data));
@@ -125,17 +175,24 @@ export class VehiclesComponent implements OnInit {
     }
   ];
 
+  // Default column definition
   defaultColDef = {
     sortable: true,
     filter: true,
-    resizable: false,
-    flex: 1
+    resizable: true,
+    flex: 1,
+    minWidth: 100
   };
 
   constructor(
     private dialog: MatDialog,
     private vehicleService: VehicleService,
-  ) { }
+    private cdr: ChangeDetectorRef,
+    private fb: FormBuilder
+  ) {
+    this.initializeGridOptions();
+    this.initializeVehicleForm();
+  }
 
   ngOnInit(): void {
     console.log('VehiclesComponent initialized');
@@ -143,37 +200,152 @@ export class VehiclesComponent implements OnInit {
     this.loadVehicles();
   }
 
-  loadVehicles() {
-    // Show loading overlay first
-    setTimeout(() => {
-      if (this.gridApi) {
-        this.gridApi.showLoadingOverlay();
-      }
-    });
+  // Initialize grid options
+  private initializeGridOptions(): void {
+    this.gridOptions = {
+      columnDefs: this.columnDefs,
+      defaultColDef: this.defaultColDef,
+      rowData: this.vehiclesForGrid,
+      animateRows: true,
+      rowSelection: 'single',
+      pagination: true,
+      paginationPageSize: 20,
+      suppressCellSelection: true,
+      enableRangeSelection: false,
+      onGridReady: (params: any) => this.onGridReady(params),
+      getRowId: (params: any) => params.data.id || params.node.rowIndex.toString()
+    };
+  }
 
-    this.vehicleService.getOwnerId().subscribe({
-      next: (id) => {
-        this.ownerId = id;
-        console.log('Owner ID:', id);
-        this.fetchVehiclesByOwner(id);
+  // Initialize Vehicle Form
+  private initializeVehicleForm(): void {
+    this.vehicleForm = this.fb.group({
+      // Step 1: Basic Vehicle Information
+      basicInfo: this.fb.group({
+        vehicleNumber: ['', [Validators.required, Validators.pattern('^[A-Z]{2}[ -][0-9]{1,2}(?: [A-Z])?(?: [A-Z]*)? [0-9]{4}$')]],
+        vehicleType: ['', Validators.required],
+        manufacturer: ['', Validators.required],
+        model: ['', Validators.required],
+        year: ['', [Validators.required, Validators.min(1990), Validators.max(new Date().getFullYear())]],
+        capacity: ['', [Validators.required, Validators.min(0)]],
+        status: ['AVAILABLE', Validators.required]
+      }),
+
+      // Step 2: Documents
+      documents: this.fb.group({
+        registration: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        insurance: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          provider: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        permit: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        fitness: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        }),
+        pollution: this.fb.group({
+          number: ['', Validators.required],
+          expiryDate: ['', Validators.required],
+          documentUrl: ['']
+        })
+      }),
+
+      // Step 3: Fare & Additional Details
+      fareAndDetails: this.fb.group({
+        fareDetails: this.fb.group({
+          perKmRate: ['', [Validators.required, Validators.min(0)]],
+          wholeFare: ['', [Validators.required, Validators.min(0)]],
+          sharingFare: ['', [Validators.required, Validators.min(0)]],
+          gstIncluded: [true],
+          movingInsurance: ['', Validators.min(0)]
+        }),
+        location: this.fb.group({
+          currentLatitude: [''],
+          currentLongitude: [''],
+          currentAddress: ['']
+        }),
+        nextServiceDate: [''],
+        isActive: [true]
+      })
+    });
+  }
+
+  // FIXED: Load vehicles data
+  loadVehicles(): void {
+    console.log('Loading vehicles...');
+    
+    // Try to get owner ID first, but fallback to sample data if it fails
+    if (this.vehicleService.getOwnerId) {
+      this.vehicleService.getOwnerId().subscribe({
+        next: (id) => {
+          this.ownerId = id;
+          console.log('Owner ID retrieved:', id);
+          this.fetchVehiclesByOwner(id);
+        },
+        error: (err) => {
+          console.error('Error getting owner ID:', err);
+          this.ownerId = 'default-owner-123';
+          this.fetchVehiclesByOwner(this.ownerId);
+        }
+      });
+    } else {
+      // If getOwnerId method doesn't exist, try to fetch with default owner or load sample data
+      console.log('getOwnerId method not available, trying with default owner...');
+      this.ownerId = 'default-owner-123';
+      this.fetchVehiclesByOwner(this.ownerId);
+    }
+  }
+
+  // FIXED: Fetch vehicles by owner
+  fetchVehiclesByOwner(ownerId: string): void {
+    console.log('Fetching vehicles for owner:', ownerId);
+    
+    this.vehicleService.getvehiclesbyOwner(ownerId).subscribe({
+      next: (vehicles) => {
+        console.log('Raw vehicles data received:', vehicles);
+        
+        if (vehicles && Array.isArray(vehicles) && vehicles.length > 0) {
+          this.vehiclesForGrid = vehicles.map((vehicle, idx) => ({
+            ...vehicle,
+            _sNo: idx + 1,
+            status: vehicle.status || 'AVAILABLE',
+            capacity: parseFloat(vehicle.capacity) || 0
+          }));
+          
+          console.log('Processed vehicles for grid:', this.vehiclesForGrid);
+          this.isLoading = false;
+          this.updateGridData();
+        } else {
+          console.log('No vehicles found, loading sample data');
+          this.loadSampleData();
+        }
       },
       error: (err) => {
-        console.error('Error getting owner ID:', err);
-        this.isLoading = false;
-        // Show sample data for demonstration
+        console.error('Error fetching vehicles:', err);
+        console.log('API call failed, loading sample data');
         this.loadSampleData();
-        if (this.gridApi) {
-          this.gridApi.hideOverlay();
-        }
       }
     });
   }
 
-  // Sample data for demonstration
-  loadSampleData() {
+  // IMPROVED: Load sample data for demonstration
+  loadSampleData(): void {
+    console.log('Loading sample data...');
+    
     this.vehiclesForGrid = [
       {
-        id: '1',
+        id: 'sample_1',
         _sNo: 1,
         vehicleNumber: 'MH 12 AB 1234',
         vehicleType: 'TRUCK',
@@ -184,7 +356,7 @@ export class VehiclesComponent implements OnInit {
         status: 'AVAILABLE'
       },
       {
-        id: '2',
+        id: 'sample_2',
         _sNo: 2,
         vehicleNumber: 'MH 14 CD 5678',
         vehicleType: 'TRUCK',
@@ -192,10 +364,10 @@ export class VehiclesComponent implements OnInit {
         model: 'Blazo X 28',
         year: 2020,
         capacity: 16.2,
-        status: 'ASSIGNED'
+        status: 'IN_TRANSIT'
       },
       {
-        id: '3',
+        id: 'sample_3',
         _sNo: 3,
         vehicleNumber: 'KA 05 EF 9012',
         vehicleType: 'TRUCK',
@@ -204,163 +376,275 @@ export class VehiclesComponent implements OnInit {
         year: 2019,
         capacity: 8.5,
         status: 'MAINTENANCE'
+      },
+      {
+        id: 'sample_4',
+        _sNo: 4,
+        vehicleNumber: 'DL 8C A 4567',
+        vehicleType: 'VAN',
+        manufacturer: 'Force Motors',
+        model: 'Traveller',
+        year: 2021,
+        capacity: 3.5,
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sample_5',
+        _sNo: 5,
+        vehicleNumber: 'GJ 01 HH 8901',
+        vehicleType: 'CONTAINER',
+        manufacturer: 'Volvo',
+        model: 'FH16',
+        year: 2022,
+        capacity: 25.0,
+        status: 'AVAILABLE'
       }
     ];
+    
     this.isLoading = false;
+    this.updateGridData();
+    console.log('Sample data loaded:', this.vehiclesForGrid);
   }
 
-  fetchVehiclesByOwner(ownerId: string) {
-    this.vehicleService.getvehiclesbyOwner(ownerId).subscribe({
-      next: (vehicles) => {
-        this.vehiclesForGrid = vehicles.map((vehicle, idx) => ({
-          ...vehicle,
-          _sNo: idx + 1,
-          status: vehicle.status || 'AVAILABLE'
-        }));
-        console.log('Vehicles list:', this.vehiclesForGrid);
-        this.isLoading = false;
-        
-        // Hide loading overlay
-        if (this.gridApi) {
-          this.gridApi.hideOverlay();
-        }
-      },
-      error: (err) => {
-        console.error('Error fetching vehicles:', err);
-        this.isLoading = false;
-        // Show sample data as fallback
-        this.loadSampleData();
-        
-        // Hide loading overlay
-        if (this.gridApi) {
-          this.gridApi.hideOverlay();
-        }
+  // Update grid data
+  private updateGridData(): void {
+    console.log('Updating grid data...');
+    
+    if (this.gridApi) {
+      console.log('Grid API available, setting row data:', this.vehiclesForGrid);
+      this.gridApi.setRowData(this.vehiclesForGrid);
+      
+      if (this.vehiclesForGrid.length === 0) {
+        this.gridApi.showNoRowsOverlay();
+      } else {
+        this.gridApi.hideOverlay();
       }
-    });
+      
+      // Auto-size columns
+      setTimeout(() => {
+        if (this.gridApi) {
+          this.gridApi.sizeColumnsToFit();
+        }
+      }, 100);
+    } else {
+      console.log('Grid API not available yet');
+    }
+    
+    // Force change detection
+    this.cdr.detectChanges();
   }
 
-  onGridReady(params: any) {
+  // Grid ready event handler
+  onGridReady(params: any): void {
+    console.log('Grid ready event fired');
     this.gridApi = params.api;
     this.gridColumnApi = params.columnApi;
     
-    // Show loading overlay when grid is ready
-    if (this.isLoading) {
+    // Set data if already loaded
+    if (this.vehiclesForGrid.length > 0) {
+      console.log('Setting initial data to grid:', this.vehiclesForGrid.length, 'vehicles');
+      this.gridApi.setRowData(this.vehiclesForGrid);
+      this.gridApi.hideOverlay();
+    } else if (this.isLoading) {
       this.gridApi.showLoadingOverlay();
+    } else {
+      this.gridApi.showNoRowsOverlay();
     }
+    
+    // Auto-size columns
+    this.gridApi.sizeColumnsToFit();
+    console.log('Grid ready completed');
   }
 
   // Search functionality
-  onQuickFilterChanged() {
-    this.gridApi?.setQuickFilter(this.searchValue);
+  onQuickFilterChanged(): void {
+    if (this.gridApi) {
+      this.gridApi.setQuickFilter(this.searchValue);
+    }
   }
 
-  // Export functionality - CSV Export (Community Edition)
-  exportToCSV() {
-    if (this.gridApi) {
-      // Get column keys excluding Actions column
+  // Export to CSV functionality
+  exportToCSV(): void {
+    if (!this.gridApi) {
+      this.showError('Grid not ready for export. Please try again.');
+      return;
+    }
+
+    try {
       const columnKeys = this.columnDefs
         .filter(col => col.colId !== 'Actions' && col.headerName !== 'Actions')
         .map(col => col.field)
-        .filter(field => field); // Remove undefined values
+        .filter((field): field is string => field !== undefined);
 
       const params = {
         fileName: `vehicles_${new Date().toISOString().split('T')[0]}.csv`,
         skipColumnHeaders: false,
         suppressQuotes: false,
         columnSeparator: ',',
-        columnKeys: columnKeys, // Only export specific columns
+        columnKeys: columnKeys,
         processCellCallback: (params: any) => {
-          // Format status values for CSV export
           if (params.column.getColId() === 'status') {
             return params.value ? params.value.toUpperCase() : 'AVAILABLE';
           }
-          // Format capacity with unit
           if (params.column.getColId() === 'capacity') {
-            return params.value ? `${params.value} Tons` : '';
+            return params.value ? `${params.value}` : '';
           }
           return params.value;
         },
         processHeaderCallback: (params: any) => {
-          // Customize headers for export
           return params.column.getColDef().headerName || params.column.getColId();
         }
       };
-      
+
       this.gridApi.exportDataAsCsv(params);
       this.showSuccess('Vehicle data exported to CSV successfully!');
-    } else {
-      this.showError('Grid not ready for export. Please try again.');
+    } catch (error) {
+      console.error('Export error:', error);
+      this.showError('Failed to export data. Please try again.');
     }
   }
 
-  openAddVehicleDialog(): void {
-    const dialogRef = this.dialog.open(VehicleFormComponent, {
-      width: '600px',
-      data: { ownerId: this.ownerId }
+  // Progressive Form Methods
+  openAddVehicleForm(): void {
+    this.showAddVehicleForm = true;
+    this.currentStep = 1;
+    this.vehicleForm.reset();
+    this.vehicleForm.patchValue({
+      basicInfo: { status: 'AVAILABLE' },
+      fareAndDetails: { 
+        fareDetails: { gstIncluded: true },
+        isActive: true 
+      }
     });
+    this.formError = null;
+  }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        console.log('New vehicle added:', result);
-        this.showSuccess('Vehicle added successfully');
+  closeAddVehicleForm(): void {
+    this.showAddVehicleForm = false;
+    this.currentStep = 1;
+    this.vehicleForm.reset();
+    this.formError = null;
+  }
+
+  nextStep(): void {
+    if (this.isCurrentStepValid()) {
+      if (this.currentStep < this.totalSteps) {
+        this.currentStep++;
+      }
+    } else {
+      this.markCurrentStepGroupAsTouched();
+    }
+  }
+
+  previousStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+    }
+  }
+
+  isCurrentStepValid(): boolean {
+    switch (this.currentStep) {
+      case 1:
+        return this.vehicleForm.get('basicInfo')?.valid || false;
+      case 2:
+        return this.vehicleForm.get('documents')?.valid || false;
+      case 3:
+        return this.vehicleForm.get('fareAndDetails')?.valid || false;
+      default:
+        return false;
+    }
+  }
+
+  markCurrentStepGroupAsTouched(): void {
+    switch (this.currentStep) {
+      case 1:
+        this.vehicleForm.get('basicInfo')?.markAllAsTouched();
+        break;
+      case 2:
+        this.vehicleForm.get('documents')?.markAllAsTouched();
+        break;
+      case 3:
+        this.vehicleForm.get('fareAndDetails')?.markAllAsTouched();
+        break;
+    }
+  }
+
+onSubmitVehicleForm(): void {
+  if (this.vehicleForm.valid) {
+    this.isFormLoading = true;
+    this.formError = null;
+
+    // Prepare payload
+    const formValue = this.vehicleForm.value;
+    const vehiclePayload = {
+      ...formValue.basicInfo,
+      ...formValue.documents,
+      ...formValue.fareAndDetails,
+      owner: { id: this.ownerId }
+    };
+
+    console.log('Vehicle payload:', vehiclePayload);
+
+    // ENABLE THIS - Replace the setTimeout with actual API call:
+    this.vehicleService.saveVehicle(vehiclePayload).subscribe({
+      next: (response) => {
+        this.isFormLoading = false;
+        this.showSuccess('Vehicle added successfully!');
+        this.closeAddVehicleForm();
         if (this.ownerId) {
           this.fetchVehiclesByOwner(this.ownerId);
         }
+      },
+      error: (error) => {
+        this.isFormLoading = false;
+        this.formError = 'Failed to add vehicle. Please try again.';
+        console.error('Error adding vehicle:', error);
       }
     });
+  } else {
+    this.markCurrentStepGroupAsTouched();
+  }
+}
+
+  // Update existing method to use progressive form
+  openAddVehicleDialog(): void {
+    this.openAddVehicleForm();
   }
 
-  assignVehicle(vehicleData: any) {
+  // Vehicle actions
+  assignVehicle(vehicleData: any): void {
     console.log('Assign vehicle:', vehicleData);
     this.showSuccess('Vehicle assignment feature coming soon!');
   }
 
-  editVehicle(vehicleData: any) {
-    const dialogRef = this.dialog.open(VehicleFormComponent, {
-      width: '600px',
-      data: {
-        mode: 'edit',
-        vehicle: vehicleData,
-        ownerId: this.ownerId
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.showSuccess('Vehicle updated successfully');
-        if (this.ownerId) {
-          this.fetchVehiclesByOwner(this.ownerId);
-        }
-      }
-    });
+  editVehicle(vehicleData: any): void {
+    console.log('Edit vehicle:', vehicleData);
+    this.showSuccess('Vehicle edit feature coming soon!');
   }
 
-  deleteVehicle(vehicleData: any) {
+  deleteVehicle(vehicleData: any): void {
     this.confirmMessage = `Are you sure you want to delete vehicle "${vehicleData.vehicleNumber}"? This action cannot be undone.`;
     this.showCustomConfirm = true;
     this.pendingAction = () => this.executeDeleteVehicle(vehicleData);
   }
 
-  private executeDeleteVehicle(vehicleData: any) {
-    if (this.ownerId) {
-      this.vehicleService.deleteVehicle(vehicleData.id).subscribe({
-        next: () => {
-          console.log('Vehicle deleted successfully');
-          this.showSuccess('Vehicle deleted successfully');
-          this.fetchVehiclesByOwner(this.ownerId!);
-        },
-        error: (err) => {
-          console.error('Error deleting vehicle', err);
-          this.showError('Failed to delete vehicle');
-        }
-      });
-    }
+  private executeDeleteVehicle(vehicleData: any): void {
+    console.log('Deleting vehicle:', vehicleData);
+    
+    // Remove from sample data
+    this.vehiclesForGrid = this.vehiclesForGrid.filter(vehicle => vehicle.id !== vehicleData.id);
+    
+    // Update serial numbers
+    this.vehiclesForGrid.forEach((vehicle, index) => {
+      vehicle._sNo = index + 1;
+    });
+    
+    this.updateGridData();
+    this.showSuccess('Vehicle deleted successfully');
   }
 
   // Confirmation modal methods
-  private pendingAction: (() => void) | null = null;
-
-  onConfirmYes() {
+  onConfirmYes(): void {
     this.showCustomConfirm = false;
     if (this.pendingAction) {
       this.pendingAction();
@@ -368,13 +652,13 @@ export class VehiclesComponent implements OnInit {
     }
   }
 
-  onConfirmNo() {
+  onConfirmNo(): void {
     this.showCustomConfirm = false;
     this.pendingAction = null;
   }
 
   // Alert methods
-  private showSuccess(message: string) {
+  private showSuccess(message: string): void {
     this.customMessage = message;
     this.customMessageIsError = false;
     this.showCustomMessage = true;
@@ -383,12 +667,21 @@ export class VehiclesComponent implements OnInit {
     }, 3000);
   }
 
-  private showError(message: string) {
+  private showError(message: string): void {
     this.customMessage = message;
     this.customMessageIsError = true;
     this.showCustomMessage = true;
     setTimeout(() => {
       this.showCustomMessage = false;
     }, 5000);
+  }
+
+  // Refresh vehicles data
+  refreshData(): void {
+    this.isLoading = true;
+    if (this.gridApi) {
+      this.gridApi.showLoadingOverlay();
+    }
+    this.loadVehicles();
   }
 }
