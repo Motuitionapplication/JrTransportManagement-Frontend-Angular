@@ -1,0 +1,523 @@
+<div class="transport-history-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="fas fa-history me-2"></i>
+          Transport History
+        </h2>
+        <p class="page-subtitle">View and manage your transport journey history</p>
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-outline-secondary me-2" (click)="exportHistory()" 
+                [disabled]="filteredHistory.length === 0">
+          <i class="fas fa-download me-1"></i>
+          Export
+        </button>
+        <button class="btn btn-primary" (click)="refreshHistory()" [disabled]="isRefreshing">
+          <i class="fas fa-sync-alt me-1" [class.fa-spin]="isRefreshing"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4" *ngIf="historySummary">
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-primary">
+          <i class="fas fa-route"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ historySummary.total }}</h4>
+          <p>Total Trips</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-success">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ historySummary.completed }}</h4>
+          <p>Completed</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-warning">
+          <i class="fas fa-star"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ historySummary.averageRating | number:'1.1-1' }}</h4>
+          <p>Avg Rating</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-info">
+          <i class="fas fa-rupee-sign"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ formatCurrency(historySummary.totalAmount) }}</h4>
+          <p>Total Spent</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading transport history...</p>
+  </div>
+
+  <!-- History Content -->
+  <div *ngIf="!isLoading" class="row g-4">
+    <!-- History List -->
+    <div class="col-lg-8">
+      <div class="history-list-card">
+        <!-- Enhanced Filters -->
+        <div class="filters-section mb-4">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Search</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Search trips, drivers, locations..."
+                       [(ngModel)]="searchTerm" (input)="onSearchChange()">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Status</label>
+              <select class="form-select" [(ngModel)]="statusFilter" (change)="onStatusFilterChange()">
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="in-progress">In Progress</option>
+                <option value="scheduled">Scheduled</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Date Range</label>
+              <select class="form-select" [(ngModel)]="dateFilter" (change)="onDateFilterChange()">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Sort By</label>
+              <select class="form-select" [(ngModel)]="sortBy" (change)="onSortChange()">
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="fare-desc">Highest Fare</option>
+                <option value="fare-asc">Lowest Fare</option>
+                <option value="rating-desc">Highest Rated</option>
+                <option value="status">By Status</option>
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-outline-primary me-2" (click)="clearSelection()" 
+                      [disabled]="!selectedTrip">
+                <i class="fas fa-times me-1"></i>
+                Clear Selection
+              </button>
+              <div class="results-info">
+                <small class="text-muted">
+                  {{ filteredHistory.length }} of {{ transportHistory.length }} trips
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History List -->
+        <div class="history-list">
+          <!-- Empty State -->
+          <div *ngIf="filteredHistory.length === 0 && !isLoading" class="empty-state">
+            <div class="text-center py-5">
+              <i class="fas fa-route fa-4x text-muted mb-3"></i>
+              <h4 class="text-muted">No trips found</h4>
+              <p class="text-muted">
+                <span *ngIf="searchTerm || statusFilter !== 'all' || dateFilter !== 'all'">
+                  Try adjusting your search criteria or filters
+                </span>
+                <span *ngIf="!searchTerm && statusFilter === 'all' && dateFilter === 'all'">
+                  You haven't taken any trips yet. Book your first trip to get started!
+                </span>
+              </p>
+              <button class="btn btn-primary" routerLink="/customer/book-transport">
+                <i class="fas fa-plus me-2"></i>
+                Book Your First Trip
+              </button>
+            </div>
+          </div>
+
+          <!-- Trip Items -->
+          <div *ngFor="let trip of getPaginatedHistory(); trackBy: trackByTripId" 
+               class="history-item"
+               [class.selected]="selectedTrip?.id === trip.id"
+               (click)="selectTrip(trip)">
+            <div class="row g-3 align-items-center">
+              <div class="col-md-6">
+                <div class="trip-route">
+                  <div class="d-flex align-items-center mb-2">
+                    <h6 class="mb-0 me-2">{{ trip.bookingId }}</h6>
+                    <span class="time-ago text-muted small">{{ getTimeAgo(trip.date) }}</span>
+                  </div>
+                  <div class="route-display">
+                    <i class="fas fa-circle text-success me-2"></i>
+                    <span class="location">{{ trip.route.from }}</span>
+                    <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                    <i class="fas fa-circle text-danger me-2"></i>
+                    <span class="location">{{ trip.route.to }}</span>
+                  </div>
+                  <div class="trip-details mt-1">
+                    <small class="text-muted">
+                      <i class="fas fa-calendar me-1"></i>
+                      {{ formatDate(trip.date) }}
+                    </small>
+                    <small class="text-muted ms-3">
+                      <i class="fas fa-clock me-1"></i>
+                      {{ trip.departureTime }}
+                    </small>
+                    <small class="text-muted ms-3">
+                      <i class="fas fa-route me-1"></i>
+                      {{ trip.distance }} km
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <div class="driver-info text-center">
+                  <div class="driver-avatar mb-1">
+                    <img *ngIf="trip.driver.avatar" [src]="trip.driver.avatar" [alt]="trip.driver.name" class="avatar-img">
+                    <i *ngIf="!trip.driver.avatar" class="fas fa-user"></i>
+                  </div>
+                  <small class="driver-name">{{ trip.driver.name }}</small>
+                  <div class="driver-rating">
+                    <i class="fas fa-star text-warning"></i>
+                    <small>{{ trip.driver.rating }}</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-2 text-center">
+                <div class="fare-info">
+                  <h6 class="fare-amount mb-0">{{ formatCurrency(trip.fare) }}</h6>
+                  <small class="payment-status" [class]="getPaymentStatusClass(trip.paymentStatus)">
+                    {{ getPaymentStatusDisplay(trip.paymentStatus) }}
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-2 text-center">
+                <span class="status-badge" [class]="getStatusClass(trip.status)">
+                  <i [class]="getStatusIcon(trip.status)" class="me-1"></i>
+                  {{ getStatusDisplay(trip.status) }}
+                </span>
+                <div *ngIf="trip.rating" class="trip-rating mt-1">
+                  <span *ngFor="let star of generateStars(trip.rating)" 
+                        class="star" [class.filled]="star === 1">
+                    <i class="fas fa-star"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trip Actions -->
+            <div class="trip-actions mt-3">
+              <button class="btn btn-sm btn-outline-primary me-1" 
+                      (click)="$event.stopPropagation(); downloadReceipt(trip)"
+                      [disabled]="!canDownloadReceipt(trip)"
+                      [title]="canDownloadReceipt(trip) ? 'Download Receipt' : 'Receipt not available'">
+                <i class="fas fa-download me-1"></i>
+                Receipt
+              </button>
+              <button class="btn btn-sm btn-outline-success me-1"
+                      (click)="$event.stopPropagation(); rebookTrip(trip)"
+                      title="Book a similar trip">
+                <i class="fas fa-redo me-1"></i>
+                Rebook
+              </button>
+              <button *ngIf="canRateTrip(trip)" 
+                      class="btn btn-sm btn-outline-warning me-1"
+                      (click)="$event.stopPropagation(); rateTrip(trip)"
+                      title="Rate this trip">
+                <i class="fas fa-star me-1"></i>
+                Rate
+              </button>
+              <button class="btn btn-sm btn-outline-danger"
+                      (click)="$event.stopPropagation(); reportIssue(trip)"
+                      title="Report an issue">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enhanced Pagination -->
+        <div *ngIf="totalPages > 1" class="pagination-section mt-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="pagination-info">
+              <small class="text-muted">
+                Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - 
+                {{ Math.min(currentPage * itemsPerPage, totalItems) }} of {{ totalItems }} trips
+              </small>
+            </div>
+            <nav aria-label="History pagination">
+              <ul class="pagination mb-0">
+                <li class="page-item" [class.disabled]="currentPage === 1">
+                  <a class="page-link" (click)="goToPage(1)" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === 1">
+                  <a class="page-link" (click)="goToPage(currentPage - 1)" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+                <li *ngFor="let page of getPaginationPages()"
+                    class="page-item" [class.active]="currentPage === page">
+                  <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                  <a class="page-link" (click)="goToPage(currentPage + 1)" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages">
+                  <a class="page-link" (click)="goToPage(totalPages)" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            <div class="page-size-selector">
+              <select class="form-select form-select-sm" [(ngModel)]="itemsPerPage" 
+                      (change)="onPageSizeChange()" style="width: auto;">
+                <option value="5">5 per page</option>
+                <option value="10">10 per page</option>
+                <option value="20">20 per page</option>
+                <option value="50">50 per page</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trip Details -->
+    <div class="col-lg-4">
+      <div class="trip-detail-card">
+        <div *ngIf="!selectedTrip" class="no-trip-selected">
+          <div class="text-center py-5">
+            <i class="fas fa-mouse-pointer fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">Select a trip to view details</h5>
+            <p class="text-muted">Click on any trip from the list to see more information</p>
+          </div>
+        </div>
+
+        <div *ngIf="selectedTrip" class="trip-details">
+          <div class="trip-detail-header">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h5 class="mb-0">Trip Details</h5>
+              <button class="btn btn-outline-secondary btn-sm" (click)="closeDetails()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <span [class]="getStatusClass(selectedTrip.status)">
+              <i [class]="getStatusIcon(selectedTrip.status)" class="me-1"></i>
+              {{ selectedTrip.status | titlecase }}
+            </span>
+          </div>
+
+          <div class="trip-info">
+            <!-- Route Information -->
+            <div class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-route me-2"></i>
+                Route
+              </h6>
+              <div class="route-details">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="fas fa-circle text-success me-2"></i>
+                  <span>{{ selectedTrip.route.from }}</span>
+                </div>
+                <div class="route-line"></div>
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-circle text-danger me-2"></i>
+                  <span>{{ selectedTrip.route.to }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trip Information -->
+            <div class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-info-circle me-2"></i>
+                Trip Information
+              </h6>
+              <div class="info-grid">
+                <div class="info-item">
+                  <small class="text-muted">Booking ID</small>
+                  <span>{{ selectedTrip.bookingId }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Date</small>
+                  <span>{{ selectedTrip.date | date:'MMM d, y' }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Departure</small>
+                  <span>{{ selectedTrip.departureTime }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Arrival</small>
+                  <span>{{ selectedTrip.arrivalTime }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Distance</small>
+                  <span>{{ selectedTrip.distance }} km</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Duration</small>
+                  <span>{{ selectedTrip.duration }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Driver Information -->
+            <div class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-user-tie me-2"></i>
+                Driver Information
+              </h6>
+              <div class="driver-details">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="driver-avatar me-3">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                    <div class="fw-bold">{{ selectedTrip.driver.name }}</div>
+                    <small class="text-muted">{{ selectedTrip.driver.phone }}</small>
+                  </div>
+                </div>
+                <div class="driver-rating">
+                  <span class="me-2">Rating:</span>
+                  <span *ngFor="let star of generateStars(selectedTrip.driver.rating)" 
+                        class="star" [class.filled]="star === 1">
+                    <i class="fas fa-star"></i>
+                  </span>
+                  <span class="ms-1">({{ selectedTrip.driver.rating }})</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vehicle Information -->
+            <div class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-car me-2"></i>
+                Vehicle Information
+              </h6>
+              <div class="info-grid">
+                <div class="info-item">
+                  <small class="text-muted">Vehicle Number</small>
+                  <span>{{ selectedTrip.vehicle.number }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Type</small>
+                  <span>{{ selectedTrip.vehicle.type }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Model</small>
+                  <span>{{ selectedTrip.vehicle.model }}</span>
+                </div>
+                <div class="info-item">
+                  <small class="text-muted">Passengers</small>
+                  <span>{{ selectedTrip.passengers }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-credit-card me-2"></i>
+                Payment Information
+              </h6>
+              <div class="payment-details">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Total Fare:</span>
+                  <strong class="fare-amount">₹{{ selectedTrip.fare }}</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Payment Status:</span>
+                  <span [class]="getPaymentStatusClass(selectedTrip.paymentStatus)">
+                    {{ selectedTrip.paymentStatus | titlecase }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rating & Feedback -->
+            <div *ngIf="selectedTrip.rating" class="info-section mb-3">
+              <h6 class="section-title">
+                <i class="fas fa-star me-2"></i>
+                Your Rating & Feedback
+              </h6>
+              <div class="rating-section">
+                <div class="trip-rating mb-2">
+                  <span *ngFor="let star of generateStars(selectedTrip.rating)" 
+                        class="star filled">
+                    <i class="fas fa-star"></i>
+                  </span>
+                  <span class="ms-2">({{ selectedTrip.rating }}/5)</span>
+                </div>
+                <div *ngIf="selectedTrip.feedback" class="feedback">
+                  <small class="text-muted">Your feedback:</small>
+                  <p class="mb-0">{{ selectedTrip.feedback }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="trip-actions mt-4">
+            <button class="btn btn-primary w-100 mb-2" 
+                    (click)="downloadReceipt(selectedTrip)"
+                    [disabled]="selectedTrip.status === 'cancelled'">
+              <i class="fas fa-download me-1"></i>
+              Download Receipt
+            </button>
+            <button class="btn btn-outline-success w-100 mb-2"
+                    (click)="rebookTrip(selectedTrip)">
+              <i class="fas fa-redo me-1"></i>
+              Book Similar Trip
+            </button>
+            <button *ngIf="selectedTrip.status === 'completed' && !selectedTrip.rating" 
+                    class="btn btn-outline-warning w-100 mb-2"
+                    (click)="rateTrip(selectedTrip)">
+              <i class="fas fa-star me-1"></i>
+              Rate This Trip
+            </button>
+            <button class="btn btn-outline-danger w-100"
+                    (click)="reportIssue(selectedTrip)">
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              Report Issue
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

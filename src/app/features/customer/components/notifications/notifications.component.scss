@@ -180,7 +180,7 @@
         color: #6c757d;
       }
 
-      .form-select {
+      .form-select, .form-control {
         min-width: 150px;
         border-radius: 6px;
         border: 1px solid #ced4da;
@@ -189,6 +189,28 @@
         &:focus {
           border-color: #667eea;
           box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+      }
+
+      &.search-group {
+        .input-group {
+          min-width: 200px;
+
+          .form-control {
+            border-right: none;
+          }
+
+          .btn-outline-secondary {
+            border-left: none;
+            border-color: #ced4da;
+            color: #6c757d;
+
+            &:hover {
+              background: rgba(102, 126, 234, 0.1);
+              border-color: #667eea;
+              color: #667eea;
+            }
+          }
         }
       }
     }
@@ -554,6 +576,31 @@
           }
         }
       }
+    }
+  }
+}
+
+// Loading State
+.loading-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e3e6f0;
+
+  .loading-content {
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    h5 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #6c757d;
     }
   }
 }
