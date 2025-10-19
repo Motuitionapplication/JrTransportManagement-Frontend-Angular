@@ -271,8 +271,8 @@
                   </div>
                   <div class="contact-info">
                     <h6>Phone Support</h6>
-                    <p>{{ supportInfo.phone }}</p>
-                    <small>Available {{ supportInfo.phoneHours }}</small>
+                    <p>{{ supportInfo?.phone }}</p>
+                    <small>Available {{ supportInfo?.phoneHours }}</small>
                   </div>
                 </div>
 
@@ -282,8 +282,8 @@
                   </div>
                   <div class="contact-info">
                     <h6>Email Support</h6>
-                    <p>{{ supportInfo.email }}</p>
-                    <small>Response within {{ supportInfo.emailResponseTime }}</small>
+                    <p>{{ supportInfo?.email }}</p>
+                    <small>Response within {{ supportInfo?.emailResponseTime }}</small>
                   </div>
                 </div>
 
@@ -314,7 +314,7 @@
                   </div>
                   <div class="contact-info">
                     <h6>Emergency Support</h6>
-                    <p>{{ supportInfo.emergencyPhone }}</p>
+                    <p>{{ supportInfo?.emergencyPhone }}</p>
                     <small>24/7 for urgent booking issues</small>
                   </div>
                 </div>
@@ -324,7 +324,7 @@
               <div class="office-hours">
                 <h6>Office Hours</h6>
                 <div class="hours-list">
-                  <div class="hour-item" *ngFor="let hour of supportInfo.officeHours">
+                  <div class="hour-item" *ngFor="let hour of supportInfo?.officeHours">
                     <span class="day">{{ hour.day }}</span>
                     <span class="time">{{ hour.hours }}</span>
                   </div>
@@ -620,7 +620,7 @@
                     </button>
                     <button 
                       class="btn btn-sm btn-outline-success"
-                      *ngIf="selectedTicket.status === 'open' || selectedTicket.status === 'pending'"
+                      *ngIf="selectedTicket.status === 'open' || selectedTicket.status === 'in-progress'"
                       (click)="closeTicket(selectedTicket.id)"
                     >
                       Close Ticket

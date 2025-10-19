@@ -1,77 +1,16 @@
-import { Component, OnInit } from '@angular/core';
-
-export interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'booking' | 'payment' | 'system';
-  category: 'booking' | 'payment' | 'system' | 'promotion' | 'support' | 'security';
-  isRead: boolean;
-  isImportant: boolean;
-  timestamp: Date;
-  createdAt: Date;
-  priority?: 'high' | 'medium' | 'low' | 'normal';
-  actionUrl?: string;
-  actionLabel?: string;
-  relatedId?: string;
-  icon?: string;
-  imageUrl?: string;
-  expiryDate?: Date;
-  details?: Array<{ label: string; value: string; }>;
-  actions?: Array<{ type: string; label: string; url?: string; icon?: string; }>;
-  hasDetails?: boolean;
-  expandedContent?: string;
-  relatedLinks?: Array<{ label: string; url: string; icon?: string; }>;
-}
-
-export interface NotificationSettings {
-  email: {
-    bookingUpdates: boolean;
-    paymentConfirmations: boolean;
-    promotions: boolean;
-    systemAlerts: boolean;
-    supportMessages: boolean;
-  };
-  sms: {
-    bookingUpdates: boolean;
-    paymentConfirmations: boolean;
-    emergencyAlerts: boolean;
-  };
-  push: {
-    bookingUpdates: boolean;
-    paymentConfirmations: boolean;
-    promotions: boolean;
-    systemAlerts: boolean;
-    supportMessages: boolean;
-  };
-  general: {
-    doNotDisturb: boolean;
-    doNotDisturbStart?: string;
-    doNotDisturbEnd?: string;
-    frequency: 'immediate' | 'hourly' | 'daily';
-  };
-}
-
-export interface NotificationSummary {
-  total: number;
-  unread: number;
-  important: number;
-  byCategory: {
-    booking: number;
-    payment: number;
-    system: number;
-    promotion: number;
-    support: number;
-    security: number;
-  };
-}
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { NotificationService, Notification, NotificationSettings, NotificationSummary, NotificationFilters } from '../../../../services/notification.service';
 
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   // Data
   notifications: Notification[] = [];
   filteredNotifications: Notification[] = [];
@@ -118,209 +57,197 @@ export class NotificationsComponent implements OnInit {
   bulkActionConfig: any = null;
   
   // Form and additional properties
-  notificationSettingsForm: any = null;
+  notificationSettingsForm!: FormGroup;
   bulkSelectionMode: boolean = false;
   hasMoreNotifications: boolean = false;
   emailNotificationOptions: Array<{ id: string; label: string; key: string; description?: string; }> = [];
   pushNotificationOptions: Array<{ id: string; label: string; key: string; description?: string; }> = [];
   smsNotificationOptions: Array<{ id: string; label: string; key: string; description?: string; }> = [];
 
-  constructor() {}
+  // Error handling
+  error: string | null = null;
+
+  constructor(
+    private notificationService: NotificationService,
+    private formBuilder: FormBuilder
+  ) {
+    this.initializeForm();
+    this.initializeNotificationOptions();
+  }
 
   ngOnInit(): void {
+    this.setupSubscriptions();
+    this.loadInitialData();
+    this.setupSearchDebounce();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeForm(): void {
+    this.notificationSettingsForm = this.formBuilder.group({
+      email_bookingUpdates: [true],
+      email_paymentConfirmations: [true],
+      email_promotions: [false],
+      email_systemAlerts: [true],
+      email_supportMessages: [true],
+      push_bookingUpdates: [true],
+      push_paymentConfirmations: [true],
+      push_promotions: [true],
+      push_systemAlerts: [true],
+      push_supportMessages: [true],
+      sms_bookingUpdates: [true],
+      sms_paymentConfirmations: [true],
+      sms_emergencyAlerts: [true],
+      digestFrequency: ['immediate'],
+      quietHours: ['none'],
+      autoDeleteAfter: ['never']
+    });
+  }
+
+  private initializeNotificationOptions(): void {
+    this.emailNotificationOptions = [
+      { id: 'email_bookingUpdates', key: 'bookingUpdates', label: 'Booking Updates', description: 'Get notified about booking confirmations, changes, and cancellations' },
+      { id: 'email_paymentConfirmations', key: 'paymentConfirmations', label: 'Payment Confirmations', description: 'Receive confirmations for successful payments and failed transactions' },
+      { id: 'email_promotions', key: 'promotions', label: 'Promotions & Offers', description: 'Get special offers, discounts, and promotional campaigns' },
+      { id: 'email_systemAlerts', key: 'systemAlerts', label: 'System Alerts', description: 'Important system updates and maintenance notifications' },
+      { id: 'email_supportMessages', key: 'supportMessages', label: 'Support Messages', description: 'Communication from customer support team' }
+    ];
+
+    this.pushNotificationOptions = [
+      { id: 'push_bookingUpdates', key: 'bookingUpdates', label: 'Booking Updates', description: 'Real-time booking status updates' },
+      { id: 'push_paymentConfirmations', key: 'paymentConfirmations', label: 'Payment Confirmations', description: 'Instant payment notifications' },
+      { id: 'push_promotions', key: 'promotions', label: 'Promotions', description: 'Special offers and time-sensitive deals' },
+      { id: 'push_systemAlerts', key: 'systemAlerts', label: 'System Alerts', description: 'Critical system notifications' },
+      { id: 'push_supportMessages', key: 'supportMessages', label: 'Support Messages', description: 'Support team communications' }
+    ];
+
+    this.smsNotificationOptions = [
+      { id: 'sms_bookingUpdates', key: 'bookingUpdates', label: 'Booking Updates', description: 'SMS alerts for booking status changes' },
+      { id: 'sms_paymentConfirmations', key: 'paymentConfirmations', label: 'Payment Confirmations', description: 'SMS payment confirmations' },
+      { id: 'sms_emergencyAlerts', key: 'emergencyAlerts', label: 'Emergency Alerts', description: 'Critical emergency notifications only' }
+    ];
+  }
+
+  private setupSubscriptions(): void {
+    // Subscribe to notifications
+    this.notificationService.notifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notifications => {
+        this.notifications = notifications;
+        this.filterNotifications();
+        this.calculateSummary();
+      });
+
+    // Subscribe to loading state
+    this.notificationService.loading$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(loading => {
+        this.isLoading = loading;
+      });
+
+    // Subscribe to errors
+    this.notificationService.error$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(error => {
+        this.error = error;
+      });
+
+    // Subscribe to unread count
+    this.notificationService.unreadCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(count => {
+        this.unreadCount = count;
+      });
+
+    // Subscribe to summary
+    this.notificationService.summary$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(summary => {
+        this.notificationSummary = summary;
+      });
+  }
+
+  private setupSearchDebounce(): void {
+    // Setup search debounce
+    this.notificationSettingsForm.get('searchQuery')?.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(query => {
+        this.searchQuery = query || '';
+        this.applyFilters();
+      });
+  }
+
+  private loadInitialData(): void {
     this.loadNotifications();
     this.loadNotificationSettings();
-    this.calculateSummary();
   }
 
   // Load notifications
-  loadNotifications(): void {
-    this.isLoading = true;
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      this.notifications = [
-        {
-          id: 'NOTIF-001',
-          title: 'Booking Confirmed',
-          message: 'Your transport booking JRT-2024-015 has been confirmed. Driver will arrive at 10:00 AM.',
-          type: 'success',
-          category: 'booking',
-          isRead: false,
-          isImportant: true,
-          timestamp: new Date(Date.now() - 30 * 60000), // 30 minutes ago
-          createdAt: new Date(Date.now() - 30 * 60000),
-          actionUrl: '/customer/my-bookings/JRT-2024-015',
-          actionLabel: 'View Booking',
-          relatedId: 'JRT-2024-015',
-          icon: 'fas fa-check-circle'
+  loadNotifications(forceRefresh: boolean = false): void {
+    const filters: NotificationFilters = {
+      category: this.categoryFilter !== 'all' ? this.categoryFilter : undefined,
+      type: this.typeFilter !== 'all' ? this.typeFilter : undefined,
+      status: this.statusFilter !== 'all' ? this.statusFilter : undefined,
+      search: this.searchQuery || undefined,
+      priority: this.selectedPriority !== 'all' ? this.selectedPriority : undefined
+    };
+
+    this.notificationService.loadNotifications(filters, this.currentPage, this.itemsPerPage, forceRefresh)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.totalPages = Math.ceil(result.total / this.itemsPerPage);
+          this.hasMoreNotifications = result.hasMore;
+          this.totalNotifications = result.total;
         },
-        {
-          id: 'NOTIF-002',
-          title: 'Payment Successful',
-          message: 'Payment of $145.00 has been processed successfully for booking JRT-2024-015.',
-          type: 'success',
-          category: 'payment',
-          isRead: true,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 2 * 60 * 60000), // 2 hours ago
-          createdAt: new Date(Date.now() - 2 * 60 * 60000),
-          actionUrl: '/customer/payment-history/PAY-001',
-          actionLabel: 'View Receipt',
-          relatedId: 'PAY-001',
-          icon: 'fas fa-credit-card'
-        },
-        {
-          id: 'NOTIF-003',
-          title: 'Driver En Route',
-          message: 'Your driver John Smith is on the way to pickup location. ETA: 15 minutes.',
-          type: 'info',
-          category: 'booking',
-          isRead: false,
-          isImportant: true,
-          timestamp: new Date(Date.now() - 45 * 60000), // 45 minutes ago
-          createdAt: new Date(Date.now() - 45 * 60000),
-          actionUrl: '/customer/track/JRT-2024-015',
-          actionLabel: 'Track Live',
-          relatedId: 'JRT-2024-015',
-          icon: 'fas fa-truck'
-        },
-        {
-          id: 'NOTIF-004',
-          title: 'Support Ticket Update',
-          message: 'Your support ticket SUP-2024-001 has been updated with a response from our team.',
-          type: 'info',
-          category: 'support',
-          isRead: false,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 3 * 60 * 60000), // 3 hours ago
-          createdAt: new Date(Date.now() - 3 * 60 * 60000),
-          actionUrl: '/customer/support/tickets/SUP-2024-001',
-          actionLabel: 'View Ticket',
-          relatedId: 'SUP-2024-001',
-          icon: 'fas fa-headset'
-        },
-        {
-          id: 'NOTIF-005',
-          title: 'Special Promotion',
-          message: '🎉 Get 20% off your next booking! Use code SAVE20. Valid until January 31st.',
-          type: 'info',
-          category: 'promotion',
-          isRead: true,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 6 * 60 * 60000), // 6 hours ago
-          createdAt: new Date(Date.now() - 6 * 60 * 60000),
-          actionUrl: '/customer/book-transport',
-          actionLabel: 'Book Now',
-          icon: 'fas fa-gift',
-          expiryDate: new Date('2024-01-31T23:59:59')
-        },
-        {
-          id: 'NOTIF-006',
-          title: 'Security Alert',
-          message: 'New login detected from Chrome on Windows. Location: Springfield, IL. If this wasn\'t you, please contact support.',
-          type: 'warning',
-          category: 'security',
-          isRead: false,
-          isImportant: true,
-          timestamp: new Date(Date.now() - 12 * 60 * 60000), // 12 hours ago
-          createdAt: new Date(Date.now() - 12 * 60 * 60000),
-          actionUrl: '/customer/profile/security',
-          actionLabel: 'Review Security',
-          icon: 'fas fa-shield-alt'
-        },
-        {
-          id: 'NOTIF-007',
-          title: 'Booking Cancelled',
-          message: 'Booking JRT-2024-012 has been cancelled due to vehicle breakdown. Full refund processed.',
-          type: 'warning',
-          category: 'booking',
-          isRead: true,
-          isImportant: true,
-          timestamp: new Date(Date.now() - 24 * 60 * 60000), // 1 day ago
-          createdAt: new Date(Date.now() - 24 * 60 * 60000),
-          actionUrl: '/customer/payment-history',
-          actionLabel: 'View Refund',
-          relatedId: 'JRT-2024-012',
-          icon: 'fas fa-times-circle'
-        },
-        {
-          id: 'NOTIF-008',
-          title: 'System Maintenance',
-          message: 'Scheduled maintenance on January 25th from 2:00 AM to 4:00 AM EST. Service may be temporarily unavailable.',
-          type: 'info',
-          category: 'system',
-          isRead: true,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60000), // 2 days ago
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60000),
-          icon: 'fas fa-tools'
-        },
-        {
-          id: 'NOTIF-009',
-          title: 'Rate Your Experience',
-          message: 'How was your recent transport service with driver Mike Johnson? Your feedback helps us improve.',
-          type: 'info',
-          category: 'booking',
-          isRead: false,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60000), // 3 days ago
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60000),
-          actionUrl: '/customer/rate-service/JRT-2024-010',
-          actionLabel: 'Rate Service',
-          relatedId: 'JRT-2024-010',
-          icon: 'fas fa-star'
-        },
-        {
-          id: 'NOTIF-010',
-          title: 'Welcome to JR Transport',
-          message: 'Welcome! Complete your profile to get personalized booking recommendations and faster service.',
-          type: 'info',
-          category: 'system',
-          isRead: true,
-          isImportant: false,
-          timestamp: new Date(Date.now() - 7 * 24 * 60 * 60000), // 1 week ago
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60000),
-          actionUrl: '/customer/profile',
-          actionLabel: 'Complete Profile',
-          icon: 'fas fa-user-plus'
+        error: (error) => {
+          console.error('Failed to load notifications:', error);
+          this.error = 'Failed to load notifications. Please try again.';
         }
-      ];
-      this.filterNotifications();
-      this.calculateSummary();
-      this.isLoading = false;
-    }, 1000);
+      });
   }
 
   // Load notification settings
   loadNotificationSettings(): void {
-    // Mock data - replace with actual API call
-    this.notificationSettings = {
-      email: {
-        bookingUpdates: true,
-        paymentConfirmations: true,
-        promotions: false,
-        systemAlerts: true,
-        supportMessages: true
-      },
-      sms: {
-        bookingUpdates: true,
-        paymentConfirmations: true,
-        emergencyAlerts: true
-      },
-      push: {
-        bookingUpdates: true,
-        paymentConfirmations: true,
-        promotions: true,
-        systemAlerts: true,
-        supportMessages: true
-      },
-      general: {
-        doNotDisturb: false,
-        doNotDisturbStart: '22:00',
-        doNotDisturbEnd: '08:00',
-        frequency: 'immediate'
-      }
-    };
+    this.notificationService.getNotificationSettings()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (settings) => {
+          this.notificationSettings = settings;
+          this.updateFormWithSettings(settings);
+        },
+        error: (error) => {
+          console.error('Failed to load notification settings:', error);
+        }
+      });
+  }
+
+  private updateFormWithSettings(settings: NotificationSettings): void {
+    if (this.notificationSettingsForm) {
+      this.notificationSettingsForm.patchValue({
+        email_bookingUpdates: settings.email.bookingUpdates,
+        email_paymentConfirmations: settings.email.paymentConfirmations,
+        email_promotions: settings.email.promotions,
+        email_systemAlerts: settings.email.systemAlerts,
+        email_supportMessages: settings.email.supportMessages,
+        push_bookingUpdates: settings.push.bookingUpdates,
+        push_paymentConfirmations: settings.push.paymentConfirmations,
+        push_promotions: settings.push.promotions,
+        push_systemAlerts: settings.push.systemAlerts,
+        push_supportMessages: settings.push.supportMessages,
+        sms_bookingUpdates: settings.sms.bookingUpdates,
+        sms_paymentConfirmations: settings.sms.paymentConfirmations,
+        sms_emergencyAlerts: settings.sms.emergencyAlerts,
+        digestFrequency: settings.general.frequency
+      });
+    }
   }
 
   // Calculate notification summary
@@ -414,43 +341,60 @@ export class NotificationsComponent implements OnInit {
 
   // Notification actions
   markAsRead(notificationId: string): void {
-    const notification = this.notifications.find(n => n.id === notificationId);
-    if (notification && !notification.isRead) {
-      notification.isRead = true;
-      this.calculateSummary();
-      console.log('Marked as read:', notificationId);
-      // API call to mark as read
-    }
+    this.notificationService.updateReadStatus(notificationId, true)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('Marked as read:', notificationId);
+        },
+        error: (error) => {
+          console.error('Failed to mark as read:', error);
+        }
+      });
   }
 
   markAsUnread(notificationId: string): void {
-    const notification = this.notifications.find(n => n.id === notificationId);
-    if (notification && notification.isRead) {
-      notification.isRead = false;
-      this.calculateSummary();
-      console.log('Marked as unread:', notificationId);
-      // API call to mark as unread
-    }
+    this.notificationService.updateReadStatus(notificationId, false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('Marked as unread:', notificationId);
+        },
+        error: (error) => {
+          console.error('Failed to mark as unread:', error);
+        }
+      });
   }
 
   toggleImportant(notificationId: string): void {
     const notification = this.notifications.find(n => n.id === notificationId);
     if (notification) {
-      notification.isImportant = !notification.isImportant;
-      this.calculateSummary();
-      console.log('Toggled important:', notificationId, notification.isImportant);
-      // API call to toggle important
+      this.notificationService.updateImportantStatus(notificationId, !notification.isImportant)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log('Toggled important:', notificationId);
+          },
+          error: (error) => {
+            console.error('Failed to toggle important:', error);
+          }
+        });
     }
   }
 
   deleteNotification(notificationId: string): void {
     if (confirm('Are you sure you want to delete this notification?')) {
-      this.notifications = this.notifications.filter(n => n.id !== notificationId);
-      this.selectedNotifications = this.selectedNotifications.filter(id => id !== notificationId);
-      this.filterNotifications();
-      this.calculateSummary();
-      console.log('Deleted notification:', notificationId);
-      // API call to delete
+      this.notificationService.deleteNotification(notificationId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.selectedNotifications = this.selectedNotifications.filter(id => id !== notificationId);
+            console.log('Deleted notification:', notificationId);
+          },
+          error: (error) => {
+            console.error('Failed to delete notification:', error);
+          }
+        });
     }
   }
 
@@ -477,19 +421,19 @@ export class NotificationsComponent implements OnInit {
     if (this.selectedNotifications.length === 0) return;
     
     this.isBulkUpdating = true;
-    // Mock API call
-    setTimeout(() => {
-      this.selectedNotifications.forEach(id => {
-        const notification = this.notifications.find(n => n.id === id);
-        if (notification) {
-          notification.isRead = true;
+    this.notificationService.bulkMarkAsRead(this.selectedNotifications)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.selectedNotifications = [];
+          this.isBulkUpdating = false;
+          console.log('Bulk marked as read');
+        },
+        error: (error) => {
+          console.error('Bulk mark as read failed:', error);
+          this.isBulkUpdating = false;
         }
       });
-      this.selectedNotifications = [];
-      this.calculateSummary();
-      this.isBulkUpdating = false;
-      console.log('Bulk marked as read');
-    }, 1000);
   }
 
   bulkDelete(): void {
@@ -497,43 +441,56 @@ export class NotificationsComponent implements OnInit {
     
     if (confirm(`Are you sure you want to delete ${this.selectedNotifications.length} notifications?`)) {
       this.isBulkUpdating = true;
-      // Mock API call
-      setTimeout(() => {
-        this.notifications = this.notifications.filter(n => !this.selectedNotifications.includes(n.id));
-        this.selectedNotifications = [];
-        this.filterNotifications();
-        this.calculateSummary();
-        this.isBulkUpdating = false;
-        console.log('Bulk deleted');
-      }, 1000);
+      this.notificationService.bulkDelete(this.selectedNotifications)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.selectedNotifications = [];
+            this.isBulkUpdating = false;
+            console.log('Bulk deleted');
+          },
+          error: (error) => {
+            console.error('Bulk delete failed:', error);
+            this.isBulkUpdating = false;
+          }
+        });
     }
   }
 
   markAllAsRead(): void {
     if (confirm('Mark all notifications as read?')) {
       this.isBulkUpdating = true;
-      // Mock API call
-      setTimeout(() => {
-        this.notifications.forEach(n => n.isRead = true);
-        this.calculateSummary();
-        this.isBulkUpdating = false;
-        console.log('All marked as read');
-      }, 1000);
+      this.notificationService.markAllAsRead()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.isBulkUpdating = false;
+            console.log('All marked as read');
+          },
+          error: (error) => {
+            console.error('Mark all as read failed:', error);
+            this.isBulkUpdating = false;
+          }
+        });
     }
   }
 
   clearAllNotifications(): void {
     if (confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
       this.isBulkUpdating = true;
-      // Mock API call
-      setTimeout(() => {
-        this.notifications = [];
-        this.selectedNotifications = [];
-        this.filterNotifications();
-        this.calculateSummary();
-        this.isBulkUpdating = false;
-        console.log('All notifications cleared');
-      }, 1000);
+      this.notificationService.clearAllNotifications()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.selectedNotifications = [];
+            this.isBulkUpdating = false;
+            console.log('All notifications cleared');
+          },
+          error: (error) => {
+            console.error('Clear all notifications failed:', error);
+            this.isBulkUpdating = false;
+          }
+        });
     }
   }
 
@@ -563,13 +520,52 @@ export class NotificationsComponent implements OnInit {
     
     this.isUpdatingSettings = true;
     
-    // Mock API call
-    setTimeout(() => {
-      console.log('Notification settings updated:', this.notificationSettings);
-      this.isUpdatingSettings = false;
-      this.showSettingsModal = false;
-      alert('Notification settings updated successfully!');
-    }, 1500);
+    // Convert form values to settings format
+    const formValues = this.notificationSettingsForm.value;
+    const settings: NotificationSettings = {
+      email: {
+        bookingUpdates: formValues.email_bookingUpdates,
+        paymentConfirmations: formValues.email_paymentConfirmations,
+        promotions: formValues.email_promotions,
+        systemAlerts: formValues.email_systemAlerts,
+        supportMessages: formValues.email_supportMessages
+      },
+      sms: {
+        bookingUpdates: formValues.sms_bookingUpdates,
+        paymentConfirmations: formValues.sms_paymentConfirmations,
+        emergencyAlerts: formValues.sms_emergencyAlerts
+      },
+      push: {
+        bookingUpdates: formValues.push_bookingUpdates,
+        paymentConfirmations: formValues.push_paymentConfirmations,
+        promotions: formValues.push_promotions,
+        systemAlerts: formValues.push_systemAlerts,
+        supportMessages: formValues.push_supportMessages
+      },
+      general: {
+        doNotDisturb: false,
+        doNotDisturbStart: '22:00',
+        doNotDisturbEnd: '08:00',
+        frequency: formValues.digestFrequency || 'immediate'
+      }
+    };
+
+    this.notificationService.updateNotificationSettings(settings)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationSettings = settings;
+          this.isUpdatingSettings = false;
+          this.showSettingsModal = false;
+          alert('Notification settings updated successfully!');
+          console.log('Notification settings updated');
+        },
+        error: (error) => {
+          console.error('Failed to update notification settings:', error);
+          this.isUpdatingSettings = false;
+          alert('Failed to update settings. Please try again.');
+        }
+      });
   }
 
   // Pagination
@@ -669,7 +665,8 @@ export class NotificationsComponent implements OnInit {
   }
 
   applyFilters(): void {
-    this.filterNotifications();
+    this.currentPage = 1; // Reset to first page when filtering
+    this.loadNotifications();
   }
 
   markSelectedAsRead(): void {
@@ -743,20 +740,43 @@ export class NotificationsComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.selectedFilter = 'all';
-    this.selectedType = 'all';
+    this.statusFilter = 'all';
+    this.categoryFilter = 'all';
+    this.typeFilter = 'all';
     this.selectedPriority = 'all';
     this.searchQuery = '';
+    this.activeTab = 'all';
     this.applyFilters();
   }
 
   loadMoreNotifications(): void {
-    this.isLoadingMore = true;
-    // Simulate loading more notifications
-    setTimeout(() => {
-      this.isLoadingMore = false;
-      console.log('Loaded more notifications');
-    }, 1000);
+    if (this.hasMoreNotifications && !this.isLoadingMore) {
+      this.isLoadingMore = true;
+      this.currentPage++;
+      
+      const filters: NotificationFilters = {
+        category: this.categoryFilter !== 'all' ? this.categoryFilter : undefined,
+        type: this.typeFilter !== 'all' ? this.typeFilter : undefined,
+        status: this.statusFilter !== 'all' ? this.statusFilter : undefined,
+        search: this.searchQuery || undefined,
+        priority: this.selectedPriority !== 'all' ? this.selectedPriority : undefined
+      };
+
+      this.notificationService.loadNotifications(filters, this.currentPage, this.itemsPerPage)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (result) => {
+            this.hasMoreNotifications = result.hasMore;
+            this.isLoadingMore = false;
+            console.log('Loaded more notifications');
+          },
+          error: (error) => {
+            console.error('Failed to load more notifications:', error);
+            this.isLoadingMore = false;
+            this.currentPage--; // Revert page increment on error
+          }
+        });
+    }
   }
 
   closeSettingsModal(): void {
@@ -812,5 +832,48 @@ export class NotificationsComponent implements OnInit {
       count: this.selectedNotifications.length
     };
     this.showBulkActionModal = true;
+  }
+
+  refreshNotifications(): void {
+    this.currentPage = 1;
+    this.loadNotifications(true); // Force refresh
+  }
+
+  // Export notifications to CSV
+  exportNotifications(): void {
+    try {
+      const csvData = this.convertToCSV(this.notifications);
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `notifications_${new Date().getTime()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export notifications. Please try again.');
+    }
+  }
+
+  private convertToCSV(notifications: Notification[]): string {
+    const headers = ['ID', 'Title', 'Message', 'Type', 'Category', 'Status', 'Priority', 'Created Date'];
+    const rows = notifications.map(notification => [
+      notification.id,
+      `"${notification.title.replace(/"/g, '""')}"`,
+      `"${notification.message.replace(/"/g, '""')}"`,
+      notification.type,
+      notification.category,
+      notification.isRead ? 'Read' : 'Unread',
+      notification.priority || 'Normal',
+      new Date(notification.createdAt).toLocaleDateString()
+    ]);
+
+    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
   }
 }
