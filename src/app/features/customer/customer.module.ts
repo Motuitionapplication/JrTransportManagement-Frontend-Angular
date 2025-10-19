@@ -39,24 +39,63 @@ import { NotificationsComponent } from './components/notifications/notifications
 
 // Routing
 import { CustomerRoutingModule } from './customer-routing.module';
-import { ProfileComponent } from './profile/profile.component';
-import { CustomerLayoutComponent } from './customer-layout/customer-layout.component';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { BookingRequestComponent } from './booking-request/booking-request.component';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { BookingHistoryComponent } from './booking-history/booking-history.component';
 
 @NgModule({
-  declarations: [CustomerComponent, ProfileComponent, CustomerLayoutComponent, BookingRequestComponent, BookingHistoryComponent],
-  imports: [CommonModule, CustomerRoutingModule,
-    FormsModule,
+  declarations: [
+    CustomerComponent,
+    CustomerDashboardComponent,
+    MyBookingsComponent,
+    BookTransportComponent,
+    MyTripsComponent,
+    TrackingComponent,
+    TransportHistoryComponent,
+    WalletComponent,
+    MessagesComponent,
+    PaymentHistoryComponent,
+    ProfileComponent,
+    SupportComponent,
+    NotificationsComponent
+  ],
+  imports: [
+    CommonModule,
+    RouterModule,
     ReactiveFormsModule,
-     MatFormFieldModule, 
-     MatProgressSpinnerModule,
-    MatSnackBarModule,         
-    MatProgressSpinnerModule],
-  exports: [CustomerComponent]
+    FormsModule,
+    CustomerRoutingModule,
+    // Angular Material Modules
+    MatCardModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatCheckboxModule,
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatBadgeModule,
+    MatMenuModule,
+    MatDialogModule,
+    MatStepperModule
+  ],
+  providers: [
+    TitleCasePipe
+  ],
+  exports: [
+    CustomerComponent,
+    CustomerDashboardComponent,
+    MyBookingsComponent,
+    BookTransportComponent,
+    MyTripsComponent,
+    TrackingComponent,
+    TransportHistoryComponent,
+    WalletComponent,
+    MessagesComponent,
+    PaymentHistoryComponent,
+    ProfileComponent,
+    SupportComponent,
+    NotificationsComponent
+  ]
 })
 export class CustomerModule {}
