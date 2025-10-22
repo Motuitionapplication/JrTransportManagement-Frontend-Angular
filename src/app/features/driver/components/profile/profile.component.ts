@@ -1,687 +1,704 @@
-import { Component, OnInit } from '@angular/core';
-import { DriverService } from '../../driver.service';
-import { AuthService } from 'src/app/services/auth.service';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import {
+  AbstractControl,
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import { EnvironmentService } from 'src/app/core/services/environment.service';
+import { DriverDTO } from 'src/app/models/driver.dto';
 import { Driver } from 'src/app/models/driver.model';
+import { AuthService } from 'src/app/services/auth.service';
+import { DriverService } from '../../driver.service';
+import { User } from 'src/app/models/auth.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
-type TabKey = 'personal' | 'vehicle' | 'work' | 'stats' | 'preferences';
+type UploadType = 'avatar' | 'license' | 'document';
 
-export interface DriverProfile {
-  id: string;
-  personalInfo: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: Date;
-    phone: string;
-    email: string;
-    address: {
-      street: string;
-      city: string;
-      state: string;
-      zipCode: string;
-      country: string;
-    };
-    emergencyContact: {
-      name: string;
-      relationship: string;
-      phone: string;
-    };
-  };
-  driverInfo: {
-    licenseNumber: string;
-    licenseClass: string;
-    licenseExpiry: Date;
-    yearsOfExperience: number;
-    languagesSpoken: string[];
-    specializations: string[];
-  };
-  vehicleInfo: {
-    make: string;
-    model: string;
-    year: number;
-    color: string;
-    plateNumber: string;
-    vin: string;
-    registrationExpiry: Date;
-    insuranceExpiry: Date;
-    capacity: number;
-    features: string[];
-  };
-  workInfo: {
-    joinDate: Date;
-    employeeId: string;
-    workingHours: {
-      monday: { start: string; end: string; };
-      tuesday: { start: string; end: string; };
-      wednesday: { start: string; end: string; };
-      thursday: { start: string; end: string; };
-      friday: { start: string; end: string; };
-      saturday: { start: string; end: string; };
-      sunday: { start: string; end: string; };
-    };
-    preferredAreas: string[];
-    maxDistance: number;
-  };
-  statistics: {
-    totalTrips: number;
-    totalEarnings: number;
-    averageRating: number;
-    completionRate: number;
-    onTimePercentage: number;
-    customerFeedbackCount: number;
-    monthsActive: number;
-  };
-  ratings: {
-    overall: number;
-    punctuality: number;
-    vehicleCondition: number;
-    customerService: number;
-    navigation: number;
-  };
-  preferences: {
-    notifications: {
-      tripRequests: boolean;
-      paymentUpdates: boolean;
-      scheduleChanges: boolean;
-      systemUpdates: boolean;
-      promotions: boolean;
-    };
-    privacy: {
-      shareLocation: boolean;
-      shareStats: boolean;
-      allowRatings: boolean;
-    };
-    language: string;
-    theme: 'light' | 'dark' | 'auto';
-  };
+interface DriverAttachment {
+  id?: string;
+  name?: string;
+  url?: string;
+  type?: string;
+  size?: number;
+  uploadedAt?: string;
 }
 
 @Component({
-  selector: 'app-profile',
+  selector: 'app-driver-profile',
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss']
+  styleUrls: ['./profile.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfileComponent implements OnInit {
-  profile: DriverProfile = {} as DriverProfile;
-  editMode = false;
-  activeTab: 'personal' | 'vehicle' | 'work' | 'stats' | 'preferences' = 'personal';
-  loading = true;
+export class ProfileComponent implements OnInit, OnDestroy {
+  loading = false;
   saving = false;
-  
-  originalProfile: DriverProfile = {} as DriverProfile;
-  
-  // Form validation
-  formErrors: { [key: string]: string } = {};
-  
-  // Available options
-  languages = [
-    'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 
-    'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hindi', 'Russian'
-  ];
-  
-  specializations = [
-    'Airport Transfers', 'Business Travel', 'Medical Transport', 
-    'School Runs', 'Long Distance', 'Night Shifts', 'Pet Friendly',
-    'Wheelchair Accessible', 'Luxury Service', 'Cargo Transport'
-  ];
-  
-  vehicleFeatures = [
-    'Air Conditioning', 'GPS Navigation', 'Wi-Fi', 'Phone Charger',
-    'Water Bottles', 'Wheelchair Accessible', 'Pet Friendly', 'Cargo Space',
-    'Child Seats', 'Music System', 'Leather Seats', 'Sunroof'
-  ];
-  
-  preferredAreas = [
-    'Downtown', 'Airport', 'Business District', 'Residential Areas',
-    'Shopping Centers', 'Universities', 'Hospitals', 'Industrial Zone',
-    'Suburbs', 'Tourist Areas', 'Transportation Hubs'
+  isCreatingProfile = false;
+  driver: Driver | null = null;
+  /** When true, inputs are enabled and user can modify fields */
+  editMode = false;
+  /** Snapshot used to restore values on Cancel */
+  private originalDriver: Driver | null = null;
+  serverError = '';
+  successMessage = '';
+  uploadErrors: string[] = [];
+  form: FormGroup;
+  currentUser: User | null = null;
+  profileAutoCreated = false;
+  /** Holds current profile photo URL for display */
+  profilePhotoUrl: string = '';
+  /** Avatar upload in-progress flag */
+  uploadingAvatar = false;
+
+  private autoCreateAttempted = false;
+
+  readonly maxFileSizeBytes = 5 * 1024 * 1024; // 5MB
+  readonly allowedMimeTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'application/pdf',
   ];
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
-    private driverService: DriverService,
-    private authService: AuthService
-  ) { }
+    private readonly fb: FormBuilder,
+    private readonly driverService: DriverService,
+    private readonly authService: AuthService,
+    private readonly environmentService: EnvironmentService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly snackBar: MatSnackBar
+  ) {
+    this.form = this.buildForm();
+  }
 
   ngOnInit(): void {
     this.loadProfile();
+    // Start in read-only mode until user taps Edit
+    this.setReadOnlyMode();
   }
 
-  loadProfile(): void {
-    this.loading = true;
-    const currentUser = this.authService.getCurrentUser();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    if (currentUser?.id != null) {
-      // Attempt to pull fresh data from backend; fallback to mock data if unavailable.
-      this.driverService.getDriverByUserId(currentUser.id.toString()).subscribe({
-        next: (driver) => {
-          this.hydrateProfileFromDriver(driver);
-          this.loading = false;
+  get attachments(): FormArray {
+    return this.form.get('attachments') as FormArray;
+  }
+
+  refresh(): void {
+    // COPILOT-FIX: allow another auto-create attempt when user explicitly refreshes
+    this.autoCreateAttempted = false;
+    this.profileAutoCreated = false;
+    this.loadProfile(true);
+  }
+
+  save(): void {
+    this.successMessage = '';
+    this.serverError = '';
+    this.uploadErrors = [];
+
+    // Only allow saving when in edit mode
+    if (!this.editMode) {
+      return;
+    }
+
+    if (!this.driver) {
+      this.serverError = 'No profile to update yet. Please refresh.';
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const payload = this.buildUpdatePayload();
+
+    if (this.environmentService.isLocal()) {
+      console.debug('[DriverProfile] update payload', payload);
+    }
+    this.saving = true;
+    this.cdr.markForCheck();
+
+    this.driverService
+      .updateDriver(this.driver.id, payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedDriver) => {
+          this.driver = updatedDriver;
+          this.patchForm(updatedDriver);
+          // Update snapshot and exit edit mode
+          this.originalDriver = updatedDriver;
+          this.setReadOnlyMode();
+          this.editMode = false;
+          this.successMessage = 'Profile updated';
+          this.saving = false;
+          this.cdr.markForCheck();
         },
-        error: (err) => {
-          console.warn('Driver profile fetch failed, using mock data instead.', err);
-          this.profile = this.generateMockProfile();
-          this.originalProfile = JSON.parse(JSON.stringify(this.profile));
-          this.loading = false;
-        }
+        error: (error) => {
+          this.saving = false;
+          this.serverError = this.extractErrorMessage(
+            error,
+            'We could not update your profile. Please try again later.'
+          );
+
+          if (error?.status === 401) {
+            this.authService.logout();
+          }
+
+          this.cdr.markForCheck();
+        },
       });
-    } else {
-      // No authenticated user context; use mock data but surface TODO for future guard.
-      console.warn('Driver profile: no authenticated user found. Falling back to mock profile.');
-      this.profile = this.generateMockProfile();
-      this.originalProfile = JSON.parse(JSON.stringify(this.profile));
-      this.loading = false;
-    }
   }
 
-  /**
-   * Minimal mapping from backend driver model to existing profile view model.
-   * TODO: replace mock scaffolding with full backend-driven structure once API stabilises.
-   */
-  private hydrateProfileFromDriver(driver: Driver): void {
-    const baseline = this.generateMockProfile();
-
-    baseline.id = driver.id ?? baseline.id;
-
-    const prof = driver.profile;
-    if (prof) {
-      baseline.personalInfo.firstName = prof.firstName || baseline.personalInfo.firstName;
-      baseline.personalInfo.lastName = prof.lastName || baseline.personalInfo.lastName;
-      baseline.personalInfo.email = prof.email || baseline.personalInfo.email;
-      baseline.personalInfo.phone = prof.phoneNumber || baseline.personalInfo.phone;
-
-      if (prof.address) {
-        baseline.personalInfo.address.street = prof.address.street || baseline.personalInfo.address.street;
-        baseline.personalInfo.address.city = prof.address.city || baseline.personalInfo.address.city;
-        baseline.personalInfo.address.state = prof.address.state || baseline.personalInfo.address.state;
-        baseline.personalInfo.address.zipCode = prof.address.pincode || baseline.personalInfo.address.zipCode;
-      }
-
-      if (prof.emergencyContact) {
-        baseline.personalInfo.emergencyContact.name = prof.emergencyContact.name || baseline.personalInfo.emergencyContact.name;
-        baseline.personalInfo.emergencyContact.relationship = prof.emergencyContact.relationship || baseline.personalInfo.emergencyContact.relationship;
-        baseline.personalInfo.emergencyContact.phone = prof.emergencyContact.phoneNumber || baseline.personalInfo.emergencyContact.phone;
-      }
+  onFileSelected(event: Event, type: UploadType): void {
+    if (!this.editMode) {
+      this.showToast('Enable Edit mode to upload files.', true);
+      return;
+    }
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length || !this.driver) {
+      return;
     }
 
-    const dl = driver.drivingLicense;
-    if (dl) {
-      baseline.driverInfo.licenseNumber = dl.licenseNumber || baseline.driverInfo.licenseNumber;
-      baseline.driverInfo.licenseExpiry = dl.expiryDate ? new Date(dl.expiryDate) : baseline.driverInfo.licenseExpiry;
+    const file = input.files[0];
+    input.value = '';
+
+    this.uploadErrors = [];
+    this.successMessage = '';
+
+    if (file.size > this.maxFileSizeBytes) {
+      this.uploadErrors.push('File is too large. Maximum allowed size is 5MB.');
+      this.cdr.markForCheck();
+      return;
     }
 
-    const experienceYears = driver.experience?.totalYears;
-    if (experienceYears != null) {
-      baseline.driverInfo.yearsOfExperience = experienceYears;
-    }
-
-    // Vehicle and statistics data remain mock-backed until dedicated endpoints are wired.
-    // TODO: hydrate vehicleInfo once driver API exposes assigned vehicle details.
-
-    this.profile = baseline;
-    this.originalProfile = JSON.parse(JSON.stringify(this.profile));
-  }
-
-  generateMockProfile(): DriverProfile {
-    return {
-      id: 'driver_001',
-      personalInfo: {
-        firstName: 'John',
-        lastName: 'Smith',
-        dateOfBirth: new Date('1985-06-15'),
-        phone: '+1 (555) 123-4567',
-        email: 'john.smith@email.com',
-        address: {
-          street: '123 Main Street, Apt 4B',
-          city: 'New York',
-          state: 'NY',
-          zipCode: '10001',
-          country: 'United States'
-        },
-        emergencyContact: {
-          name: 'Jane Smith',
-          relationship: 'Spouse',
-          phone: '+1 (555) 987-6543'
-        }
-      },
-      driverInfo: {
-        licenseNumber: 'D1234567890',
-        licenseClass: 'Class C',
-        licenseExpiry: new Date('2025-06-15'),
-        yearsOfExperience: 8,
-        languagesSpoken: ['English', 'Spanish'],
-        specializations: ['Airport Transfers', 'Business Travel', 'Long Distance']
-      },
-      vehicleInfo: {
-        make: 'Toyota',
-        model: 'Camry',
-        year: 2020,
-        color: 'Silver',
-        plateNumber: 'ABC-1234',
-        vin: '1HGBH41JXMN109186',
-        registrationExpiry: new Date('2024-12-31'),
-        insuranceExpiry: new Date('2024-08-15'),
-        capacity: 4,
-        features: ['Air Conditioning', 'GPS Navigation', 'Wi-Fi', 'Phone Charger']
-      },
-      workInfo: {
-        joinDate: new Date('2022-01-15'),
-        employeeId: 'EMP001234',
-        workingHours: {
-          monday: { start: '08:00', end: '18:00' },
-          tuesday: { start: '08:00', end: '18:00' },
-          wednesday: { start: '08:00', end: '18:00' },
-          thursday: { start: '08:00', end: '18:00' },
-          friday: { start: '08:00', end: '18:00' },
-          saturday: { start: '09:00', end: '15:00' },
-          sunday: { start: '', end: '' }
-        },
-        preferredAreas: ['Downtown', 'Airport', 'Business District'],
-        maxDistance: 50
-      },
-      statistics: {
-        totalTrips: 1247,
-        totalEarnings: 28750.50,
-        averageRating: 4.8,
-        completionRate: 98.5,
-        onTimePercentage: 94.2,
-        customerFeedbackCount: 523,
-        monthsActive: 24
-      },
-      ratings: {
-        overall: 4.8,
-        punctuality: 4.9,
-        vehicleCondition: 4.7,
-        customerService: 4.8,
-        navigation: 4.6
-      },
-      preferences: {
-        notifications: {
-          tripRequests: true,
-          paymentUpdates: true,
-          scheduleChanges: true,
-          systemUpdates: false,
-          promotions: false
-        },
-        privacy: {
-          shareLocation: true,
-          shareStats: true,
-          allowRatings: true
-        },
-        language: 'English',
-        theme: 'light'
-      }
-    };
-  }
-
-  // Tab navigation
-  switchTab(tab: TabKey): void {
-    if (this.editMode && this.hasUnsavedChanges()) {
-      const confirmSwitch = confirm('You have unsaved changes. Do you want to discard them?');
-      if (!confirmSwitch) return;
-      this.cancelEdit();
-    }
-    this.activeTab = tab;
-  }
-
-  // Edit mode management
-  enterEditMode(): void {
-    this.editMode = true;
-    this.originalProfile = JSON.parse(JSON.stringify(this.profile));
-    this.formErrors = {};
-  }
-
-  cancelEdit(): void {
-    this.profile = JSON.parse(JSON.stringify(this.originalProfile));
-    this.editMode = false;
-    this.formErrors = {};
-  }
-
-  saveProfile(): void {
-    if (!this.validateProfile()) {
+    if (!this.allowedMimeTypes.includes(file.type)) {
+      this.uploadErrors.push(
+        'Unsupported file format. Please upload an image or PDF file.'
+      );
+      this.cdr.markForCheck();
       return;
     }
 
     this.saving = true;
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Saving profile:', this.profile);
-      this.originalProfile = JSON.parse(JSON.stringify(this.profile));
-      this.editMode = false;
-      this.saving = false;
-      this.formErrors = {};
-      
-      // Show success message
-      alert('Profile updated successfully!');
-    }, 1500);
+    this.cdr.markForCheck();
+
+    if (this.environmentService.isLocal()) {
+      console.debug('[DriverProfile] uploading file', {
+        driverId: this.driver.id,
+        type,
+        fileName: file.name,
+        size: file.size,
+      });
+    }
+
+    this.driverService
+      .uploadDriverFile(this.driver.id, file, type)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.successMessage = 'File uploaded successfully.';
+          this.saving = false;
+          this.loadProfile(true, true);
+        },
+        error: (error) => {
+          this.saving = false;
+          const message = this.extractErrorMessage(
+            error,
+            'We could not upload the file. Please try again.'
+          );
+          this.uploadErrors = [message];
+
+          if (error?.status === 401) {
+            this.serverError = 'Session expired, please login again.';
+            this.authService.logout();
+          }
+
+          this.cdr.markForCheck();
+        },
+      });
   }
 
-  hasUnsavedChanges(): boolean {
-    return JSON.stringify(this.profile) !== JSON.stringify(this.originalProfile);
+  removeAttachment(index: number): void {
+    if (!this.editMode) {
+      this.showToast('Enable Edit mode to modify attachments.', true);
+      return;
+    }
+    const control = this.attachments.at(index);
+    if (!control) {
+      return;
+    }
+
+    const attachment = control.value as DriverAttachment;
+    this.attachments.removeAt(index);
+    if (this.driver) {
+      (this.driver as any).attachments = this.attachments.value;
+    }
+    this.uploadErrors = [
+      `Removed ${
+        attachment?.name ?? 'attachment'
+      } locally. Backend deletion will be wired soon.`,
+    ];
+    this.cdr.markForCheck();
   }
 
-  // Validation
-  validateProfile(): boolean {
-    this.formErrors = {};
-    let isValid = true;
-
-    // Validate personal info
-    if (!this.profile.personalInfo.firstName?.trim()) {
-      this.formErrors['firstName'] = 'First name is required';
-      isValid = false;
-    }
-
-    if (!this.profile.personalInfo.lastName?.trim()) {
-      this.formErrors['lastName'] = 'Last name is required';
-      isValid = false;
-    }
-
-    if (!this.profile.personalInfo.email?.trim()) {
-      this.formErrors['email'] = 'Email is required';
-      isValid = false;
-    } else if (!this.isValidEmail(this.profile.personalInfo.email)) {
-      this.formErrors['email'] = 'Please enter a valid email address';
-      isValid = false;
-    }
-
-    if (!this.profile.personalInfo.phone?.trim()) {
-      this.formErrors['phone'] = 'Phone number is required';
-      isValid = false;
-    }
-
-    // Validate driver info
-    if (!this.profile.driverInfo.licenseNumber?.trim()) {
-      this.formErrors['licenseNumber'] = 'License number is required';
-      isValid = false;
-    }
-
-    if (this.profile.driverInfo.licenseExpiry < new Date()) {
-      this.formErrors['licenseExpiry'] = 'License has expired';
-      isValid = false;
-    }
-
-    // Validate vehicle info
-    if (!this.profile.vehicleInfo.plateNumber?.trim()) {
-      this.formErrors['plateNumber'] = 'Plate number is required';
-      isValid = false;
-    }
-
-    if (this.profile.vehicleInfo.registrationExpiry < new Date()) {
-      this.formErrors['registrationExpiry'] = 'Vehicle registration has expired';
-      isValid = false;
-    }
-
-    if (this.profile.vehicleInfo.insuranceExpiry < new Date()) {
-      this.formErrors['insuranceExpiry'] = 'Vehicle insurance has expired';
-      isValid = false;
-    }
-
-    return isValid;
+  hasError(controlName: string, errorCode: string): boolean {
+    const control = this.form.get(controlName);
+    return !!control && control.touched && control.hasError(errorCode);
   }
 
-  isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  trackAttachment(_: number, item: AbstractControl): string {
+    const value = item.value as DriverAttachment;
+    return value?.id ?? value?.url ?? value?.name ?? Math.random().toString(36);
   }
 
-  // Utility methods
-  formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date);
+  focusFirstField(): void {
+    // COPILOT-FIX: quick CTA to guide drivers after auto-create completes
+    const firstInput = document.getElementById(
+      'firstName'
+    ) as HTMLInputElement | null;
+    firstInput?.focus();
   }
 
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  private buildForm(): FormGroup {
+    return this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      phoneNumber: [
+        '',
+        [Validators.required, Validators.pattern(/^[0-9+\s-]{7,15}$/)],
+      ],
+      city: [''],
+      addressLine: [''],
+      postalCode: ['', [this.optionalMinLengthValidator(4)]],
+      licenseNumber: ['', [this.optionalMinLengthValidator(4)]],
+      licenseExpiry: ['', [this.futureDateValidator()]],
+      avatarUrl: [''],
+      attachments: this.fb.array([]),
+    });
   }
 
-  getExperienceYears(): number {
-    const joinDate = new Date(this.profile.workInfo.joinDate);
-    const now = new Date();
-    return Math.floor((now.getTime() - joinDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
-  }
-
-  getRatingStars(rating: number): string[] {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push('★');
+  private loadProfile(forceReload = false, retainSuccessMessage = false): void {
+    if (this.loading && !forceReload) {
+      return;
     }
-    
-    if (hasHalfStar) {
-      stars.push('☆');
+
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) {
+      this.serverError = 'Not authenticated. Please login again.';
+      this.cdr.markForCheck();
+      return;
     }
-    
-    while (stars.length < 5) {
-      stars.push('☆');
+
+    this.currentUser = user;
+    if (this.environmentService.isLocal()) {
+      console.debug('[DriverProfile] loading profile for user', {
+        userId: user.id,
+        username: user.username,
+      });
     }
-    
-    return stars;
-  }
 
-  // Array management for multi-select fields
-  addLanguage(language: string): void {
-    if (language && !this.profile.driverInfo.languagesSpoken.includes(language)) {
-      this.profile.driverInfo.languagesSpoken.push(language);
+    this.loading = true;
+    this.serverError = '';
+    if (!retainSuccessMessage) {
+      this.successMessage = '';
     }
+    this.uploadErrors = [];
+    this.cdr.markForCheck();
+
+    this.driverService
+      .getDriverByUserId(user.id.toString())
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (driver) => {
+          this.driver = driver;
+          this.patchForm(driver);
+          this.originalDriver = driver;
+          this.setReadOnlyMode();
+          this.loading = false;
+          this.profileAutoCreated = retainSuccessMessage
+            ? this.profileAutoCreated
+            : false;
+          this.autoCreateAttempted = false;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.loading = false;
+          if (error?.status === 404) {
+            if (!this.autoCreateAttempted) {
+              this.autoCreateAttempted = true;
+              this.tryAutoCreateProfile(user);
+              return;
+            }
+            this.serverError = 'No profile found. Please contact support.';
+          } else if (error?.status === 401) {
+            this.serverError = 'Session expired, please login again.';
+            this.authService.logout();
+          } else {
+            this.serverError = this.extractErrorMessage(
+              error,
+              'Unable to load your profile at the moment.'
+            );
+          }
+          this.cdr.markForCheck();
+        },
+      });
   }
 
-  removeLanguage(language: string): void {
-    const index = this.profile.driverInfo.languagesSpoken.indexOf(language);
-    if (index > -1) {
-      this.profile.driverInfo.languagesSpoken.splice(index, 1);
+  private tryAutoCreateProfile(user: User): void {
+    if (this.isCreatingProfile) {
+      return;
     }
-  }
-
-  addSpecialization(specialization: string): void {
-    if (specialization && !this.profile.driverInfo.specializations.includes(specialization)) {
-      this.profile.driverInfo.specializations.push(specialization);
+    const userId = user.id?.toString();
+    if (!userId) {
+      this.serverError =
+        'We could not determine your driver account identifier.';
+      this.cdr.markForCheck();
+      return;
     }
-  }
 
-  removeSpecialization(specialization: string): void {
-    const index = this.profile.driverInfo.specializations.indexOf(specialization);
-    if (index > -1) {
-      this.profile.driverInfo.specializations.splice(index, 1);
+    const payload = {
+      userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    };
+
+    if (this.environmentService.isLocal()) {
+      console.debug(
+        '[DriverProfile] auto-creating minimal driver profile',
+        payload
+      );
     }
+
+    // COPILOT-FIX: guard against multiple concurrent auto-create attempts
+    this.isCreatingProfile = true;
+    this.serverError = '';
+    this.uploadErrors = [];
+    this.cdr.markForCheck();
+
+    this.driverService
+      .createMinimalDriver(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isCreatingProfile = false;
+          this.profileAutoCreated = true;
+          this.successMessage =
+            'Profile created automatically. Please review and save your details.';
+          this.showToast('Profile created. Please complete your details.');
+          this.cdr.markForCheck();
+          this.loadProfile(true, true);
+        },
+        error: (error) => {
+          this.isCreatingProfile = false;
+          this.serverError = this.extractErrorMessage(
+            error,
+            'We could not create a driver profile automatically. Please try again later.'
+          );
+          this.showToast(this.serverError, true);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
-  addVehicleFeature(feature: string): void {
-    if (feature && !this.profile.vehicleInfo.features.includes(feature)) {
-      this.profile.vehicleInfo.features.push(feature);
+  private showToast(message: string, isError = false): void {
+    this.snackBar.open(message, 'Dismiss', {
+      duration: isError ? 6000 : 4000,
+      horizontalPosition: 'right',
+      verticalPosition: 'top',
+    });
+  }
+
+  private patchForm(driver: Driver): void {
+    const driverAny = driver as any;
+    const profile = driverAny?.profile ?? {};
+    const address = profile?.address ?? driverAny?.address ?? {};
+    const license = driverAny?.drivingLicense ?? {};
+    const attachments = this.resolveAttachments(driver);
+
+    const firstName = profile?.firstName ?? driverAny?.firstName ?? '';
+    const lastName = profile?.lastName ?? driverAny?.lastName ?? '';
+    const email = profile?.email ?? driverAny?.email ?? '';
+    const phoneNumber = profile?.phoneNumber ?? driverAny?.phoneNumber ?? '';
+    const avatarUrl = profile?.profilePhoto ?? driverAny?.profilePhoto ?? '';
+
+    this.form.patchValue({
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      city: address?.city ?? '',
+      addressLine: address?.street ?? '',
+      postalCode: address?.pincode ?? '',
+      licenseNumber: license?.licenseNumber ?? '',
+      licenseExpiry: this.toDateInputValue(license?.expiryDate),
+      avatarUrl,
+    });
+
+    // keep a local display URL for avatar
+    this.profilePhotoUrl = avatarUrl;
+
+    this.setAttachments(attachments);
+    this.form.markAsPristine();
+    this.form.markAsUntouched();
+    this.form.updateValueAndValidity({ emitEvent: false });
+  }
+
+  /** Handle dedicated avatar selection, validates size/type, shows preview and uploads */
+  onAvatarFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length || !this.driver) {
+      return;
     }
-  }
+    const file = input.files[0];
+    input.value = '';
 
-  removeVehicleFeature(feature: string): void {
-    const index = this.profile.vehicleInfo.features.indexOf(feature);
-    if (index > -1) {
-      this.profile.vehicleInfo.features.splice(index, 1);
+    // Validate size/type: only png/jpg/jpeg up to 2MB
+    const validTypes = ['image/png', 'image/jpeg'];
+    const maxBytes = 2 * 1024 * 1024;
+    if (!validTypes.includes(file.type) || file.size > maxBytes) {
+      this.showToast('Only image files up to 2MB allowed', true);
+      return;
     }
+
+    // Temporary preview using object URL
+    const tempUrl = URL.createObjectURL(file);
+    const prevUrl = this.profilePhotoUrl;
+    this.profilePhotoUrl = tempUrl;
+    this.uploadingAvatar = true;
+    this.cdr.markForCheck();
+
+    this.driverService
+      .uploadProfilePhoto(this.driver.id, file)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (url: any) => {
+          // backend returns plain text URL
+          const newUrl = typeof url === 'string' ? url : url?.url ?? '';
+          this.profilePhotoUrl = newUrl || tempUrl;
+          this.form.patchValue({ avatarUrl: this.profilePhotoUrl });
+          this.successMessage = 'Profile photo updated!';
+          this.uploadingAvatar = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // Restore previous
+          this.profilePhotoUrl = prevUrl;
+          this.uploadingAvatar = false;
+          this.showToast('Failed to update profile photo', true);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
-  addPreferredArea(area: string): void {
-    if (area && !this.profile.workInfo.preferredAreas.includes(area)) {
-      this.profile.workInfo.preferredAreas.push(area);
+  /** Enter edit mode: enable form and focus first input */
+  enterEdit(): void {
+    if (this.loading || this.saving || this.isCreatingProfile) return;
+    if (!this.driver) return;
+    this.editMode = true;
+    this.form.enable({ emitEvent: false });
+    this.cdr.markForCheck();
+    // Focus after view updates
+    setTimeout(() => this.focusFirstField());
+  }
+
+  /** Cancel edits: revert to last snapshot, disable form */
+  cancelEdit(): void {
+    if (!this.editMode) return;
+    if (this.originalDriver) {
+      this.patchForm(this.originalDriver);
     }
+    this.setReadOnlyMode();
+    this.editMode = false;
+    this.cdr.markForCheck();
   }
 
-  removePreferredArea(area: string): void {
-    const index = this.profile.workInfo.preferredAreas.indexOf(area);
-    if (index > -1) {
-      this.profile.workInfo.preferredAreas.splice(index, 1);
+  /** Helper to disable the form without affecting action buttons */
+  private setReadOnlyMode(): void {
+    this.form.disable({ emitEvent: false });
+  }
+
+  private setAttachments(attachments: DriverAttachment[]): void {
+    this.attachments.clear();
+    attachments.forEach((attachment) => {
+      this.attachments.push(
+        this.fb.group({
+          id: [attachment.id ?? null],
+          name: [attachment.name ?? ''],
+          url: [attachment.url ?? ''],
+          type: [attachment.type ?? 'document'],
+          size: [attachment.size ?? null],
+          uploadedAt: [attachment.uploadedAt ?? null],
+        })
+      );
+    });
+  }
+
+  private resolveAttachments(driver: Driver): DriverAttachment[] {
+    const attachments = (driver as any)?.attachments as DriverAttachment[];
+    const documents = (driver as any)?.documents as DriverAttachment[];
+
+    if (Array.isArray(attachments) && attachments.length) {
+      return attachments;
     }
-  }
 
-  // File upload (for profile picture, documents, etc.)
-  uploadProfilePicture(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // TODO: Implement file upload
-      console.log('Uploading profile picture:', file);
+    if (Array.isArray(documents) && documents.length) {
+      return documents;
     }
+
+    return [];
   }
 
-  // Profile actions
-  downloadProfile(): void {
-    const dataStr = JSON.stringify(this.profile, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `driver-profile-${this.profile.id}.json`;
-    link.click();
-    
-    URL.revokeObjectURL(url);
+  private buildUpdatePayload(): Partial<DriverDTO> {
+    const value = this.form.value;
+    const payload: Partial<DriverDTO> & Record<string, unknown> = {
+      firstName: value.firstName?.trim(),
+      lastName: value.lastName?.trim(),
+      email: value.email?.trim(),
+      phoneNumber: value.phoneNumber?.trim(),
+      profile: {
+        firstName: value.firstName?.trim(),
+        lastName: value.lastName?.trim(),
+        email: value.email?.trim(),
+        phoneNumber: value.phoneNumber?.trim(),
+        profilePhoto: value.avatarUrl,
+        address: {
+          street: value.addressLine?.trim(),
+          city: value.city?.trim(),
+          pincode: value.postalCode?.trim(),
+        },
+      },
+      drivingLicense: {
+        licenseNumber: value.licenseNumber?.trim(),
+        expiryDate: value.licenseExpiry
+          ? new Date(value.licenseExpiry).toISOString()
+          : null,
+      },
+    };
+
+    return this.removeEmptyFields(payload);
   }
 
-  exportToPDF(): void {
-    // TODO: Implement PDF export
-    console.log('Exporting profile to PDF...');
+  private removeEmptyFields<T extends Record<string, unknown>>(obj: T): T {
+    const cleaned: Record<string, unknown> = {};
+    Object.entries(obj).forEach(([key, val]) => {
+      if (val === null || val === undefined || val === '') {
+        return;
+      }
+
+      if (Array.isArray(val)) {
+        cleaned[key] = val.length ? val : undefined;
+        return;
+      }
+
+      if (typeof val === 'object' && val !== null) {
+        const nested = this.removeEmptyFields(val as Record<string, unknown>);
+        if (Object.keys(nested).length) {
+          cleaned[key] = nested;
+        }
+        return;
+      }
+
+      cleaned[key] = val;
+    });
+
+    return cleaned as T;
   }
 
-  deleteAccount(): void {
-    const confirmDelete = confirm(
-      'Are you sure you want to delete your account? This action cannot be undone.'
-    );
-    
-    if (confirmDelete) {
-      const confirmPassword = prompt('Please enter your password to confirm account deletion:');
-      if (confirmPassword) {
-        // TODO: Implement account deletion
-        console.log('Deleting account...');
+  private extractErrorMessage(error: any, fallback: string): string {
+    if (!error) {
+      return fallback;
+    }
+
+    if (typeof error === 'string') {
+      return error;
+    }
+
+    if (error.userMessage) {
+      return error.userMessage;
+    }
+
+    if (error.error) {
+      if (typeof error.error === 'string') {
+        return error.error;
+      }
+      if (error.error.message) {
+        return error.error.message;
+      }
+      if (error.error.userMessage) {
+        return error.error.userMessage;
       }
     }
-  }
 
-  // Preferences management
-  updateNotificationPreference(type: keyof typeof this.profile.preferences.notifications, value: boolean): void {
-    this.profile.preferences.notifications[type] = value;
-  }
-
-  updatePrivacyPreference(type: keyof typeof this.profile.preferences.privacy, value: boolean): void {
-    this.profile.preferences.privacy[type] = value;
-  }
-
-  changeLanguage(language: string): void {
-    this.profile.preferences.language = language;
-    // TODO: Implement language change functionality
-  }
-
-  changeTheme(theme: 'light' | 'dark' | 'auto'): void {
-    this.profile.preferences.theme = theme;
-    // TODO: Implement theme change functionality
-  }
-
-  // Date update methods
-  updateDateOfBirth(event: any): void {
-    this.profile.personalInfo.dateOfBirth = new Date(event.target.value);
-  }
-
-  updateLicenseExpiry(event: any): void {
-    this.profile.driverInfo.licenseExpiry = new Date(event.target.value);
-  }
-
-  updateRegistrationExpiry(event: any): void {
-    this.profile.vehicleInfo.registrationExpiry = new Date(event.target.value);
-  }
-
-  updateInsuranceExpiry(event: any): void {
-    this.profile.vehicleInfo.insuranceExpiry = new Date(event.target.value);
-  }
-
-  switchTabHelper(tabKey: string): void {
-    this.switchTab(tabKey as TabKey);
-  }
-
-  // Helper methods for event handling
-  onLanguageChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target.value) {
-      this.addLanguage(target.value);
-      target.value = '';
+    if (error.message) {
+      return error.message;
     }
+
+    return fallback;
   }
 
-  onSpecializationChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target.value) {
-      this.addSpecialization(target.value);
-      target.value = '';
+  private toDateInputValue(value: string | Date | undefined): string {
+    if (!value) {
+      return '';
     }
-  }
 
-  onVehicleFeatureChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target.value) {
-      this.addVehicleFeature(target.value);
-      target.value = '';
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (Number.isNaN(date.getTime())) {
+      return '';
     }
+
+    return date.toISOString().split('T')[0];
   }
 
-  onPreferredAreaChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target.value) {
-      this.addPreferredArea(target.value);
-      target.value = '';
-    }
+  private futureDateValidator(): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = control.value;
+      if (!value) {
+        return null;
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return { invalidDate: true };
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (date < today) {
+        return { pastDate: true };
+      }
+
+      return null;
+    };
   }
 
-  onNotificationChange(key: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.updateNotificationPreference(key as 'tripRequests' | 'paymentUpdates' | 'scheduleChanges' | 'systemUpdates' | 'promotions', target.checked);
-  }
+  private optionalMinLengthValidator(length: number): ValidatorFn {
+    return (control: AbstractControl) => {
+      const value = (control.value ?? '').toString().trim();
+      if (!value) {
+        return null;
+      }
 
-  // Helper for working hours with proper typing
-  getWorkingHour(day: string, period: 'start' | 'end'): string {
-    const workingHours = this.profile.workInfo.workingHours as any;
-    return workingHours[day]?.[period] || '';
-  }
-
-  setWorkingHour(day: string, period: 'start' | 'end', value: string): void {
-    const workingHours = this.profile.workInfo.workingHours as any;
-    if (!workingHours[day]) {
-      workingHours[day] = { start: '', end: '' };
-    }
-    workingHours[day][period] = value;
-  }
-
-  // Helper method for working hours input events
-  onWorkingHourChange(event: Event, day: string, type: 'start' | 'end'): void {
-    const target = event.target as HTMLInputElement;
-    if (target) {
-      this.setWorkingHour(day, type, target.value);
-    }
-  }
-
-  // Helper method for privacy preference changes
-  onPrivacyPreferenceChange(event: Event, preference: string): void {
-    const target = event.target as HTMLInputElement;
-    if (target) {
-      // Use any type to avoid complex type assertion issues
-      this.updatePrivacyPreference(preference as any, target.checked);
-    }
-  }
-
-  // Helper method for language selection change
-  onLanguageSelectionChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target) {
-      this.changeLanguage(target.value);
-    }
-  }
-
-  // Helper method for theme change
-  onThemeChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target) {
-      this.changeTheme(target.value as 'light' | 'dark' | 'auto');
-    }
+      return value.length >= length
+        ? null
+        : { minLength: { requiredLength: length, actualLength: value.length } };
+    };
   }
 }

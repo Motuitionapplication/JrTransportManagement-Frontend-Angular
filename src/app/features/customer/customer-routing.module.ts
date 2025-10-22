@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { CustomerComponent } from './customer.component';
 import { CustomerDashboardComponent } from './components/customer-dashboard.component';
+import { CustomerDashboardComponent as DynamicDashboardComponent } from './components/dashboard/customer-dashboard.component';
 import { MyBookingsComponent } from './components/my-bookings/my-bookings.component';
 import { MyTripsComponent } from './components/my-trips/my-trips.component';
 import { TrackingComponent } from './components/tracking.component';
@@ -23,7 +24,7 @@ const routes: Routes = [
     data: { role: 'ROLE_CUSTOMER' },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: CustomerDashboardComponent },
+      { path: 'dashboard', component: DynamicDashboardComponent },
       { path: 'bookings', component: MyBookingsComponent },
       { path: 'my-bookings', redirectTo: 'bookings', pathMatch: 'full' },
       { path: 'trips', component: MyTripsComponent },

@@ -1,300 +1,239 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-
-export interface DashboardStats {
-  totalBookings: number;
-  completedTrips: number;
-  pendingTrips: number;
-  totalEarnings: number;
-  thisMonthEarnings: number;
-  averageRating: number;
-  totalDistance: number;
-  fuelExpense: number;
-}
-
-export interface RecentActivity {
-  id: string;
-  type: 'booking' | 'trip' | 'payment' | 'message';
-  title: string;
-  description: string;
-  timestamp: Date;
-  status?: string;
-  amount?: number;
-}
-
-export interface QuickAction {
-  title: string;
-  icon: string;
-  route: string;
-  color: string;
-  description: string;
-}
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, takeUntil, tap } from 'rxjs/operators';
+import {
+  DriverService,
+  DriverDashboardStats,
+  DriverTripSummary,
+  DriverBookingSummary,
+  DriverMessageSummary,
+  DriverChartData,
+} from '../../driver.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit {
-  // Dashboard data
-  stats: DashboardStats = {
-    totalBookings: 0,
-    completedTrips: 0,
-    pendingTrips: 0,
-    totalEarnings: 0,
-    thisMonthEarnings: 0,
-    averageRating: 0,
-    totalDistance: 0,
-    fuelExpense: 0
-  };
+export class DashboardComponent implements OnInit, OnDestroy {
+  loading = false;
+  error: string | null = null;
+  lastUpdated: Date | null = null;
 
-  recentActivities: RecentActivity[] = [];
-  quickActions: QuickAction[] = [
-    {
-      title: 'My Trips',
-      icon: 'fas fa-route',
-      route: '/driver/my-trips',
-      color: 'primary',
-      description: 'View and manage your trips'
-    },
-    {
-      title: 'New Bookings',
-      icon: 'fas fa-calendar-plus',
-      route: '/driver/bookings',
-      color: 'success',
-      description: 'Check new booking requests'
-    },
-    {
-      title: 'My Truck',
-      icon: 'fas fa-truck',
-      route: '/driver/my-truck',
-      color: 'info',
-      description: 'Manage vehicle information'
-    },
-    {
-      title: 'Earnings',
-      icon: 'fas fa-rupee-sign',
-      route: '/driver/earnings',
-      color: 'warning',
-      description: 'View earnings and payments'
-    },
-    {
-      title: 'Schedule',
-      icon: 'fas fa-calendar-alt',
-      route: '/driver/schedule',
-      color: 'secondary',
-      description: 'Manage your schedule'
-    },
-    {
-      title: 'Messages',
-      icon: 'fas fa-comments',
-      route: '/driver/messages',
-      color: 'primary',
-      description: 'View customer messages'
-    }
-  ];
+  dashboardStats: DriverDashboardStats | null = null;
+  recentTrips: DriverTripSummary[] = [];
+  activeBookings: DriverBookingSummary[] = [];
+  messageSummary: DriverMessageSummary[] = [];
+  chartData: DriverChartData | null = null;
+  chartBars: Array<{ label: string; value: number; heightPercent: number }> =
+    [];
 
-  // Loading states
-  isLoading = true;
-  statsLoading = true;
-  activitiesLoading = true;
+  readonly tripsLimit = 5;
+  readonly bookingsLimit = 5;
+  readonly messagesLimit = 5;
+  readonly math = Math;
 
-  constructor(private router: Router) {}
+  private destroy$ = new Subject<void>();
+  private cachedUserId: string | null = null;
+  private hasLoggedDashboardConnection = false;
+
+  constructor(
+    private driverService: DriverService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.loadDashboardData();
+    this.refresh();
   }
 
-  loadDashboardData(): void {
-    this.isLoading = true;
-    this.statsLoading = true;
-    this.activitiesLoading = true;
-
-    // Simulate API calls with mock data
-    this.loadStats();
-    this.loadRecentActivities();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  private loadStats(): void {
-    // Mock data - replace with actual service call
-    setTimeout(() => {
-      this.stats = {
-        totalBookings: 147,
-        completedTrips: 142,
-        pendingTrips: 5,
-        totalEarnings: 85600,
-        thisMonthEarnings: 12450,
-        averageRating: 4.7,
-        totalDistance: 18750,
-        fuelExpense: 15230
-      };
-      this.statsLoading = false;
-    }, 800);
+  refresh(): void {
+    this.error = null;
+    this.loading = true;
+    this.fetchDashboardData();
   }
 
-  private loadRecentActivities(): void {
-    // Mock data - replace with actual service call
-    setTimeout(() => {
-      this.recentActivities = [
-        {
-          id: '1',
-          type: 'booking',
-          title: 'New Booking Request',
-          description: 'Mumbai to Delhi - Heavy cargo',
-          timestamp: new Date(Date.now() - 10 * 60 * 1000), // 10 minutes ago
-          status: 'pending'
-        },
-        {
-          id: '2',
-          type: 'trip',
-          title: 'Trip Completed',
-          description: 'Pune to Bangalore delivery completed',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          status: 'completed',
-          amount: 8500
-        },
-        {
-          id: '3',
-          type: 'payment',
-          title: 'Payment Received',
-          description: 'Payment for trip #TR-2024-156',
-          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-          amount: 7200
-        },
-        {
-          id: '4',
-          type: 'message',
-          title: 'New Message',
-          description: 'Customer inquiry about delivery time',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-        },
-        {
-          id: '5',
-          type: 'trip',
-          title: 'Trip Started',
-          description: 'Chennai to Coimbatore pickup started',
-          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-          status: 'in-progress'
-        }
-      ];
-      this.activitiesLoading = false;
-      this.isLoading = false;
-    }, 1000);
-  }
-
-  // Navigation methods
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
-  }
-
-  // Quick actions
-  viewAllTrips(): void {
-    this.router.navigate(['/driver/my-trips']);
-  }
-
-  viewBookings(): void {
-    this.router.navigate(['/driver/bookings']);
-  }
-
-  viewEarnings(): void {
-    this.router.navigate(['/driver/earnings']);
-  }
-
-  viewMessages(): void {
+  navigateToMessages(): void {
     this.router.navigate(['/driver/messages']);
   }
 
-  // Activity handling
-  handleActivityClick(activity: RecentActivity): void {
-    switch (activity.type) {
-      case 'booking':
-        this.router.navigate(['/driver/bookings']);
-        break;
-      case 'trip':
-        this.router.navigate(['/driver/my-trips']);
-        break;
-      case 'payment':
-        this.router.navigate(['/driver/earnings']);
-        break;
-      case 'message':
-        this.router.navigate(['/driver/messages']);
-        break;
-    }
+  navigateToTrips(): void {
+    this.router.navigate(['/driver/my-trips']);
   }
 
-  // Utility methods
-  formatCurrency(amount: number): string {
+  navigateToBookings(): void {
+    this.router.navigate(['/driver/bookings']);
+  }
+
+  formatCurrency(value?: number | null): string {
+    if (value === undefined || value === null) {
+      return '—';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'INR'
-    }).format(amount);
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
-  formatDistance(distance: number): string {
-    return `${distance.toLocaleString()} km`;
-  }
-
-  getTimeAgo(date: Date): string {
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    } else if (diffMinutes > 0) {
-      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-    } else {
-      return 'Just now';
+  formatDateTime(value?: string | Date | null): string {
+    if (!value) {
+      return '—';
     }
+    const date = value instanceof Date ? value : new Date(value);
+    return new Intl.DateTimeFormat('en-IN', {
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
   }
 
-  getActivityIcon(type: string): string {
-    const icons = {
-      'booking': 'fas fa-calendar-plus',
-      'trip': 'fas fa-route',
-      'payment': 'fas fa-rupee-sign',
-      'message': 'fas fa-comment'
-    };
-    return icons[type as keyof typeof icons] || 'fas fa-info-circle';
+  trackById(_: number, item: { id?: string; conversationId?: string }): string {
+    return item?.id || item?.conversationId || `${_}`;
   }
 
-  getActivityColor(type: string): string {
-    const colors = {
-      'booking': 'text-primary',
-      'trip': 'text-success',
-      'payment': 'text-warning',
-      'message': 'text-info'
-    };
-    return colors[type as keyof typeof colors] || 'text-secondary';
+  private fetchDashboardData(): void {
+    const userId = this.resolveUserId();
+    if (!userId) {
+      this.error =
+        'Authentication required: Please log in as a driver to view dashboard.';
+      this.loading = false;
+      return;
+    }
+
+    const stats$ = this.driverService.getDashboardStats(userId).pipe(
+      tap(() => this.logDashboardConnection()),
+      catchError((error) => {
+        this.handlePartialError('dashboard stats', error);
+        return of(null);
+      })
+    );
+
+    const trips$ = this.driverService
+      .getRecentTrips(userId, this.tripsLimit)
+      .pipe(
+        tap(() => this.logDashboardConnection()),
+        catchError((error) => {
+          this.handlePartialError('recent trips', error);
+          return of([] as DriverTripSummary[]);
+        })
+      );
+
+    const bookings$ = this.driverService
+      .getActiveBookings(userId, this.bookingsLimit)
+      .pipe(
+        tap(() => this.logDashboardConnection()),
+        catchError((error) => {
+          this.handlePartialError('active bookings', error);
+          return of([] as DriverBookingSummary[]);
+        })
+      );
+
+    const messages$ = this.driverService
+      .getMessageSummary(userId, this.messagesLimit)
+      .pipe(
+        tap(() => this.logDashboardConnection()),
+        catchError((error) => {
+          this.handlePartialError('message summary', error);
+          return of([] as DriverMessageSummary[]);
+        })
+      );
+
+    const chart$ = this.driverService.getChartData(userId).pipe(
+      tap(() => this.logDashboardConnection()),
+      catchError((error) => {
+        this.handlePartialError('dashboard chart', error);
+        return of(null);
+      })
+    );
+
+    forkJoin({
+      stats: stats$,
+      trips: trips$,
+      bookings: bookings$,
+      messages: messages$,
+      chart: chart$,
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ stats, trips, bookings, messages, chart }) => {
+        this.dashboardStats = stats;
+        this.recentTrips = trips ?? [];
+        this.activeBookings = bookings ?? [];
+        this.messageSummary = messages ?? [];
+        this.chartData = chart;
+        this.buildChartBars(chart);
+        this.lastUpdated = new Date();
+        this.loading = false;
+      });
   }
 
-  getStatusBadgeClass(status: string): string {
-    const classes = {
-      'pending': 'badge bg-warning',
-      'completed': 'badge bg-success',
-      'in-progress': 'badge bg-primary',
-      'cancelled': 'badge bg-danger'
-    };
-    return classes[status as keyof typeof classes] || 'badge bg-secondary';
+  private resolveUserId(): string | null {
+    if (this.cachedUserId) {
+      return this.cachedUserId;
+    }
+    const user = this.authService.getCurrentUser();
+    if (!user || user.id === undefined || user.id === null) {
+      console.error(
+        '❌ No authenticated user found. User must be logged in to access dashboard.'
+      );
+      return null;
+    }
+    this.cachedUserId = user.id.toString();
+    return this.cachedUserId;
   }
 
-  refreshDashboard(): void {
-    this.loadDashboardData();
+  private handlePartialError(segment: string, error: unknown): void {
+    console.error(`Driver dashboard: failed to load ${segment}`, error);
+    let errorMessage = `Failed to load ${segment}`;
+
+    if (error && typeof error === 'object' && 'status' in error) {
+      const httpError = error as any;
+      if (httpError.status === 0) {
+        errorMessage += ': Backend server unavailable';
+      } else if (httpError.status === 404) {
+        errorMessage += ': Data not found';
+      } else if (httpError.status === 500) {
+        errorMessage += ': Server error';
+      } else {
+        errorMessage += `: HTTP ${httpError.status}`;
+      }
+    }
+
+    errorMessage += '.';
+    this.error = this.error ? `${this.error} ${errorMessage}` : errorMessage;
   }
 
-  // Calculate completion rate
-  getCompletionRate(): number {
-    if (this.stats.totalBookings === 0) return 0;
-    return Math.round((this.stats.completedTrips / this.stats.totalBookings) * 100);
+  private buildChartBars(data: DriverChartData | null): void {
+    if (!data?.series?.length) {
+      this.chartBars = [];
+      return;
+    }
+    const maxValue = Math.max(...data.series, 0);
+    this.chartBars = data.series.map((value, index) => {
+      const heightPercent =
+        maxValue > 0 ? Math.max(4, (value / maxValue) * 100) : 0;
+      return {
+        label: data.labels?.[index] ?? `Item ${index + 1}`,
+        value,
+        heightPercent,
+      };
+    });
   }
 
-  // Get earnings growth (mock calculation)
-  getEarningsGrowth(): number {
-    // Mock calculation - would be based on previous month data
-    return 15.7; // 15.7% growth
+  private logDashboardConnection(): void {
+    if (this.hasLoggedDashboardConnection) {
+      return;
+    }
+    this.hasLoggedDashboardConnection = true;
+    console.log('✅ Driver Dashboard connected to', environment.apiUrl);
   }
 }

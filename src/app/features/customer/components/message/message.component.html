@@ -1,0 +1,253 @@
+<div class="message-container">
+  <div class="message-header">
+    <h2 class="page-title">
+      <i class="fas fa-envelope me-2"></i>
+      Messages
+      <span *ngIf="unreadCount > 0" class="badge bg-danger ms-2">{{ unreadCount }}</span>
+    </h2>
+    <div class="header-actions">
+      <button class="btn btn-outline-success me-2" (click)="markAllAsRead()" 
+              [disabled]="unreadCount === 0">
+        <i class="fas fa-check-double me-1"></i>
+        Mark All Read
+      </button>
+      <button class="btn btn-primary" (click)="refreshMessages()">
+        <i class="fas fa-sync-alt me-1"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="showError" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="clearError()"></button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading messages...</p>
+  </div>
+
+  <!-- Message Content -->
+  <div *ngIf="!isLoading" class="row g-4">
+    <!-- Message List -->
+    <div class="col-lg-5">
+      <div class="message-list-card">
+        <!-- Search and Filters -->
+        <div class="search-filters mb-3">
+          <div class="input-group mb-2">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input type="text" class="form-control" placeholder="Search messages..."
+                   [(ngModel)]="searchTerm" (input)="onSearchChange()">
+          </div>
+            <select class="form-select" [(ngModel)]="filterType" (change)="onFilterChange()">
+            <option value="all">All Messages</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+            <option value="success">Success</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+            <option value="info">Info</option>
+          </select>
+        </div>
+
+        <!-- Results Summary -->
+        <div class="results-summary mb-3" *ngIf="!isLoading">
+          <small class="text-muted">
+            Showing {{ filteredMessages.length }} of {{ totalElements }} messages
+            <span *ngIf="totalPages > 1">(Page {{ currentPage + 1 }} of {{ totalPages }})</span>
+          </small>
+        </div>
+        </div>
+
+        <!-- Message List -->
+        <div class="message-list">
+          <div *ngIf="filteredMessages.length === 0" class="text-center py-4">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No messages found</p>
+          </div>
+
+          <div *ngFor="let message of filteredMessages" 
+               class="message-item"
+               [class.unread]="!message.isRead"
+               [class.selected]="selectedMessage?.id === message.id"
+               (click)="selectMessage(message)">
+            <div class="message-item-header">
+              <div class="d-flex align-items-center">
+                <i [class]="getPriorityIcon(message.priority)" class="me-2"></i>
+                <span class="sender" [class.fw-bold]="!message.isRead">{{ message.from }}</span>
+                <small class="text-muted ms-auto">{{ message.date | date:'MMM d, h:mm a' }}</small>
+              </div>
+            </div>
+            <div class="message-item-content">
+              <h6 class="subject" [class.fw-bold]="!message.isRead">
+                {{ message.subject }}
+                <i *ngIf="hasAttachments(message)" class="fas fa-paperclip ms-2 text-muted" title="Has attachments"></i>
+              </h6>
+              <p class="preview">{{ message.content | slice:0:100 }}{{ message.content.length > 100 ? '...' : '' }}</p>
+            </div>
+            <div class="message-item-footer">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                  <i [class]="getTypeIcon(message.type)"></i>
+                  <span *ngIf="message.bookingId" class="badge bg-light text-dark ms-2">
+                    <i class="fas fa-ticket-alt me-1"></i>{{ message.bookingId }}
+                  </span>
+                </div>
+                <div class="message-actions">
+                  <button class="btn btn-sm btn-outline-secondary me-1"
+                          [title]="message.isRead ? 'Mark as unread' : 'Mark as read'"
+                          (click)="$event.stopPropagation(); message.isRead ? markAsUnread(message.id) : markAsRead(message.id)">
+                    <i class="fas" [class.fa-envelope]="message.isRead" [class.fa-envelope-open]="!message.isRead"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger"
+                          title="Delete message"
+                          (click)="$event.stopPropagation(); deleteMessage(message.id)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Detail -->
+    <div class="col-lg-7">
+      <div class="message-detail-card">
+        <div *ngIf="!selectedMessage" class="no-message-selected">
+          <div class="text-center py-5">
+            <i class="fas fa-envelope-open fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Select a message to read</h4>
+            <p class="text-muted">Choose a message from the list to view its content</p>
+          </div>
+        </div>
+
+        <div *ngIf="selectedMessage" class="message-detail">
+          <div class="message-detail-header">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h4 class="message-title">{{ selectedMessage.subject }}</h4>
+                <div class="message-meta">
+                  <span class="sender">
+                    <i class="fas fa-user me-1"></i>
+                    {{ selectedMessage.from }}
+                  </span>
+                  <span class="date ms-3">
+                    <i class="fas fa-clock me-1"></i>
+                    {{ selectedMessage.date | date:'medium' }}
+                  </span>
+                </div>
+              </div>
+              <button class="btn btn-outline-secondary btn-sm" (click)="closeMessage()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="message-badges">
+              <span class="badge me-2" 
+                    [class.bg-success]="selectedMessage.type === 'success'"
+                    [class.bg-warning]="selectedMessage.type === 'warning'"
+                    [class.bg-danger]="selectedMessage.type === 'error'"
+                    [class.bg-info]="selectedMessage.type === 'info'">
+                <i [class]="getTypeIcon(selectedMessage.type)" class="me-1"></i>
+                {{ selectedMessage.type | titlecase }}
+              </span>
+              <span class="badge"
+                    [class.bg-danger]="selectedMessage.priority === 'high'"
+                    [class.bg-warning]="selectedMessage.priority === 'medium'"
+                    [class.bg-secondary]="selectedMessage.priority === 'low'">
+                <i [class]="getPriorityIcon(selectedMessage.priority)" class="me-1"></i>
+                {{ selectedMessage.priority | titlecase }} Priority
+              </span>
+            </div>
+          </div>
+
+          <div class="message-detail-content">
+            <p>{{ selectedMessage.content }}</p>
+          </div>
+
+          <div class="message-detail-actions mt-4">
+            <button class="btn btn-outline-primary me-2">
+              <i class="fas fa-reply me-1"></i>
+              Reply
+            </button>
+            <button class="btn btn-outline-secondary me-2">
+              <i class="fas fa-forward me-1"></i>
+              Forward
+            </button>
+            <button class="btn btn-outline-danger" (click)="deleteMessage(selectedMessage.id)">
+              <i class="fas fa-trash me-1"></i>
+              Delete
+            </button>
+          </div>
+
+          <!-- Attachments Section -->
+          <div *ngIf="hasAttachments(selectedMessage)" class="attachments-section mt-3">
+            <h6 class="section-title">
+              <i class="fas fa-paperclip me-2"></i>
+              Attachments
+            </h6>
+            <div class="attachments-list">
+              <div *ngFor="let attachment of selectedMessage.attachments" class="attachment-item">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-file me-2"></i>
+                    <span>{{ attachment.filename }}</span>
+                    <small class="text-muted ms-2">({{ (attachment.size / 1024) | number:'1.0-0' }} KB)</small>
+                  </div>
+                  <button class="btn btn-sm btn-outline-primary" 
+                          (click)="downloadAttachment(attachment.id, attachment.filename)">
+                    <i class="fas fa-download"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div *ngIf="totalPages > 1 && !isLoading" class="pagination-section mt-4">
+          <nav aria-label="Message pagination">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" [class.disabled]="!hasPrevious">
+                <button class="page-link" (click)="previousPage()" [disabled]="!hasPrevious">
+                  <i class="fas fa-chevron-left me-1"></i>Previous
+                </button>
+              </li>
+              
+              <li *ngFor="let page of getPageNumbers(); let i = index"
+                  class="page-item" 
+                  [class.active]="currentPage === page">
+                <button class="page-link" 
+                        (click)="goToPage(page)">
+                  {{ page + 1 }}
+                </button>
+              </li>
+              
+              <li class="page-item" [class.disabled]="!hasNext">
+                <button class="page-link" (click)="nextPage()" [disabled]="!hasNext">
+                  Next<i class="fas fa-chevron-right ms-1"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+          
+          <div class="pagination-info text-center mt-2">
+            <small class="text-muted">
+              Page {{ currentPage + 1 }} of {{ totalPages }} 
+              ({{ totalElements }} total messages)
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

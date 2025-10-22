@@ -11,9 +11,23 @@
       </div>
       <div class="col-md-4 text-end">
         <div class="header-actions">
-          <button class="btn btn-outline-light me-2" (click)="markAllAsRead()" [disabled]="unreadCount === 0">
-            <i class="fas fa-check-double me-2"></i>
-            Mark All Read
+          <button class="btn btn-outline-light me-2" (click)="refreshNotifications()" [disabled]="isLoading">
+            <i class="fas fa-sync-alt me-2" [class.fa-spin]="isLoading"></i>
+            Refresh
+          </button>
+          <button class="btn btn-outline-light me-2" (click)="exportNotifications()" [disabled]="notifications.length === 0">
+            <i class="fas fa-download me-2"></i>
+            Export
+          </button>
+          <button class="btn btn-outline-light me-2" (click)="markAllAsRead()" [disabled]="unreadCount === 0 || isBulkUpdating">
+            <span *ngIf="!isBulkUpdating">
+              <i class="fas fa-check-double me-2"></i>
+              Mark All Read
+            </span>
+            <span *ngIf="isBulkUpdating">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Processing...
+            </span>
           </button>
           <button class="btn btn-outline-light" (click)="openNotificationSettings()">
             <i class="fas fa-cog me-2"></i>
@@ -74,30 +88,53 @@
     </div>
   </div>
 
+  <!-- Error Display -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
   <!-- Filters and Actions -->
   <div class="notification-filters">
     <div class="row align-items-center">
       <div class="col-md-8">
         <div class="filter-controls">
+          <!-- Search Input -->
+          <div class="filter-group search-group">
+            <label class="filter-label">Search:</label>
+            <div class="input-group">
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Search notifications..." 
+                [(ngModel)]="searchQuery"
+                (input)="applyFilters()"
+              >
+              <button class="btn btn-outline-secondary" type="button" (click)="searchQuery = ''; applyFilters()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
           <div class="filter-group">
-            <label class="filter-label">Filter by:</label>
-            <select class="form-select" [(ngModel)]="selectedFilter" (change)="applyFilters()">
+            <label class="filter-label">Status:</label>
+            <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
               <option value="all">All Notifications</option>
               <option value="unread">Unread Only</option>
               <option value="read">Read Only</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
+              <option value="important">Important</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Type:</label>
-            <select class="form-select" [(ngModel)]="selectedType" (change)="applyFilters()">
-              <option value="all">All Types</option>
+            <label class="filter-label">Category:</label>
+            <select class="form-select" [(ngModel)]="categoryFilter" (change)="applyFilters()">
+              <option value="all">All Categories</option>
               <option value="booking">Booking Updates</option>
               <option value="payment">Payment Alerts</option>
-              <option value="account">Account Activity</option>
               <option value="system">System Messages</option>
-              <option value="promotional">Promotions</option>
+              <option value="promotion">Promotions</option>
+              <option value="support">Support</option>
+              <option value="security">Security</option>
             </select>
           </div>
           <div class="filter-group">
@@ -107,6 +144,7 @@
               <option value="high">High Priority</option>
               <option value="medium">Medium Priority</option>
               <option value="low">Low Priority</option>
+              <option value="normal">Normal</option>
             </select>
           </div>
         </div>
@@ -115,11 +153,19 @@
         <div class="bulk-actions" *ngIf="selectedNotifications.length > 0">
           <span class="selected-count">{{ selectedNotifications.length }} selected</span>
           <div class="btn-group ms-2">
-            <button class="btn btn-sm btn-outline-primary" (click)="markSelectedAsRead()">
-              <i class="fas fa-check me-1"></i>Mark Read
+            <button class="btn btn-sm btn-outline-primary" (click)="markSelectedAsRead()" [disabled]="isBulkUpdating">
+              <span *ngIf="!isBulkUpdating">
+                <i class="fas fa-check me-1"></i>Mark Read
+              </span>
+              <span *ngIf="isBulkUpdating">
+                <span class="spinner-border spinner-border-sm me-1"></span>Processing...
+              </span>
             </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="deleteSelected()">
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteSelected()" [disabled]="isBulkUpdating">
               <i class="fas fa-trash me-1"></i>Delete
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="selectedNotifications = []">
+              <i class="fas fa-times me-1"></i>Clear Selection
             </button>
           </div>
         </div>
@@ -147,7 +193,18 @@
 
   <!-- Notifications List -->
   <div class="notifications-content">
-    <div class="notifications-list" [class.grid-view]="viewMode === 'grid'" *ngIf="filteredNotifications.length > 0; else noNotifications">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading && notifications.length === 0">
+      <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="mt-3">Loading notifications...</h5>
+        <p class="text-muted">Please wait while we fetch your latest notifications.</p>
+      </div>
+    </div>
+
+    <div class="notifications-list" [class.grid-view]="viewMode === 'grid'" *ngIf="!isLoading && filteredNotifications.length > 0; else noNotifications">
       <div class="notification-item" 
            *ngFor="let notification of filteredNotifications; trackBy: trackByNotificationId"
            [class.unread]="!notification.isRead"
@@ -251,16 +308,21 @@
 
     <!-- No Notifications State -->
     <ng-template #noNotifications>
-      <div class="empty-state">
+      <div class="empty-state" *ngIf="!isLoading">
         <div class="empty-icon">
           <i class="fas fa-bell-slash"></i>
         </div>
         <h4>No notifications found</h4>
-        <p *ngIf="selectedFilter === 'all'">You have no notifications yet.</p>
-        <p *ngIf="selectedFilter !== 'all'">No notifications match your current filters.</p>
-        <div class="empty-actions" *ngIf="selectedFilter !== 'all'">
+        <p *ngIf="statusFilter === 'all' && categoryFilter === 'all' && !searchQuery">You have no notifications yet.</p>
+        <p *ngIf="statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery">No notifications match your current filters.</p>
+        <div class="empty-actions" *ngIf="statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery">
           <button class="btn btn-outline-primary" (click)="clearFilters()">
             <i class="fas fa-times me-2"></i>Clear Filters
+          </button>
+        </div>
+        <div class="empty-actions" *ngIf="statusFilter === 'all' && categoryFilter === 'all' && !searchQuery">
+          <button class="btn btn-outline-primary" (click)="refreshNotifications()">
+            <i class="fas fa-sync-alt me-2"></i>Refresh
           </button>
         </div>
       </div>
