@@ -1,5 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/auth.model';
 
 @Component({
   selector: 'app-admin',
@@ -17,17 +19,40 @@ export class AdminComponent implements OnInit {
   
   // User dropdown state
   showUserDropdown: boolean = false;
+  // Displayed user info
+  userName: string = 'Admin';
+  userRole: string = 'Admin';
+  userAvatarUrl: string = 'https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=AD';
+  userInitials: string = 'AD';
+  private currentUser: User | null = null;
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authService: AuthService) { }
 
   ngOnInit(): void {
     console.log('Admin component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
-    // Example: fetch owner name from service or storage
-    // this.ownerName = this.authService.getOwnerName();
-    // For now, set a default name
-    this.ownerName = 'John Doe';
+    // Redirect to dashboard by default if at root admin path
+    if (this.router.url === '/admin' || this.router.url === '/admin/') {
+      this.router.navigate(['/admin/dashboard']);
+    }
+
+    // Initialize displayed user from AuthService (if already stored)
+    try {
+      const stored = this.authService.getCurrentUser();
+      if (stored) this.setUser(stored);
+    } catch (e) { /* ignore */ }
+
+    // Subscribe to auth state updates to reflect login/logout
+    this.authService.authState$.subscribe(state => {
+      if (state && state.user) {
+        this.setUser(state.user);
+      } else {
+        // reset to defaults
+        this.userName = 'Admin';
+        this.userRole = 'Admin';
+        this.userAvatarUrl = 'https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=AD';
+        this.currentUser = null;
+      }
+    });
   }
 
   /**
@@ -238,12 +263,21 @@ export class AdminComponent implements OnInit {
   logout(): void {
     console.log('User logging out...');
     this.showUserDropdown = false;
-    
-    // Clear user session/token if needed
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('userSession');
-    
-    // Navigate to dashboard page
-    this.router.navigate(['/dashboard']);
+    // Use AuthService to clear stored auth
+    try { this.authService.logout(); } catch (e) { console.warn('logout failed', e); }
+    try { localStorage.removeItem('authToken'); } catch {}
+    try { sessionStorage.removeItem('userSession'); } catch {}
+    // Navigate to login page
+    this.router.navigate(['/auth/login']);
+  }
+
+  private setUser(user: User): void {
+    this.currentUser = user;
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Admin';
+    this.userName = name;
+    this.userRole = (user.roles && user.roles.length > 0) ? (user.roles.includes('ROLE_ADMIN') ? 'Admin' : user.roles[0]) : 'User';
+    const initials = (((user.firstName && user.firstName[0]) || (user.username && user.username[0]) || 'A') + ((user.lastName && user.lastName[0]) || '')).toUpperCase();
+    this.userInitials = initials;
+    this.userAvatarUrl = `https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=${initials}`;
   }
 }

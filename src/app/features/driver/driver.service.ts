@@ -175,8 +175,7 @@ export class DriverService {
   }
 
   /**
-   * Get driver details by associated userId.
-   * Endpoint expectation: GET /transport/drivers/profile/userId/{userId}
+   * Create a new driver
    */
   getDriverByUserId(userId: string): Observable<Driver> {
     const url = `${this.apiUrl}/profile/userId/${encodeURIComponent(userId)}`;

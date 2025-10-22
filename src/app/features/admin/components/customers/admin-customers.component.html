@@ -6,10 +6,15 @@
       <p class="subtitle">Manage and monitor customer accounts and activities</p>
     </div>
     <div class="header-actions">
-      <button mat-raised-button color="primary" (click)="exportCustomers()">
-        <mat-icon>download</mat-icon>
-        Export Data
-      </button>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button mat-raised-button color="primary" [matMenuTriggerFor]="exportMenu">
+          Export
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="export('pdf')">PDF</button>
+          <button mat-menu-item (click)="export('excel')">Excel</button>
+        </mat-menu>
+      </div>
     </div>
   </div>
 
@@ -84,7 +89,9 @@
             [(ngModel)]="searchQuery" 
             (keyup)="applySearchFilter()"
             placeholder="Name, email, phone, or company">
-          <mat-icon matSuffix>search</mat-icon>
+          <span matSuffix class="search-icon" aria-hidden="false" aria-label="Search">
+            <i class="fas fa-search"></i>
+          </span>
         </mat-form-field>
 
         <!-- Status Filter -->

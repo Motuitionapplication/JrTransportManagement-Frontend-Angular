@@ -26,11 +26,11 @@
         
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
+            <div class="initials-badge">{{ userInitials }}</div>
           </div>
           <div class="user-info">
-            <span class="user-name">{{ ownerName }}</span>
-            <span class="user-role">Owner</span>
+            <span class="user-name">{{ userName }}</span>
+            <span class="user-role">{{ userRole }}</span>
           </div>
           <button class="dropdown-toggle">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">

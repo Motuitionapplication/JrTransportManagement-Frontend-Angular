@@ -2,6 +2,11 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
+import { PaymentService } from 'src/app/features/payment/payment.service';
+// For export
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export interface Payment {
   id: number;
@@ -78,7 +83,10 @@ export class AdminPaymentsComponent implements OnInit {
     { value: 'bank-transfer', label: 'Bank Transfer' }
   ];
 
-  constructor() { }
+  loading = false;
+  error: string | null = null;
+
+  constructor(private paymentService: PaymentService) { }
 
   ngOnInit(): void {
     this.loadPayments();
@@ -106,117 +114,50 @@ export class AdminPaymentsComponent implements OnInit {
    * Load payments data (replace with actual service call)
    */
   loadPayments(): void {
-    const mockPayments: Payment[] = [
+    this.loading = true;
+    this.error = null;
+    this.paymentService.getAllPayments().subscribe({ next: (res) => {
+      const list = Array.isArray(res) ? res : [];
+      if (list.length > 0) {
+        this.dataSource.data = list.map((p: any) => ({
+          ...p,
+          transactionDate: p.transactionDate ? new Date(p.transactionDate) : new Date(),
+          refundDate: p.refundDate ? new Date(p.refundDate) : undefined
+        } as Payment));
+      } else {
+        console.warn('PaymentService returned no data; using mock fallback');
+        this.dataSource.data = this.getMockPayments();
+      }
+      this.loading = false;
+      this.calculatePaymentStats();
+    }, error: (err) => {
+      console.error('Failed to load payments', err);
+      this.error = 'Failed to load payments';
+      this.loading = false;
+      this.dataSource.data = this.getMockPayments();
+      this.calculatePaymentStats();
+    } });
+  }
+
+  private getMockPayments(): Payment[] {
+    // minimal fallback dataset (kept small)
+    return [
       {
         id: 1,
-        transactionId: 'TXN001234567',
+        transactionId: 'TXN001',
         bookingId: 'BK001',
         customerId: 101,
         customerName: 'John Doe',
-        driverId: 201,
-        driverName: 'Raj Kumar',
-        amount: 2500.00,
+        amount: 1200,
         paymentMethod: 'upi',
         status: 'completed',
-        transactionDate: new Date('2024-01-15T10:30:00'),
-        description: 'Transport service Mumbai to Pune',
-        commissionAmount: 250.00,
-        driverEarnings: 2000.00,
-        companyEarnings: 250.00,
-        paymentGateway: 'Razorpay',
-        gatewayTransactionId: 'razorpay_ABC123'
-      },
-      {
-        id: 2,
-        transactionId: 'TXN001234568',
-        bookingId: 'BK002',
-        customerId: 102,
-        customerName: 'Sarah Johnson',
-        driverId: 202,
-        driverName: 'Suresh Patel',
-        amount: 3500.00,
-        paymentMethod: 'card',
-        status: 'completed',
-        transactionDate: new Date('2024-01-14T15:45:00'),
-        description: 'Freight delivery Ahmedabad to Mumbai',
-        commissionAmount: 350.00,
-        driverEarnings: 2800.00,
-        companyEarnings: 350.00,
-        paymentGateway: 'Stripe',
-        gatewayTransactionId: 'stripe_DEF456'
-      },
-      {
-        id: 3,
-        transactionId: 'TXN001234569',
-        bookingId: 'BK003',
-        customerId: 103,
-        customerName: 'Mike Wilson',
-        amount: 1800.00,
-        paymentMethod: 'cash',
-        status: 'pending',
-        transactionDate: new Date('2024-01-14T09:20:00'),
-        description: 'Local delivery within Bangalore',
-        commissionAmount: 180.00,
-        driverEarnings: 1440.00,
-        companyEarnings: 180.00
-      },
-      {
-        id: 4,
-        transactionId: 'TXN001234570',
-        bookingId: 'BK004',
-        customerId: 104,
-        customerName: 'Emily Davis',
-        driverId: 203,
-        driverName: 'Amit Singh',
-        amount: 4200.00,
-        paymentMethod: 'upi',
-        status: 'refunded',
-        transactionDate: new Date('2024-01-13T14:10:00'),
-        description: 'Cancelled trip Delhi to Jaipur',
-        commissionAmount: 420.00,
-        driverEarnings: 3360.00,
-        companyEarnings: 420.00,
-        paymentGateway: 'Razorpay',
-        gatewayTransactionId: 'razorpay_GHI789',
-        refundAmount: 4200.00,
-        refundDate: new Date('2024-01-13T16:30:00'),
-        refundReason: 'Trip cancelled by customer'
-      },
-      {
-        id: 5,
-        transactionId: 'TXN001234571',
-        bookingId: 'BK005',
-        customerId: 105,
-        customerName: 'Robert Brown',
-        amount: 2800.00,
-        paymentMethod: 'wallet',
-        status: 'failed',
-        transactionDate: new Date('2024-01-12T11:00:00'),
-        description: 'Payment failed for Chennai to Coimbatore trip',
-        commissionAmount: 280.00,
-        driverEarnings: 2240.00,
-        companyEarnings: 280.00
-      },
-      {
-        id: 6,
-        transactionId: 'TXN001234572',
-        bookingId: 'BK006',
-        customerId: 106,
-        customerName: 'Lisa Anderson',
-        driverId: 204,
-        driverName: 'Vikash Sharma',
-        amount: 5500.00,
-        paymentMethod: 'bank-transfer',
-        status: 'disputed',
-        transactionDate: new Date('2024-01-11T08:30:00'),
-        description: 'Disputed charge for Kolkata to Bhubaneswar',
-        commissionAmount: 550.00,
-        driverEarnings: 4400.00,
-        companyEarnings: 550.00
+        transactionDate: new Date(),
+        description: 'Mock payment',
+        commissionAmount: 120,
+        driverEarnings: 1000,
+        companyEarnings: 120
       }
     ];
-
-    this.dataSource.data = mockPayments;
   }
 
   /**
@@ -279,9 +220,32 @@ export class AdminPaymentsComponent implements OnInit {
   /**
    * Export payments data
    */
-  exportPayments(): void {
-    console.log('Exporting payments data...');
-    // Implement export functionality (CSV, PDF, etc.)
+  export(mode: string): void {
+    if (mode === 'pdf') {
+      this.exportPDF();
+    } else if (mode === 'excel') {
+      this.exportExcel();
+    }
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    const head = [['ID', 'Amount', 'Date', 'Status']];
+    const body = this.dataSource.data.map(payment => [
+      payment.id,
+      payment.amount,
+      payment.transactionDate.toLocaleDateString(), // Format the date
+      payment.status
+    ]);
+    autoTable(doc, { head, body, styles: { fontSize: 8 } });
+    doc.save('payments_report.pdf');
+  }
+
+  exportExcel(): void {
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.dataSource.data);
+    const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payments');
+    XLSX.writeFile(workbook, 'payments_report.xlsx');
   }
 
   /**
@@ -289,7 +253,12 @@ export class AdminPaymentsComponent implements OnInit {
    */
   processRefund(payment: Payment): void {
     console.log('Processing refund for payment:', payment);
-    // Open refund processing dialog
+    const amountStr = prompt('Enter refund amount', String(payment.amount));
+  const reasonRaw = prompt('Enter refund reason', 'Customer requested refund');
+  const reason: string | undefined = reasonRaw === null ? undefined : reasonRaw;
+  const amount = amountStr ? Number(amountStr) : 0;
+    if (!amount || amount <= 0) return;
+    this.paymentService.processRefund(payment.id, { amount, reason }).subscribe({ next: (res) => { alert('Refund processed'); this.loadPayments(); }, error: (err) => { console.error(err); alert('Refund failed'); } });
   }
 
   /**
@@ -305,7 +274,8 @@ export class AdminPaymentsComponent implements OnInit {
    */
   retryPayment(payment: Payment): void {
     console.log('Retrying payment:', payment);
-    // Implement retry payment logic
+    if (!confirm('Retry this payment?')) return;
+    this.paymentService.retryPayment(payment.id).subscribe({ next: () => { alert('Retry initiated'); this.loadPayments(); }, error: (err) => { console.error(err); alert('Retry failed'); } });
   }
 
   /**
@@ -313,7 +283,9 @@ export class AdminPaymentsComponent implements OnInit {
    */
   resolveDispute(payment: Payment): void {
     console.log('Resolving dispute for payment:', payment);
-    // Open dispute resolution dialog
+    const resolution = prompt('Enter resolution note', 'Resolved in favor of customer');
+    if (!resolution) return;
+    this.paymentService.resolveDispute(payment.id, { resolution }).subscribe({ next: () => { alert('Dispute resolved'); this.loadPayments(); }, error: (err) => { console.error(err); alert('Resolve failed'); } });
   }
 
   /**
@@ -321,7 +293,7 @@ export class AdminPaymentsComponent implements OnInit {
    */
   sendPaymentReminder(payment: Payment): void {
     console.log('Sending payment reminder:', payment);
-    // Implement payment reminder functionality
+    this.paymentService.sendReminder(payment.id).subscribe({ next: () => { alert('Reminder sent'); }, error: (err) => { console.error(err); alert('Failed to send reminder'); } });
   }
 
   /**
@@ -329,7 +301,10 @@ export class AdminPaymentsComponent implements OnInit {
    */
   viewReceipt(payment: Payment): void {
     console.log('Viewing receipt for payment:', payment);
-    // Open receipt in new window or modal
+    this.paymentService.getReceipt(payment.id).subscribe({ next: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }, error: (err) => { console.error(err); alert('Failed to load receipt'); } });
   }
 
   /**

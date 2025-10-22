@@ -2,9 +2,19 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
+import { VehicleService } from 'src/app/services/vehicle.service';
+import { Vehicle } from 'src/app/models/vehicle.model';
+// For Excel export
+import * as XLSX from 'xlsx';
+// For PDF export
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { MatDialog } from '@angular/material/dialog';
+import { VehicleDialogComponent } from '../../../Fetched/vehicle-dialog/vehicle-dialog.component';
 
 export interface Truck {
   id: number;
+  originalId?: string; // keep reference to Vehicle.id when mapped from backend
   vehicleNumber: string;
   model: string;
   brand: string;
@@ -40,6 +50,9 @@ export class AdminTrucksComponent implements OnInit {
   // Table configuration
   displayedColumns: string[] = ['vehicleNumber', 'model', 'driver', 'status', 'location', 'maintenance', 'trips', 'revenue', 'actions'];
   dataSource = new MatTableDataSource<Truck>();
+
+  // Add a property for trucks if not already declared
+  trucks: any[] = [];
 
   // Filter states
   statusFilter: string = 'all';
@@ -83,7 +96,10 @@ export class AdminTrucksComponent implements OnInit {
     { value: 'hybrid', label: 'Hybrid' }
   ];
 
-  constructor() { }
+  loading = false;
+  error: string | null = null;
+
+  constructor(private vehicleService: VehicleService, private dialog: MatDialog) { }
 
   ngOnInit(): void {
     this.loadTrucks();
@@ -111,7 +127,60 @@ export class AdminTrucksComponent implements OnInit {
    * Load trucks data (replace with actual service call)
    */
   loadTrucks(): void {
-    const mockTrucks: Truck[] = [
+    this.loading = true;
+    this.error = null;
+    this.vehicleService.getAllVehicles().subscribe({ next: (list) => {
+      if (list && list.length > 0) {
+        // Map vehicles to Truck view and filter only trucks
+        const trucks = list.filter(v => v.vehicleType === 'truck').map(v => this.mapToTruck(v));
+        this.dataSource.data = trucks;
+      } else {
+        // Fallback to previous mock data if service has no vehicles yet
+        console.warn('VehicleService returned no vehicles, using local mock data');
+        this.dataSource.data = this.getMockTrucks();
+      }
+      this.loading = false;
+      this.calculateFleetStats();
+    }, error: (err) => {
+      console.error('Failed to load vehicles', err);
+      this.error = 'Failed to load vehicles';
+      this.loading = false;
+      this.dataSource.data = this.getMockTrucks();
+      this.calculateFleetStats();
+    } });
+  }
+
+  // Map backend Vehicle -> local Truck view
+  private mapToTruck(v: Vehicle): Truck {
+    return {
+      id: Number(v.id) || 0,
+      originalId: v.id,
+      vehicleNumber: v.vehicleNumber,
+      model: v.model,
+      brand: v.manufacturer || '',
+      year: v.year || new Date().getFullYear(),
+      capacity: v.capacity || 0,
+      fuelType: (v.fareDetails && v.fareDetails.movingInsurance) ? 'diesel' as any : 'diesel' as any,
+      status: (v.status === 'maintenance' ? 'maintenance' : (v.status === 'inactive' ? 'inactive' : 'active')) as any,
+      driverId: v.driverId ? Number(v.driverId) : undefined,
+      driverName: undefined,
+      currentLocation: v.currentLocation ? v.currentLocation.address : undefined,
+      lastMaintenanceDate: v.nextServiceDate || new Date(),
+      nextMaintenanceDate: v.nextServiceDate || new Date(),
+      totalTrips: v.maintenanceHistory ? v.maintenanceHistory.length * 10 : 0,
+      totalKilometers: 0,
+      fuelEfficiency: v.fareDetails?.perKmRate ? Math.max(8, 100 / v.fareDetails.perKmRate) : 12,
+      registrationDate: v.createdAt || new Date(),
+      insuranceExpiryDate: v.documents?.insurance?.expiryDate || new Date(),
+      permitExpiryDate: v.documents?.permit?.expiryDate || new Date(),
+      availabilityStatus: (v.status === 'in_transit' ? 'on-trip' : (v.status === 'available' ? 'available' : 'unavailable')) as any,
+      monthlyRevenue: v.fareDetails?.wholeFare || 0
+    };
+  }
+
+  // Provide the previous mock trucks when backend is empty
+  private getMockTrucks(): Truck[] {
+    return [
       {
         id: 1,
         vehicleNumber: 'MH-12-AB-1234',
@@ -157,75 +226,8 @@ export class AdminTrucksComponent implements OnInit {
         permitExpiryDate: new Date('2024-12-31'),
         availabilityStatus: 'available',
         monthlyRevenue: 98500
-      },
-      {
-        id: 3,
-        vehicleNumber: 'KA-03-EF-9012',
-        model: 'Mahindra Bolero Pickup',
-        brand: 'Mahindra',
-        year: 2023,
-        capacity: 1.5,
-        fuelType: 'diesel',
-        status: 'maintenance',
-        currentLocation: 'Bangalore Service Center',
-        lastMaintenanceDate: new Date('2024-01-20'),
-        nextMaintenanceDate: new Date('2024-04-20'),
-        totalTrips: 156,
-        totalKilometers: 28950,
-        fuelEfficiency: 16.8,
-        registrationDate: new Date('2023-01-25'),
-        insuranceExpiryDate: new Date('2025-01-24'),
-        permitExpiryDate: new Date('2024-12-31'),
-        availabilityStatus: 'maintenance',
-        monthlyRevenue: 65200
-      },
-      {
-        id: 4,
-        vehicleNumber: 'DL-1C-GH-3456',
-        model: 'Eicher Pro 1049',
-        brand: 'Eicher Motors',
-        year: 2022,
-        capacity: 4.99,
-        fuelType: 'diesel',
-        status: 'active',
-        driverId: 103,
-        driverName: 'Amit Singh',
-        currentLocation: 'New Delhi',
-        lastMaintenanceDate: new Date('2023-11-30'),
-        nextMaintenanceDate: new Date('2024-02-28'),
-        totalTrips: 298,
-        totalKilometers: 67230,
-        fuelEfficiency: 13.1,
-        registrationDate: new Date('2022-05-08'),
-        insuranceExpiryDate: new Date('2024-05-07'),
-        permitExpiryDate: new Date('2024-12-31'),
-        availabilityStatus: 'available',
-        monthlyRevenue: 142300
-      },
-      {
-        id: 5,
-        vehicleNumber: 'TN-07-IJ-7890',
-        model: 'Force Traveller',
-        brand: 'Force Motors',
-        year: 2020,
-        capacity: 2.5,
-        fuelType: 'diesel',
-        status: 'inactive',
-        currentLocation: 'Chennai Depot',
-        lastMaintenanceDate: new Date('2023-09-15'),
-        nextMaintenanceDate: new Date('2024-01-15'),
-        totalTrips: 412,
-        totalKilometers: 89640,
-        fuelEfficiency: 11.9,
-        registrationDate: new Date('2020-11-12'),
-        insuranceExpiryDate: new Date('2024-11-11'),
-        permitExpiryDate: new Date('2024-12-31'),
-        availabilityStatus: 'unavailable',
-        monthlyRevenue: 0
       }
     ];
-
-    this.dataSource.data = mockTrucks;
   }
 
   /**
@@ -297,7 +299,38 @@ export class AdminTrucksComponent implements OnInit {
    */
   exportFleetData(): void {
     console.log('Exporting fleet data...');
-    // Implement export functionality (CSV, PDF, etc.)
+    const rows = this.dataSource.data.map(t => ({
+      VehicleNumber: t.vehicleNumber,
+      Model: `${t.brand} ${t.model}`,
+      Year: t.year,
+      CapacityTons: t.capacity,
+      FuelType: t.fuelType,
+      Status: t.status,
+      Driver: t.driverName || '',
+      Location: t.currentLocation || '',
+      MonthlyRevenue: t.monthlyRevenue
+    }));
+
+    // Excel
+    try {
+      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Fleet');
+      XLSX.writeFile(wb, 'fleet.xlsx');
+    } catch (err) {
+      console.error('Failed to export fleet XLSX', err);
+    }
+
+    // PDF
+    try {
+      const doc = new jsPDF({ unit: 'pt' });
+      const head = [Object.keys(rows[0] || {})];
+      const body = rows.map(r => Object.values(r));
+      autoTable(doc, { head, body, styles: { fontSize: 8 } });
+      doc.save('fleet.pdf');
+    } catch (err) {
+      console.error('Failed to export fleet PDF', err);
+    }
   }
 
   /**
@@ -305,7 +338,60 @@ export class AdminTrucksComponent implements OnInit {
    */
   addNewTruck(): void {
     console.log('Adding new truck...');
-    // Open add truck dialog or navigate to form
+    // Very small create flow: open a prompt for vehicle number and create a minimal vehicle record
+    const vehicleNumber = prompt('Enter vehicle number (eg: MH-12-AB-1234)');
+    if (!vehicleNumber) return;
+    const payload: Partial<Vehicle> = {
+      vehicleNumber,
+      vehicleType: 'truck',
+      model: 'New Model',
+      manufacturer: 'Unknown',
+      year: new Date().getFullYear(),
+      capacity: 0,
+      ownerId: '0',
+      documents: {
+        registration: { number: '', expiryDate: new Date() },
+        insurance: { policyNumber: '', expiryDate: new Date(), provider: '' },
+        permit: { number: '', expiryDate: new Date() },
+        fitness: { certificateNumber: '', expiryDate: new Date() },
+        pollution: { certificateNumber: '', expiryDate: new Date() }
+      },
+      status: 'available',
+      fareDetails: { perKmRate: 0, wholeFare: 0, sharingFare: 0, gstIncluded: false, movingInsurance: 0 },
+      maintenanceHistory: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isActive: true
+    } as any;
+
+    this.vehicleService.createVehicle(payload as any).subscribe({ next: (v) => {
+      alert('Truck created');
+      this.loadTrucks();
+    }, error: (err) => { console.error('Failed to create vehicle', err); alert('Failed to create truck'); } });
+  }
+
+  // Updated onAddTruck method with proper type annotations
+  onAddTruck(): void {
+    const dialogRef = this.dialog.open(VehicleDialogComponent, {
+      width: '400px',
+      data: {} // Pass any default data if needed
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.vehicleService.addTruck(result).subscribe(
+          (res: any) => {
+            this.trucks.push(res);
+            // Optionally show a success message
+            console.log('Truck added successfully');
+          },
+          (error: any) => {
+            console.error('Error adding truck:', error);
+            alert('Failed to add truck');
+          }
+        );
+      }
+    });
   }
 
   /**
@@ -321,7 +407,16 @@ export class AdminTrucksComponent implements OnInit {
    */
   editTruck(truck: Truck): void {
     console.log('Editing truck:', truck);
-    // Navigate to truck edit page or open modal
+    const newModel = prompt('Enter new model name', truck.model);
+    if (!newModel) return;
+    // update via service if originalId available
+    if (truck.originalId) {
+      this.vehicleService.updateVehicle(truck.originalId, { model: newModel }).subscribe({ next: () => { alert('Updated'); this.loadTrucks(); }, error: (err) => { console.error(err); alert('Update failed'); } });
+    } else {
+      // fallback: update local dataSource
+      const idx = this.dataSource.data.findIndex(t => t.id === truck.id);
+      if (idx >= 0) { this.dataSource.data[idx].model = newModel; this.dataSource._updateChangeSubscription(); }
+    }
   }
 
   /**
@@ -329,7 +424,13 @@ export class AdminTrucksComponent implements OnInit {
    */
   deleteTruck(truck: Truck): void {
     console.log('Deleting truck:', truck);
-    // Show confirmation dialog and delete truck
+    if (!confirm(`Delete truck ${truck.vehicleNumber}?`)) return;
+    if (truck.originalId) {
+      this.vehicleService.deleteVehicle(truck.originalId).subscribe({ next: (ok) => { if (ok) { alert('Deleted'); this.loadTrucks(); } else { alert('Delete failed'); } }, error: (err) => { console.error(err); alert('Delete failed'); } });
+    } else {
+      this.dataSource.data = this.dataSource.data.filter(t => t.id !== truck.id);
+      this.calculateFleetStats();
+    }
   }
 
   /**
@@ -337,7 +438,15 @@ export class AdminTrucksComponent implements OnInit {
    */
   assignDriver(truck: Truck): void {
     console.log('Assigning driver to truck:', truck);
-    // Open driver assignment dialog
+    const driverId = prompt('Enter driver ID to assign');
+    if (!driverId) return;
+    // This demo just updates the local truck or calls vehicleService
+    if (truck.originalId) {
+      this.vehicleService.updateVehicle(truck.originalId, { driverId }).subscribe({ next: () => { alert('Driver assigned'); this.loadTrucks(); }, error: (err) => { console.error(err); alert('Assign failed'); } });
+    } else {
+      const idx = this.dataSource.data.findIndex(t => t.id === truck.id);
+      if (idx >= 0) { this.dataSource.data[idx].driverId = Number(driverId); this.dataSource._updateChangeSubscription(); }
+    }
   }
 
   /**
@@ -345,7 +454,15 @@ export class AdminTrucksComponent implements OnInit {
    */
   scheduleMaintenance(truck: Truck): void {
     console.log('Scheduling maintenance for:', truck);
-    // Open maintenance scheduling dialog
+    const dateStr = prompt('Enter next maintenance date (YYYY-MM-DD)');
+    if (!dateStr) return;
+    const next = new Date(dateStr);
+    if (truck.originalId) {
+      this.vehicleService.updateVehicle(truck.originalId, { nextServiceDate: next }).subscribe({ next: () => { alert('Maintenance scheduled'); this.loadTrucks(); }, error: (err) => { console.error(err); alert('Failed to schedule'); } });
+    } else {
+      const idx = this.dataSource.data.findIndex(t => t.id === truck.id);
+      if (idx >= 0) { this.dataSource.data[idx].nextMaintenanceDate = next; this.dataSource._updateChangeSubscription(); }
+    }
   }
 
   /**
@@ -438,5 +555,30 @@ export class AdminTrucksComponent implements OnInit {
     const insuranceDays = Math.ceil((truck.insuranceExpiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     const permitDays = Math.ceil((truck.permitExpiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return insuranceDays <= 30 || permitDays <= 30; // Expiring within 30 days
+  }
+
+  /**
+   * Export trucks data
+   */
+  export(mode: string): void {
+    if (mode === 'pdf') {
+      this.exportPDF();
+    } else if (mode === 'excel') {
+      this.exportExcel();
+    }
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    const head = [['ID', 'Name', 'Plate', 'Status']];
+    const body = this.dataSource.data.map(truck => [truck.id, truck.model, truck.vehicleNumber, truck.status]);
+    autoTable(doc, { head, body, styles: { fontSize: 8 } });
+    doc.save('trucks_report.pdf');
+  }
+
+  exportExcel(): void {
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.dataSource.data);
+    const workbook: XLSX.WorkBook = { Sheets: { data: worksheet }, SheetNames: ['data'] };
+    XLSX.writeFile(workbook, 'trucks_report.xlsx');
   }
 }

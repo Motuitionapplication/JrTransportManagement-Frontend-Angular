@@ -1,7 +1,32 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { SettingsService } from '../../services/settings.service';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { HttpClientModule } from '@angular/common/http';
+import { MatTableDataSource } from '@angular/material/table';
+import * as XLSX from 'xlsx';
+import { VehicleService } from 'src/app/services/vehicle.service';
+import { DriverService } from 'src/app/driver/driver.service';
+import { CustomerService } from 'src/app/customer/customer.service';
+import { AdminService } from 'src/app/admin/admin.service';
+import { forkJoin, of } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 
 interface SystemSettings {
   general: {
@@ -49,7 +74,7 @@ interface SystemSettings {
   templateUrl: './admin-settings.component.html',
   styleUrls: ['./admin-settings.component.scss']
 })
-export class AdminSettingsComponent implements OnInit {
+export class AdminSettingsComponent implements OnInit, AfterViewInit {
   settingsForm!: FormGroup;
   selectedTab = 0;
   isLoading = false;
@@ -127,29 +152,7 @@ export class AdminSettingsComponent implements OnInit {
   ];
 
   // Backup and restore options
-  backupHistory = [
-    {
-      id: 1,
-      date: new Date('2024-01-15T10:30:00'),
-      type: 'Automatic',
-      size: '125 MB',
-      status: 'Completed'
-    },
-    {
-      id: 2,
-      date: new Date('2024-01-10T15:45:00'),
-      type: 'Manual',
-      size: '118 MB',
-      status: 'Completed'
-    },
-    {
-      id: 3,
-      date: new Date('2024-01-05T08:15:00'),
-      type: 'Automatic',
-      size: '112 MB',
-      status: 'Completed'
-    }
-  ];
+  backupHistory: { id: number; date: Date; type: string; size: string; status: string }[] = [];
 
   // User management data
   adminUsers = [
@@ -182,16 +185,46 @@ export class AdminSettingsComponent implements OnInit {
     }
   ];
 
+  dataSource = new MatTableDataSource(this.backupHistory);
+  displayedColumns: string[] = ['date', 'type', 'size', 'status'];
+  searchValue: string = '';
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private settingsService: SettingsService,
+    private vehicleService: VehicleService,
+    private driverService: DriverService,
+    private customerService: CustomerService,
+    private adminService: AdminService,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
     this.initializeForm();
   }
 
   ngOnInit(): void {
-    this.loadSettings();
+    this.loadBackupHistory();
+  }
+
+  ngAfterViewInit(): void {
+    if (this.paginator) {
+      if (this.paginator._intl) {
+        this.paginator._intl.itemsPerPageLabel = 'Items per page';
+      }
+      if (this.paginator.page) {
+        this.paginator.page.subscribe(() => {
+          this.dataSource.paginator = this.paginator; // Reassign paginator to ensure proper functionality
+          this.changeDetectorRef.detectChanges(); // Trigger change detection on page change
+        });
+      } else {
+        console.error('Paginator page property is undefined. Ensure MatPaginator is properly initialized.');
+      }
+    } else {
+      console.error('Paginator is undefined. Ensure MatPaginator is linked to the dataSource.');
+    }
   }
 
   private initializeForm(): void {
@@ -241,102 +274,406 @@ export class AdminSettingsComponent implements OnInit {
     });
   }
 
-  private loadSettings(): void {
-    this.isLoading = true;
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
+  loadSettings(): void {
+    this.settingsService.getSettings().subscribe(
+      (settings: { category: string; key: string; value: string }[]) => {
+        const groupedSettings: { [category: string]: { [key: string]: string } } = {};
+        settings.forEach((setting) => {
+          if (!groupedSettings[setting.category]) {
+            groupedSettings[setting.category] = {};
+          }
+          groupedSettings[setting.category][setting.key] = setting.value;
+        });
+
+        console.log('Settings loaded from backend:', groupedSettings); // Debugging log
+        this.settingsForm.patchValue(groupedSettings);
+      },
+      (error) => {
+        console.error('Error loading settings:', error); // Log error details
+        this.snackBar.open('Failed to load settings. Please try again.', 'Close', { duration: 3000 });
+      }
+    );
   }
 
-  onTabChange(index: number): void {
-    this.selectedTab = index;
+  loadBackupHistory(): void {
+    this.settingsService.getBackupHistory().subscribe(
+      (history) => {
+        // Ensure all dates are parsed as Date objects
+        this.backupHistory = history.map((backup) => ({
+          ...backup,
+          date: new Date(backup.date)
+        }));
+        this.dataSource = new MatTableDataSource(this.backupHistory); // Reinitialize the data source
+        this.dataSource.paginator = this.paginator; // Reassign paginator to the new data source
+        this.dataSource.connect().subscribe(() => {
+          this.changeDetectorRef.detectChanges(); // Trigger change detection to refresh the UI
+        });
+      },
+      (error) => {
+        this.snackBar.open('Failed to load backup history. Please try again.', 'Close', { duration: 3000 });
+      }
+    );
   }
 
+  // Save settings to the backend
   saveSettings(): void {
-    if (this.settingsForm.valid) {
-      this.isLoading = true;
-      
-      // Simulate API call
-      setTimeout(() => {
+    if (this.settingsForm.invalid) {
+      this.snackBar.open('Please fix the errors in the form before saving.', 'Close', {
+        duration: 3000,
+      });
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Log detailed form values for debugging
+    console.log('Detailed form values:', JSON.stringify(this.settingsForm.value, null, 2));
+
+    // Explicit mapping of form keys to categories
+    const categoryMapping: { [key: string]: string } = {
+      companyName: 'general',
+      companyEmail: 'general',
+      companyPhone: 'general',
+      companyAddress: 'general',
+      timezone: 'general',
+      currency: 'general',
+      language: 'general',
+      autoAcceptBookings: 'booking',
+      maxAdvanceBookingDays: 'booking',
+      cancellationDeadlineHours: 'booking',
+      refundPolicy: 'booking',
+      requirePaymentConfirmation: 'booking',
+      baseFare: 'pricing',
+      pricePerKm: 'pricing',
+      nightChargeMultiplier: 'pricing',
+      waitingChargePerMinute: 'pricing',
+      cancellationFee: 'pricing',
+      emailNotifications: 'notifications',
+      smsNotifications: 'notifications',
+      pushNotifications: 'notifications',
+      bookingConfirmation: 'notifications',
+      paymentReminders: 'notifications',
+      driverUpdates: 'notifications',
+      passwordMinLength: 'security',
+      requireTwoFactor: 'security',
+      sessionTimeoutMinutes: 'security',
+      maxLoginAttempts: 'security',
+      dataRetentionDays: 'security',
+    };
+
+    // Group fields by category
+    const groupedSettings: { [category: string]: { [key: string]: any } } = {
+      general: {},
+      booking: {},
+      pricing: {},
+      notifications: {},
+      security: {}
+    };
+
+    Object.entries(this.settingsForm.value).forEach(([key, value]) => {
+      const category = categoryMapping[key];
+      if (category) {
+        groupedSettings[category][key] = value;
+      } else {
+        console.warn(`Key "${key}" does not have a mapped category.`);
+      }
+    });
+
+    // Transform grouped settings into an array of { category, key, value }
+    const settingsArray = Object.entries(groupedSettings).flatMap(([category, settings]) =>
+      Object.entries(settings).map(([key, value]) => ({
+        category,
+        key,
+        value: value !== null && value !== undefined ? value.toString() : '', // Ensure the value is sent as a single string
+      }))
+    );
+
+    console.log('Payload being sent to the backend:', settingsArray); // Debugging log
+
+    if (settingsArray.length === 0) {
+      this.snackBar.open('No settings to save. Please check your input.', 'Close', {
+        duration: 3000,
+      });
+      this.isLoading = false;
+      return;
+    }
+
+    this.settingsService.saveSettings(settingsArray).subscribe(
+      (updatedSettings: { category: string; key: string; value: string }[]) => {
         this.isLoading = false;
         this.hasUnsavedChanges = false;
-        this.settingsForm.markAsPristine();
-        this.showSnackBar('Settings saved successfully!', 'success');
-      }, 1500);
-    } else {
-      this.showSnackBar('Please correct the errors in the form', 'error');
+        this.snackBar.open('Settings saved successfully.', 'Close', {
+          duration: 3000,
+        });
+
+        // Update the form with the latest settings
+        const groupedSettings: { [category: string]: { [key: string]: string } } = {};
+        updatedSettings.forEach((setting) => {
+          if (!groupedSettings[setting.category]) {
+            groupedSettings[setting.category] = {};
+          }
+          groupedSettings[setting.category][setting.key] = setting.value;
+        });
+        this.settingsForm.patchValue(groupedSettings);
+      },
+      (error: any) => {
+        this.isLoading = false;
+        console.error('Error saving settings:', error);
+        this.snackBar.open('Failed to save settings. Please try again.', 'Close', {
+          duration: 3000,
+        });
+      }
+    );
+  }
+
+  onFormChange(): void {
+    if (this.settingsForm.dirty) {
+      this.hasUnsavedChanges = true;
     }
   }
 
+  // Confirm save settings
+  confirmSaveSettings(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Save Changes',
+        message: 'Are you sure you want to save the changes? This action will overwrite the current settings.',
+        confirmButtonText: 'Save',
+        cancelButtonText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.isLoading = true; // Start loading
+        this.saveSettings();
+      }
+    });
+  }
+
+  // Reset settings to default values
   resetSettings(): void {
-    if (confirm('Are you sure you want to reset all settings to default values?')) {
-      this.settingsForm.reset();
-      this.initializeForm();
-      this.showSnackBar('Settings reset to default values', 'info');
-    }
+    this.settingsForm.reset(this.settings);
+    this.hasUnsavedChanges = false;
+    this.snackBar.open('Settings reset to default values.', 'Close', { duration: 3000 });
   }
 
-  // Backup and Restore functions
+  // Confirm reset settings
+  confirmResetSettings(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Reset Settings',
+        message: 'Are you sure you want to reset all settings to their default values? This action cannot be undone.',
+        confirmButtonText: 'Reset',
+        cancelButtonText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.resetSettings();
+      }
+    });
+  }
+
+  // Handle tab change
+  onTabChange(index: number): void {
+    this.selectedTab = index;
+    console.log(`Switched to tab index: ${index}`);
+  }
+
+  // Backup actions
   createBackup(): void {
-    this.isLoading = true;
-    // Simulate backup creation
-    setTimeout(() => {
-      this.isLoading = false;
-      const newBackup = {
-        id: this.backupHistory.length + 1,
-        date: new Date(),
-        type: 'Manual',
-        size: '130 MB',
-        status: 'Completed'
-      };
-      this.backupHistory.unshift(newBackup);
-      this.showSnackBar('Backup created successfully!', 'success');
-    }, 2000);
+    const newBackup = {
+      date: new Date(),
+      type: 'Manual',
+      size: '130 MB',
+      status: 'Completed'
+    };
+
+    this.settingsService.createBackup(newBackup).pipe(
+      timeout(10000) // Set a timeout of 10 seconds
+    ).subscribe(
+      (savedBackup) => {
+        this.loadBackupHistory(); // Refresh backup history after creating a backup
+        this.changeDetectorRef.detectChanges(); // Trigger change detection to refresh the UI
+        this.snackBar.open('Backup created successfully!', 'Close', {
+          duration: 3000,
+          panelClass: ['snackbar-success']
+        });
+      },
+      (error) => {
+        this.isLoading = false;
+        const errorMessage = error.name === 'TimeoutError' 
+          ? 'The backup request timed out. Please try again.' 
+          : 'Failed to create backup. Please try again.';
+        this.snackBar.open(errorMessage, 'Close', {
+          duration: 3000,
+          panelClass: ['snackbar-error']
+        });
+        this.changeDetectorRef.detectChanges(); // Ensure UI updates even on error
+      }
+    );
   }
 
   restoreBackup(backupId: number): void {
-    if (confirm('Are you sure you want to restore this backup? This will overwrite current settings.')) {
-      this.isLoading = true;
-      // Simulate restore operation
-      setTimeout(() => {
+    this.isLoading = true;
+    this.settingsService.restoreBackup(backupId).subscribe(
+      () => {
+        this.snackBar.open('Backup restored successfully.', 'Close', { duration: 3000 });
+        this.loadBackupHistory(); // Refresh the backup history after restoration
         this.isLoading = false;
-        this.showSnackBar('Backup restored successfully!', 'success');
-      }, 2000);
-    }
+      },
+      (error) => {
+        console.error('Error restoring backup:', error);
+        this.snackBar.open('Failed to restore backup. Please try again.', 'Close', { duration: 3000 });
+        this.isLoading = false;
+      }
+    );
   }
 
   deleteBackup(backupId: number): void {
-    if (confirm('Are you sure you want to delete this backup?')) {
-      this.backupHistory = this.backupHistory.filter(b => b.id !== backupId);
-      this.showSnackBar('Backup deleted', 'info');
-    }
+    this.isLoading = true;
+    this.settingsService.deleteBackup(backupId).subscribe(
+      () => {
+        this.snackBar.open('Backup deleted successfully.', 'Close', { duration: 3000 });
+        this.loadBackupHistory(); // Refresh the backup history after deletion
+        this.isLoading = false;
+      },
+      (error) => {
+        console.error('Error deleting backup:', error);
+        this.snackBar.open('Failed to delete backup. Please try again.', 'Close', { duration: 3000 });
+        this.isLoading = false;
+      }
+    );
   }
 
-  // User Management functions
+  // Confirm delete backup
+  confirmDeleteBackup(backupId: number): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Backup',
+        message: 'Are you sure you want to delete this backup? This action cannot be undone.',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteBackup(backupId);
+      }
+    });
+  }
+
+  // Confirm restore backup
+  confirmRestoreBackup(backupId: number): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Restore Backup',
+        message: 'Are you sure you want to restore this backup? This action will overwrite current data.',
+        confirmButtonText: 'Restore',
+        cancelButtonText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.restoreBackup(backupId);
+      }
+    });
+  }
+
+  // User management actions
   addAdmin(): void {
-    // Open dialog to add new admin user
-    this.showSnackBar('Add admin functionality to be implemented', 'info');
+    this.snackBar.open('Add Admin functionality not implemented yet.', 'Close', { duration: 3000 });
   }
 
   editUser(userId: number): void {
-    // Open dialog to edit user
-    this.showSnackBar('Edit user functionality to be implemented', 'info');
+    this.snackBar.open(`Edit User ID: ${userId}`, 'Close', { duration: 3000 });
   }
 
   toggleUserStatus(userId: number): void {
     const user = this.adminUsers.find(u => u.id === userId);
     if (user) {
       user.status = user.status === 'Active' ? 'Inactive' : 'Active';
-      this.showSnackBar(`User ${user.status.toLowerCase()}`, 'success');
+      this.snackBar.open(`User status updated to: ${user.status}`, 'Close', { duration: 3000 });
     }
   }
 
   deleteUser(userId: number): void {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.adminUsers = this.adminUsers.filter(u => u.id !== userId);
-      this.showSnackBar('User deleted', 'info');
-    }
+    this.adminUsers = this.adminUsers.filter(user => user.id !== userId);
+    this.snackBar.open('User deleted successfully.', 'Close', { duration: 3000 });
+  }
+
+  // Backup admin page data
+  backupAdminPage(): void {
+    const adminData = {
+      settings: this.settingsForm.value,
+      backupHistory: this.backupHistory,
+      adminUsers: this.adminUsers
+    };
+
+    const blob = new Blob([JSON.stringify(adminData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `admin-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.snackBar.open('Admin page backup created successfully!', 'Close', { duration: 3000 });
+  }
+
+  backupAdminPageAsExcel(): void {
+    const adminData = [
+      { Section: 'Settings', Data: JSON.stringify(this.settingsForm.value) },
+      { Section: 'Backup History', Data: JSON.stringify(this.backupHistory) },
+      { Section: 'Admin Users', Data: JSON.stringify(this.adminUsers) }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(adminData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'AdminPageBackup');
+    XLSX.writeFile(workbook, `admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    this.snackBar.open('Admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
+  }
+
+  backupEntireAdminPageAsExcel(): void {
+    const adminData: any[] = [];
+
+    forkJoin({
+      settings: of(this.settingsForm.value),
+      backupHistory: of(this.backupHistory),
+      adminUsers: this.adminService.getAllAdmins(), // Fetch real-time admin data
+      vehicles: this.vehicleService.getAllVehicles(),
+      drivers: this.driverService.getProfile(),
+      customers: this.customerService.getBookings()
+    }).subscribe(results => {
+      console.log('Fetched Data:', results); // Debugging log to verify fetched data
+      adminData.push(
+        { Section: 'Settings', Data: JSON.stringify(results.settings) },
+        { Section: 'Backup History', Data: JSON.stringify(results.backupHistory) },
+        { Section: 'Admin Users', Data: JSON.stringify(results.adminUsers) },
+        { Section: 'Vehicles', Data: JSON.stringify(results.vehicles) },
+        { Section: 'Drivers', Data: JSON.stringify(results.drivers) },
+        { Section: 'Customers', Data: JSON.stringify(results.customers) }
+      );
+
+      const worksheet = XLSX.utils.json_to_sheet(adminData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'EntireAdminPageBackup');
+      XLSX.writeFile(workbook, `entire-admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+      this.snackBar.open('Entire admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
+    });
   }
 
   // Utility functions
@@ -347,14 +684,12 @@ export class AdminSettingsComponent implements OnInit {
     });
   }
 
-  formatDate(date: Date): string {
-    return date.toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  formatDate(date: any): string {
+    if (!(date instanceof Date)) {
+      console.error('Invalid date:', date); // Debugging log
+      return 'Invalid Date';
+    }
+    return date.toLocaleDateString();
   }
 
   getStatusColor(status: string): string {
@@ -368,4 +703,43 @@ export class AdminSettingsComponent implements OnInit {
         return 'primary';
     }
   }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.searchValue = filterValue.trim().toLowerCase();
+    this.dataSource.filter = this.searchValue;
+  }
+
+  clearSearch(): void {
+    this.searchValue = '';
+    this.dataSource.filter = '';
+  }
 }
+
+@NgModule({
+  declarations: [
+    ConfirmationDialogComponent
+  ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatTabsModule,
+    MatTableModule,
+    MatIconModule,
+    MatPaginatorModule,
+    MatSortModule,
+    HttpClientModule
+  ],
+  providers: [
+    SettingsService
+  ],
+  bootstrap: [AdminSettingsComponent]
+})
+export class AdminSettingsModule { }
