@@ -597,19 +597,19 @@
             <div class="ticket-header">
               <div class="row align-items-center">
                 <div class="col">
-                  <h4>{{ selectedTicket.subject }}</h4>
+                  <h4>{{ selectedTicket?.subject }}</h4>
                   <div class="ticket-meta">
-                    <span class="badge" [ngClass]="getStatusClass(selectedTicket.status)">
-                      {{ selectedTicket.status | titlecase }}
+                    <span class="badge" [ngClass]="getStatusClass(selectedTicket?.status || '')">
+                      {{ selectedTicket?.status | titlecase }}
                     </span>
-                    <span class="badge" [ngClass]="getPriorityClass(selectedTicket.priority)">
-                      {{ selectedTicket.priority | titlecase }}
-                    </span>
-                    <span class="ticket-info">
-                      <i class="fas fa-hashtag"></i>{{ selectedTicket.id }}
+                    <span class="badge" [ngClass]="getPriorityClass(selectedTicket?.priority || '')">
+                      {{ selectedTicket?.priority | titlecase }}
                     </span>
                     <span class="ticket-info">
-                      <i class="fas fa-calendar"></i>{{ formatDate(selectedTicket.createdAt) }}
+                      <i class="fas fa-hashtag"></i>{{ selectedTicket?.id }}
+                    </span>
+                    <span class="ticket-info">
+                      <i class="fas fa-calendar"></i>{{ selectedTicket?.createdAt ? formatDate(selectedTicket.createdAt) : 'N/A' }}
                     </span>
                   </div>
                 </div>
@@ -620,8 +620,8 @@
                     </button>
                     <button 
                       class="btn btn-sm btn-outline-success"
-                      *ngIf="selectedTicket.status === 'open' || selectedTicket.status === 'in-progress'"
-                      (click)="closeTicket(selectedTicket.id)"
+                      *ngIf="selectedTicket?.status === 'open' || selectedTicket?.status === 'in-progress'"
+                      (click)="closeTicket(selectedTicket?.id || '')"
                     >
                       Close Ticket
                     </button>
@@ -631,7 +631,7 @@
             </div>
 
             <div class="ticket-messages">
-              <div class="message-item" *ngFor="let message of selectedTicket.messages" [class.user-message]="message.isFromUser">
+              <div class="message-item" *ngFor="let message of selectedTicket?.messages" [class.user-message]="message.isFromUser">
                 <div class="message-header">
                   <div class="message-author">
                     <div class="author-avatar">
@@ -655,7 +655,7 @@
               </div>
             </div>
 
-            <div class="reply-form" *ngIf="selectedTicket.status !== 'closed'">
+            <div class="reply-form" *ngIf="selectedTicket?.status !== 'closed'">
               <form [formGroup]="replyForm" (ngSubmit)="sendReply()">
                 <div class="form-group mb-3">
                   <label for="replyMessage" class="form-label">Your Reply</label>

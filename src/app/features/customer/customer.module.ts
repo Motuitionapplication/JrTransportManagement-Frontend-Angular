@@ -1,6 +1,6 @@
 
 import { NgModule } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -94,7 +94,6 @@ import { CustomerRoutingModule } from './customer-routing.module';
     MatTooltipModule
   ],
   providers: [
-    TitleCasePipe
   ],
   exports: [
     CustomerComponent,
