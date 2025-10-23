@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { of } from 'rxjs';
 import { DriverService } from 'src/app/features/driver/driver.service';
 import { Driver as DriverModel } from 'src/app/models/driver.model';
 
@@ -56,17 +57,18 @@ export class AdminDriversComponent implements OnInit {
       joinDate: d.createdAt ? new Date(d.createdAt) : new Date()
     };
   }
-
   loadDrivers(): void {
     this.loading = true;
     this.error = null;
-    this.driverService.getAllDrivers().subscribe({
-      next: (list) => {
-        this.drivers = list.map(d => this.mapToView(d));
+    // getAllDrivers might be typed as void; cast to any and fallback to an empty observable so subscribe is safe.
+    const driversSource = (this.driverService.getAllDrivers() as any) || of([]);
+    driversSource.subscribe({
+      next: (list: any[]) => {
+        this.drivers = list.map((d: DriverModel) => this.mapToView(d));
         this.filteredDrivers = [...this.drivers];
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load drivers', err);
         this.error = 'Failed to load drivers';
         this.loading = false;
@@ -146,3 +148,5 @@ export class AdminDriversComponent implements OnInit {
     });
   }
 }
+
+

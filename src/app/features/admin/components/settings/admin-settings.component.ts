@@ -2,31 +2,20 @@ import { Component, OnInit, ChangeDetectorRef, ViewChild, AfterViewInit } from '
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { SettingsService } from '../../services/settings.service';
-import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { HttpClientModule } from '@angular/common/http';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
-import { VehicleService } from 'src/app/services/vehicle.service';
-import { DriverService } from 'src/app/driver/driver.service';
-import { CustomerService } from 'src/app/customer/customer.service';
-import { AdminService } from 'src/app/admin/admin.service';
 import { forkJoin, of } from 'rxjs';
 import { timeout } from 'rxjs/operators';
+
+import { SettingsService } from '../../services/settings.service';
+import { VehicleService } from '@app/services/vehicle.service';
+import { DriverService } from '@app/services/driver.service';
+import { CustomerService } from '@app/features/customer/services/customer.service';
+import { AdminService } from '@app/features/admin/services/admin.service';
+
+// Import ConfirmationDialogComponent
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 
 interface SystemSettings {
   general: {
@@ -647,32 +636,41 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
   }
 
   backupEntireAdminPageAsExcel(): void {
-    const adminData: any[] = [];
+    const adminData: Array<{ Section: string; Data: string }> = [];
+    this.isLoading = true;
 
     forkJoin({
       settings: of(this.settingsForm.value),
       backupHistory: of(this.backupHistory),
       adminUsers: this.adminService.getAllAdmins(), // Fetch real-time admin data
       vehicles: this.vehicleService.getAllVehicles(),
-      drivers: this.driverService.getProfile(),
+      drivers: this.driverService.getAllDrivers(), // Changed from getProfile to getAllDrivers
       customers: this.customerService.getBookings()
-    }).subscribe(results => {
-      console.log('Fetched Data:', results); // Debugging log to verify fetched data
-      adminData.push(
-        { Section: 'Settings', Data: JSON.stringify(results.settings) },
-        { Section: 'Backup History', Data: JSON.stringify(results.backupHistory) },
-        { Section: 'Admin Users', Data: JSON.stringify(results.adminUsers) },
-        { Section: 'Vehicles', Data: JSON.stringify(results.vehicles) },
-        { Section: 'Drivers', Data: JSON.stringify(results.drivers) },
-        { Section: 'Customers', Data: JSON.stringify(results.customers) }
-      );
+    }).subscribe({
+      next: (results) => {
+        console.log('Fetched Data:', results);
+        adminData.push(
+          { Section: 'Settings', Data: JSON.stringify(results.settings) },
+          { Section: 'Backup History', Data: JSON.stringify(results.backupHistory) },
+          { Section: 'Admin Users', Data: JSON.stringify(results.adminUsers) },
+          { Section: 'Vehicles', Data: JSON.stringify(results.vehicles) },
+          { Section: 'Drivers', Data: JSON.stringify(results.drivers) },
+          { Section: 'Customers', Data: JSON.stringify(results.customers) }
+        );
 
-      const worksheet = XLSX.utils.json_to_sheet(adminData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'EntireAdminPageBackup');
-      XLSX.writeFile(workbook, `entire-admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
+        const worksheet = XLSX.utils.json_to_sheet(adminData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'EntireAdminPageBackup');
+        XLSX.writeFile(workbook, `entire-admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
 
-      this.snackBar.open('Entire admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
+        this.isLoading = false;
+        this.snackBar.open('Entire admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error creating backup:', error);
+        this.isLoading = false;
+        this.snackBar.open('Failed to create backup. Please try again.', 'Close', { duration: 3000 });
+      }
     });
   }
 
@@ -716,30 +714,4 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
   }
 }
 
-@NgModule({
-  declarations: [
-    ConfirmationDialogComponent
-  ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    MatDialogModule,
-    MatTabsModule,
-    MatTableModule,
-    MatIconModule,
-    MatPaginatorModule,
-    MatSortModule,
-    HttpClientModule
-  ],
-  providers: [
-    SettingsService
-  ],
-  bootstrap: [AdminSettingsComponent]
-})
-export class AdminSettingsModule { }
+// Move the module to a separate file: admin-settings.module.ts

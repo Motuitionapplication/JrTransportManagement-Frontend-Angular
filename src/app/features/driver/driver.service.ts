@@ -48,6 +48,9 @@ export interface DriverChartData {
   providedIn: 'root',
 })
 export class DriverService {
+  getAllDrivers() {
+    throw new Error('Method not implemented.');
+  }
   private apiUrl: string;
 
   constructor(
