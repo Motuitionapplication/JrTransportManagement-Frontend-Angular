@@ -61,12 +61,12 @@ export class AdminDriversComponent implements OnInit {
     this.loading = true;
     this.error = null;
     this.driverService.getAllDrivers().subscribe({
-      next: (list) => {
-        this.drivers = list.map(d => this.mapToView(d));
+      next: (list: DriverModel[]) => {
+        this.drivers = list.map((d: DriverModel) => this.mapToView(d));
         this.filteredDrivers = [...this.drivers];
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load drivers', err);
         this.error = 'Failed to load drivers';
         this.loading = false;

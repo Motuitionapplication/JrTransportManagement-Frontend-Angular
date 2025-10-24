@@ -4,26 +4,12 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { SettingsService } from '../../services/settings.service';
 import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableModule } from '@angular/material/table';
-import { MatIconModule } from '@angular/material/icon';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
-import { HttpClientModule } from '@angular/common/http';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
 import { VehicleService } from 'src/app/services/vehicle.service';
-import { DriverService } from 'src/app/driver/driver.service';
-import { CustomerService } from 'src/app/customer/customer.service';
+import { DriverService } from 'src/app/features/driver/driver.service';
+import { CustomerService } from 'src/app/features/customer/customer.service';
 import { AdminService } from 'src/app/admin/admin.service';
 import { forkJoin, of } from 'rxjs';
 import { timeout } from 'rxjs/operators';
@@ -654,8 +640,8 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
       backupHistory: of(this.backupHistory),
       adminUsers: this.adminService.getAllAdmins(), // Fetch real-time admin data
       vehicles: this.vehicleService.getAllVehicles(),
-      drivers: this.driverService.getProfile(),
-      customers: this.customerService.getBookings()
+      drivers: this.driverService.testConnection(), // Using available method
+      customers: this.customerService.getAllCustomers() // Using correct method name
     }).subscribe(results => {
       console.log('Fetched Data:', results); // Debugging log to verify fetched data
       adminData.push(
@@ -715,31 +701,3 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
     this.dataSource.filter = '';
   }
 }
-
-@NgModule({
-  declarations: [
-    ConfirmationDialogComponent
-  ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    MatDialogModule,
-    MatTabsModule,
-    MatTableModule,
-    MatIconModule,
-    MatPaginatorModule,
-    MatSortModule,
-    HttpClientModule
-  ],
-  providers: [
-    SettingsService
-  ],
-  bootstrap: [AdminSettingsComponent]
-})
-export class AdminSettingsModule { }
