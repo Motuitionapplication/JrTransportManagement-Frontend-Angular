@@ -2,9 +2,15 @@ import { Component, OnInit, ChangeDetectorRef, ViewChild, AfterViewInit } from '
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { SettingsService } from '../../services/settings.service';
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import * as XLSX from 'xlsx';
+import { VehicleService } from 'src/app/services/vehicle.service';
+import { DriverService } from 'src/app/features/driver/driver.service';
+import { CustomerService } from 'src/app/features/customer/customer.service';
+import { AdminService } from 'src/app/admin/admin.service';
 import { forkJoin, of } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
@@ -644,33 +650,25 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
       backupHistory: of(this.backupHistory),
       adminUsers: this.adminService.getAllAdmins(), // Fetch real-time admin data
       vehicles: this.vehicleService.getAllVehicles(),
-      drivers: this.driverService.getAllDrivers(), // Changed from getProfile to getAllDrivers
-      customers: this.customerService.getBookings()
-    }).subscribe({
-      next: (results) => {
-        console.log('Fetched Data:', results);
-        adminData.push(
-          { Section: 'Settings', Data: JSON.stringify(results.settings) },
-          { Section: 'Backup History', Data: JSON.stringify(results.backupHistory) },
-          { Section: 'Admin Users', Data: JSON.stringify(results.adminUsers) },
-          { Section: 'Vehicles', Data: JSON.stringify(results.vehicles) },
-          { Section: 'Drivers', Data: JSON.stringify(results.drivers) },
-          { Section: 'Customers', Data: JSON.stringify(results.customers) }
-        );
+      drivers: this.driverService.testConnection(), // Using available method
+      customers: this.customerService.getAllCustomers() // Using correct method name
+    }).subscribe(results => {
+      console.log('Fetched Data:', results); // Debugging log to verify fetched data
+      adminData.push(
+        { Section: 'Settings', Data: JSON.stringify(results.settings) },
+        { Section: 'Backup History', Data: JSON.stringify(results.backupHistory) },
+        { Section: 'Admin Users', Data: JSON.stringify(results.adminUsers) },
+        { Section: 'Vehicles', Data: JSON.stringify(results.vehicles) },
+        { Section: 'Drivers', Data: JSON.stringify(results.drivers) },
+        { Section: 'Customers', Data: JSON.stringify(results.customers) }
+      );
 
-        const worksheet = XLSX.utils.json_to_sheet(adminData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'EntireAdminPageBackup');
-        XLSX.writeFile(workbook, `entire-admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
+      const worksheet = XLSX.utils.json_to_sheet(adminData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'EntireAdminPageBackup');
+      XLSX.writeFile(workbook, `entire-admin-backup-${new Date().toISOString().split('T')[0]}.xlsx`);
 
-        this.isLoading = false;
-        this.snackBar.open('Entire admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
-      },
-      error: (error) => {
-        console.error('Error creating backup:', error);
-        this.isLoading = false;
-        this.snackBar.open('Failed to create backup. Please try again.', 'Close', { duration: 3000 });
-      }
+      this.snackBar.open('Entire admin page backup (Excel) created successfully!', 'Close', { duration: 3000 });
     });
   }
 
@@ -713,5 +711,3 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
     this.dataSource.filter = '';
   }
 }
-
-// Move the module to a separate file: admin-settings.module.ts

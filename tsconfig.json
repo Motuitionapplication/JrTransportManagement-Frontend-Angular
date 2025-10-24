@@ -23,11 +23,8 @@
       "ES2022",
       "dom"
     ],
-    "types": ["node"],
-    "ignoreDeprecations": "5.0",
-    "paths": {
-      "@app/*": ["src/app/*"]
-    }
+    "types": ["node"]
+
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

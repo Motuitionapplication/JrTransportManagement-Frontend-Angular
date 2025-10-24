@@ -60,10 +60,8 @@ export class AdminDriversComponent implements OnInit {
   loadDrivers(): void {
     this.loading = true;
     this.error = null;
-    // getAllDrivers might be typed as void; cast to any and fallback to an empty observable so subscribe is safe.
-    const driversSource = (this.driverService.getAllDrivers() as any) || of([]);
-    driversSource.subscribe({
-      next: (list: any[]) => {
+    this.driverService.getAllDrivers().subscribe({
+      next: (list: DriverModel[]) => {
         this.drivers = list.map((d: DriverModel) => this.mapToView(d));
         this.filteredDrivers = [...this.drivers];
         this.loading = false;

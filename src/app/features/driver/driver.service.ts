@@ -356,6 +356,26 @@ export class DriverService {
       );
   }
 
+  /**
+   * Fetch all drivers (admin use-case)
+   */
+  getAllDrivers(): Observable<Driver[]> {
+    const url = `${this.apiUrl}`;
+    this.logRequest('GET', url);
+    return this.http.get<Driver[]>(url).pipe(
+      tap({
+        next: (data) => this.logResponse('getAllDrivers', data),
+        error: (error) => this.logError('getAllDrivers', error),
+      }),
+      catchError(
+        this.handleError(
+          'getAllDrivers',
+          'Unable to load drivers list. Please try again.'
+        )
+      )
+    );
+  }
+
   private logRequest(method: string, url: string, payload?: unknown): void {
     if (this.envService.isLocal()) {
       console.debug(`[DriverService] ${method} ${url}`, payload ?? '');
