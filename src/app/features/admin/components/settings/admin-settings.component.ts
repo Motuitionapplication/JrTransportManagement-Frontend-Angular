@@ -14,6 +14,15 @@ import { AdminService } from 'src/app/admin/admin.service';
 import { forkJoin, of } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
+import { SettingsService } from '../../services/settings.service';
+import { VehicleService } from '@app/services/vehicle.service';
+import { DriverService } from '@app/services/driver.service';
+import { CustomerService } from '@app/features/customer/services/customer.service';
+import { AdminService } from '@app/features/admin/services/admin.service';
+
+// Import ConfirmationDialogComponent
+import { ConfirmationDialogComponent } from '../../components/confirmation-dialog/confirmation-dialog.component';
+
 interface SystemSettings {
   general: {
     companyName: string;
@@ -633,7 +642,8 @@ export class AdminSettingsComponent implements OnInit, AfterViewInit {
   }
 
   backupEntireAdminPageAsExcel(): void {
-    const adminData: any[] = [];
+    const adminData: Array<{ Section: string; Data: string }> = [];
+    this.isLoading = true;
 
     forkJoin({
       settings: of(this.settingsForm.value),

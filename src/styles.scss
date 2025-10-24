@@ -572,6 +572,19 @@ body, html {
   }
 }
 
+/* Ensure Angular root and app components fill the viewport */
+app-root, app-root > * {
+  height: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Prevent horizontal overflow globally (keeps layouts inside viewport) */
+body {
+  overflow-x: hidden;
+}
+
 /* Material Design Customizations */
 .mat-mdc-form-field {
   &.mat-form-field-appearance-outline {

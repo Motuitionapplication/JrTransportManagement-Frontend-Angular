@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { of } from 'rxjs';
 import { DriverService } from 'src/app/features/driver/driver.service';
 import { Driver as DriverModel } from 'src/app/models/driver.model';
 
@@ -56,7 +57,6 @@ export class AdminDriversComponent implements OnInit {
       joinDate: d.createdAt ? new Date(d.createdAt) : new Date()
     };
   }
-
   loadDrivers(): void {
     this.loading = true;
     this.error = null;
@@ -146,3 +146,5 @@ export class AdminDriversComponent implements OnInit {
     });
   }
 }
+
+
