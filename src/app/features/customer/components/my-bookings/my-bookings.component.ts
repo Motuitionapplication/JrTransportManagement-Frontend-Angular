@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, combineLatest } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { takeUntil, finalize, switchMap } from 'rxjs/operators';
 import { BookingService } from '../../../../services/booking.service';
+import { CustomerService } from '../../customer.service';
+import { Customer } from 'src/app/models/customer.model';
 
 export interface BookingSummary {
   total: number;
@@ -124,13 +126,14 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
   
   // Export options
   exportFormat: 'csv' | 'excel' = 'csv';
+    customer: Customer | null = null;
   
   // Customer ID (should come from auth service)
   private customerId: string = 'CUST-001'; // Mock customer ID
   
   private destroy$ = new Subject<void>();
 
-  constructor(private bookingService: BookingService) {}
+  constructor(private bookingService: BookingService,private customerservice : CustomerService) {}
 
   ngOnInit(): void {
     this.loadBookingsData();
@@ -159,28 +162,46 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
    * Load bookings data from service
    */
   private loadBookingsData(): void {
-    this.isLoading = true;
-    
-    // Load customer bookings
-    this.bookingService.getBookingsByCustomer(this.customerId)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.isLoading = false)
-      )
-      .subscribe({
-        next: (bookings) => {
-          console.log('✅ Bookings loaded:', bookings.length);
-          // If no bookings from service, generate mock data
-          if (bookings.length === 0) {
-            this.generateMockBookings();
-          }
-        },
-        error: (error) => {
-          console.error('❌ Error loading bookings:', error);
-          this.generateMockBookings();
-        }
-      });
+  this.isLoading = true;
+  const userId = localStorage.getItem('userId');
+
+  if (!userId) {
+    console.error('❌ No user ID found in localStorage');
+    this.generateMockBookings();
+    this.isLoading = false;
+    return;
   }
+
+  this.customerservice.getCustomerByUserId(userId).pipe(
+    switchMap(customer => {
+      console.log('✅ Fetched customer:', customer.id);
+      this.customer = customer;
+      this.customerId = customer.id;
+      // Now fetch booking history for this customer
+      return this.customerservice.getBookingHistory(customer.id);
+    }),
+    takeUntil(this.destroy$),
+    finalize(() => this.isLoading = false)
+  ).subscribe({
+    next: (bookings) => {
+      console.log('✅ Bookings loaded:', bookings.length);
+      if (bookings.length === 0) {
+        this.generateMockBookings();
+      } else {
+        // Use your mapping function to convert the data
+        this.bookings = this.mapServiceBookings(bookings);
+        // You must also call filter and summary after loading
+        this.filterBookings();
+        this.calculateSummary();
+      }
+    },
+    error: (error) => {
+      console.error('❌ Error loading bookings:', error);
+      this.generateMockBookings();
+    }
+  });
+}
+
 
   /**
    * Generate mock bookings for demonstration
@@ -422,31 +443,43 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
    * Map service bookings to component booking format
    */
   private mapServiceBookings(serviceBookings: any[]): Booking[] {
-    return serviceBookings.map(booking => ({
-      id: booking.id,
-      bookingNumber: booking.bookingNumber,
-      pickupLocation: booking.pickup?.address || 'Unknown',
-      dropoffLocation: booking.delivery?.address || 'Unknown',
-      pickupAddress: booking.pickup?.address || 'Unknown',
-      dropoffAddress: booking.delivery?.address || 'Unknown',
-      pickupDateTime: new Date(booking.pickup?.scheduledDate || Date.now()),
-      dropoffDateTime: booking.delivery?.scheduledDate ? new Date(booking.delivery.scheduledDate) : undefined,
-      vehicleType: booking.vehicle?.type || 'truck',
-      status: booking.status,
-      paymentStatus: booking.payment?.status || 'pending',
-      estimatedCost: booking.pricing?.baseFare || 0,
-      actualCost: booking.pricing?.finalAmount || undefined,
-      totalAmount: booking.pricing?.finalAmount || booking.pricing?.baseFare || 0,
-      distance: booking.distance || 0,
-      specialInstructions: booking.specialInstructions,
-      createdAt: new Date(booking.createdAt),
-      updatedAt: new Date(booking.updatedAt)
-    }));
-  }
+    return serviceBookings.map(booking => {
+      // Helper variables for addresses
+      const pAddress = booking.pickup?.address;
+      const dAddress = booking.delivery?.address;
 
-  /**
-   * Calculate booking summary statistics
-   */
+      // Create formatted address strings
+      const pickupAddressString = pAddress
+        ? `${pAddress.street}, ${pAddress.city}, ${pAddress.state}`
+        : 'Unknown';
+        
+      const dropoffAddressString = dAddress
+        ? `${dAddress.street}, ${dAddress.city}, ${dAddress.state}`
+        : 'Unknown';
+
+      return {
+        id: booking.id,
+        bookingNumber: booking.bookingNumber,
+
+        pickupLocation: pickupAddressString,
+        dropoffLocation: dropoffAddressString,
+        pickupAddress: pickupAddressString,
+        dropoffAddress: dropoffAddressString,
+        pickupDateTime: new Date(booking.pickup?.scheduledDate || Date.now()),
+        dropoffDateTime: booking.delivery?.scheduledDate ? new Date(booking.delivery.scheduledDate) : undefined,
+        vehicleType: booking.vehicle?.type || 'truck',
+        status: booking.status,
+        paymentStatus: booking.payment?.status || 'pending',
+        estimatedCost: booking.pricing?.baseFare || 0,
+        actualCost: booking.pricing?.finalAmount || undefined,
+        totalAmount: booking.pricing?.finalAmount || booking.pricing?.baseFare || 0,
+        distance: booking.distance || 0,
+        specialInstructions: booking.specialInstructions,
+        createdAt: new Date(booking.createdAt),
+        updatedAt: new Date(booking.updatedAt)
+      };
+    });
+  }
   private calculateSummary(): void {
     const summary = this.bookings.reduce((acc, booking) => {
       acc.total++;

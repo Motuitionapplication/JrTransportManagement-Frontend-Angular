@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -6,6 +5,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { Overlay } from '@angular/cdk/overlay';
 import { LoginComponent } from '../auth/login/login.component';
 import { SignupComponent } from '../auth/signup/signup.component';
+
+declare function calculateFare(): void;
 
 @Component({
   selector: 'app-dashboard',
@@ -16,6 +17,69 @@ import { SignupComponent } from '../auth/signup/signup.component';
 export class DashboardComponent implements OnInit {
   showUserMenu = false;
   showMobileMenu = false;
+   loading: boolean = false;
+   pickupCity: string = '';
+  deliveryCity: string = '';
+  truckType: string = '';
+  fareResult: { distance: number; fare: number } | null = null;
+
+  baseFare: number = 1500;
+  rateMap: Record<string, number> = {
+    mini: 12,
+    medium: 15,
+    large: 19,
+    container: 19,
+    trailer: 23
+  };
+
+  private openCageKey: string = '908bac17a2834879887e887db99c7c08';
+
+  private async getCoordinates(city: string): Promise<{ lat: number; lon: number }> {
+    const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(city)}&key=${this.openCageKey}&limit=1`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      throw `City "${city}" not found`;
+    }
+
+    return {
+      lat: data.results[0].geometry.lat,
+      lon: data.results[0].geometry.lng
+    };
+  }
+
+  private async getDistance(from: { lat: number; lon: number }, to: { lat: number; lon: number }): Promise<number> {
+    const url = `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.routes || data.routes.length === 0) throw 'Distance not found';
+    return data.routes[0].distance / 1000; // km
+  }
+
+  async calculateFare() {
+    if (!this.pickupCity || !this.deliveryCity || !this.truckType) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    try {
+      this.loading = true;
+
+      const fromCoords = await this.getCoordinates(this.pickupCity);
+      const toCoords = await this.getCoordinates(this.deliveryCity);
+      const distance = await this.getDistance(fromCoords, toCoords);
+      const fare = this.baseFare + distance * this.rateMap[this.truckType];
+
+      this.fareResult = { distance, fare };
+
+    } catch (err: any) {
+      alert('Error: ' + err);
+    } finally {
+      this.loading = false;
+    }
+  }
 
   constructor(
     public authService: AuthService,
@@ -60,6 +124,32 @@ export class DashboardComponent implements OnInit {
     console.log('👋 User logged out');
     this.router.navigate(['/dashboard']);
   }
+   getTruckTypeName(truckType: string): string {
+    const truckNames: { [key: string]: string } = {
+      'mini': 'Mini Truck (1-2 Ton)',
+      'medium': 'Medium Truck (3-9 Ton)', 
+      'large': 'Large Truck (10+ Ton)',
+      'container': 'Container Truck',
+      'trailer': 'Trailer'
+    };
+    return truckNames[truckType] || truckType;
+  }
+  resetFareForm(): void {
+  // Reset form fields
+  this.pickupCity = '';
+  this.deliveryCity = '';
+  this.truckType = '';
+  
+  // Clear fare result
+  this.fareResult = null;
+  
+  // Reset loading state
+  this.loading = false;
+
+  
+  console.log('🔄 Fare form reset - ready for new calculation');
+}
+
 
 
   openLoginDialog(): void {
@@ -174,4 +264,37 @@ export class DashboardComponent implements OnInit {
     // Future implementation
     console.log('Attendance - Coming Soon!');
   }
+
+  // Add these methods to your existing component
+  closeFareResult(): void {
+    this.fareResult = null;
+  }
+
+  bookNow(): void {
+    if (!this.authService.getCurrentUser()) {
+      this.openLoginDialog();
+      return;
+    }
+    
+    // Navigate to booking with fare data
+    console.log('🚚 Booking with fare:', this.fareResult);
+    // Following project's role-based routing pattern
+    this.router.navigate(['/customer/book-transport'], { 
+      state: { 
+        fareData: {
+          pickup: this.pickupCity,
+          delivery: this.deliveryCity,
+          truckType: this.truckType,
+          ...this.fareResult
+        }
+      }
+    });
+    this.closeFareResult();
+  }
+
+  recalculate(): void {
+    this.closeFareResult();
+    this.resetFareForm();
+  }
+
 }
