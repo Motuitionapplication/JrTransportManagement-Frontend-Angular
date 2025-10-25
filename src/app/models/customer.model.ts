@@ -21,6 +21,11 @@ export interface Customer {
   // Authentication
   userId: string;
   password: string; // hashed
+
+  totalBookings?: number;
+  revenue?: number;
+  activeTrips?: number;
+  pendingPayments?: number;
   
   // Identity verification
   identityProof: {

@@ -1,6 +1,12 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AuthService } from 'src/app/services/auth.service';
+import { CustomerService } from './customer.service';
+import { forkJoin } from 'rxjs';
+import { Customer } from 'src/app/models/customer.model';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Booking } from 'src/app/models/booking.model';
 
 @Component({
   selector: 'app-customer',
@@ -8,15 +14,22 @@ import { filter } from 'rxjs/operators';
   styleUrls: ['./customer.component.scss']
 })
 export class CustomerComponent implements OnInit {
-  
+
   // Sidebar state
   sidebarCollapsed: boolean = false;
-  
+
+  totalBookingsCount: number = 0;
+  bookings: Booking[] = [];
+
+  customer: Customer | null = null;
   // Active section state
   activeSection: string = 'dashboard';
-  
+
   // User dropdown state
   showUserDropdown: boolean = false;
+
+  isLoading: boolean = true;
+    errorMessage: string | null = null;
 
   // Menu items for sidebar navigation
   menuItems = [
@@ -37,11 +50,14 @@ export class CustomerComponent implements OnInit {
     { documentType: 'Medical Certificate', vehicleNumber: 'MC-2024-002', daysToExpiry: 45 }
   ];
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authService: AuthService, private customerService: CustomerService) { }
 
   ngOnInit(): void {
     console.log('customer component initialized');
-    
+
+    // <-- 5. CALL THE METHOD TO FETCH DATA
+    this.loadCustomerData();
+
     // Subscribe to router events to update active section
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -50,20 +66,71 @@ export class CustomerComponent implements OnInit {
           this.updateActiveSectionFromUrl(event.url);
         }
       });
-    
+
     // Set initial active section based on current URL
     this.updateActiveSectionFromUrl(this.router.url);
-    
-    // Navigate to dashboard by default if we're at the customer root
+
     const currentUrl = this.router.url;
     if (currentUrl === '/customer' || currentUrl === '/customer/') {
       this.router.navigate(['/customer/dashboard']);
     }
   }
 
-  /**
-   * Update active section based on current URL
-   */
+  private loadCustomerData(): void {
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      console.error('User ID not found in local storage. Cannot fetch customer details.');
+      this.isLoading = false;
+      // Optionally, navigate to login
+      this.authService.logout();
+      return;
+    }
+    this.isLoading = true;
+
+    this.customerService.getCustomerByUserId(userId).subscribe({
+      next: (customerData) => {
+        this.customer = customerData;
+        console.log('✅ Customer data fetched:', this.customer.id);
+
+        // Once we have the customer data (and customer.id), fetch their booking history.
+        this.customerService.getBookingHistory(this.customer.id).subscribe({
+          next: (bookingHistory) => {
+            this.bookings = bookingHistory;
+            console.log('✅ Booking history fetched:', this.bookings.length);
+
+            // Update the totalBookings property for the dashboard stats
+            if (this.customer) {
+              this.customer.totalBookings = this.bookings.length;
+            }
+
+            // All data is loaded successfully, so stop the loading indicator.
+            this.isLoading = false;
+          },
+          error: (err: HttpErrorResponse) => {
+            console.error('❌ Failed to fetch booking history:', err);
+            this.errorMessage = "We couldn't load your booking history.";
+            this.isLoading = false; // Stop loading on inner error
+          }
+        });
+      },
+      error: (err: HttpErrorResponse) => {
+        // This catches errors for the initial customer data fetch.
+        console.error('❌ Failed to fetch primary customer data:', err);
+        
+        if (err.status === 401) {
+          this.errorMessage = "Your session has expired. Please log in again.";
+          this.authService.logout();
+        } else {
+          this.errorMessage = "We couldn't load your profile. Please try again later.";
+        }
+
+        this.isLoading = false; 
+      }
+    });
+  }
+
+
   private updateActiveSectionFromUrl(url: string): void {
     if (url.includes('/customer/dashboard')) {
       this.activeSection = 'dashboard';
@@ -86,9 +153,6 @@ export class CustomerComponent implements OnInit {
     }
   }
 
-  /**
-   * Toggle sidebar collapsed state
-   */
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
@@ -100,7 +164,7 @@ export class CustomerComponent implements OnInit {
   setActiveSection(section: string): void {
     this.activeSection = section;
     console.log('Active section changed to:', section);
-    
+
     // Navigate to the appropriate route
     switch (section) {
       case 'dashboard':
@@ -165,48 +229,49 @@ export class CustomerComponent implements OnInit {
     }
   }
 
-  /**
-   * Close sidebar when clicking outside (for mobile)
-   */
   closeSidebarOnMobile(): void {
     if (window.innerWidth <= 768) {
       this.sidebarCollapsed = true;
     }
   }
 
-  // Sample data for dashboard (you can replace with actual service calls)
-  
-  /**
-   * Get dashboard stats data
-   */
+
   getDashboardStats() {
+    if (!this.customer) {
+      return {
+        totalBookings: { value: 0, change: '0%', changeType: 'neutral' },
+        revenue: { value: '$0', change: '0%', changeType: 'neutral' },
+        activeTrips: { value: 0, change: '0%', changeType: 'neutral' },
+        pendingPayments: { value: 0, change: '0%', changeType: 'neutral' }
+      };
+    }
+
+    // Use dynamic data from the fetched customer object
     return {
       totalBookings: {
-        value: 1245,
-        change: '+5.0%',
+        value: this.customer.totalBookings || 0, // Use real data
+        change: '+5.0%', // This can also be calculated
         changeType: 'positive'
       },
       revenue: {
-        value: '$54,630',
+        value: `$${this.customer.revenue || 0}`, // Use real data
         change: '-3.2%',
         changeType: 'negative'
       },
-      activecustomers: {
-        value: 248,
+      activeTrips: {
+        value: this.customer.activeTrips || 0, // Use real data
         change: '+4.1%',
         changeType: 'positive'
       },
       pendingPayments: {
-        value: 32,
+        value: this.customer.pendingPayments || 0, // Use real data
         change: '-13%',
         changeType: 'negative'
       }
     };
   }
 
-  /**
-   * Get recent activity data
-   */
+
   getRecentActivity() {
     return [
       {
@@ -244,9 +309,7 @@ export class CustomerComponent implements OnInit {
     ];
   }
 
-  /**
-   * Get customer management data
-   */
+
   getcustomerData() {
     return [
       {
@@ -266,13 +329,10 @@ export class CustomerComponent implements OnInit {
     ];
   }
 
-  /**
-   * Navigate to specific section with additional logic if needed
-   */
+
   navigateToSection(section: string, additionalData?: any): void {
     this.setActiveSection(section);
-    
-    // Add any section-specific logic here
+
     switch (section) {
       case 'bookings':
         // Load booking data
@@ -307,18 +367,12 @@ export class CustomerComponent implements OnInit {
     }
   }
 
-  /**
-   * Handle user logout
-   */
+
   handleLogout(): void {
-    // Add logout logic here
     console.log('User logging out...');
-    // Redirect to login page or clear user session
   }
 
-  /**
-   * Handle notification click
-   */
+
   handleNotificationClick(): void {
     console.log('Notification clicked');
     // Show notification dropdown or navigate to notifications page
@@ -346,7 +400,7 @@ export class CustomerComponent implements OnInit {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     const userProfile = document.querySelector('.user-profile');
-    
+
     if (!userProfile?.contains(target)) {
       this.showUserDropdown = false;
     }
@@ -356,14 +410,7 @@ export class CustomerComponent implements OnInit {
    * Handle user logout - redirect to dashboard
    */
   logout(): void {
-    console.log('User logging out...');
-    this.showUserDropdown = false;
-    
-    // Clear user session/token if needed
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('userSession');
-    
-    // Navigate to dashboard page
+    this.authService.logout();
     this.router.navigate(['/dashboard']);
   }
 }

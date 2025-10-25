@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { BookingRequest } from 'src/app/models/BookingRequest';
+
 
 export interface VehicleOption {
   id?: string;
@@ -58,6 +60,32 @@ export class BookTransportComponent implements OnInit {
   isLoadingVehicles: boolean = false;
   availableVehicles: VehicleOption[] = [];
   
+  // Date management
+  minDate: string = '';
+  
+  // Goods types
+  goodsTypes: string[] = [
+    'Furniture',
+    'Electronics',
+    'Household Items',
+    'Office Equipment',
+    'Construction Materials',
+    'Food & Beverages',
+    'Textiles & Clothing',
+    'Machinery',
+    'Raw Materials',
+    'Other'
+  ];
+
+  // Payment methods
+  paymentMethods = [
+    { value: 'credit_card', label: 'Credit Card', icon: 'fa-credit-card' },
+    { value: 'debit_card', label: 'Debit Card', icon: 'fa-credit-card' },
+    { value: 'upi', label: 'UPI Payment', icon: 'fa-mobile-alt' },
+    { value: 'net_banking', label: 'Net Banking', icon: 'fa-university' },
+    { value: 'cash', label: 'Cash on Delivery', icon: 'fa-money-bill-wave' }
+  ];
+  
   // Time slots for pickup
   availableTimeSlots: { value: string; label: string }[] = [
     { value: '08:00', label: '8:00 AM' },
@@ -78,6 +106,7 @@ export class BookTransportComponent implements OnInit {
   ) {
     this.bookingForm = this.createBookingForm();
     this.initializeVehicleOptions();
+    this.setMinDate();
   }
 
   ngOnInit(): void {
@@ -86,47 +115,34 @@ export class BookTransportComponent implements OnInit {
 
   private createBookingForm(): FormGroup {
     return this.fb.group({
-      // Step 1: Pickup & Dropoff
-      pickupAddress: ['', Validators.required],
-      pickupLocation: ['', Validators.required],
-      pickupDate: ['', Validators.required],
-      pickupTime: ['', Validators.required],
-      pickupDateTime: ['', Validators.required],
-      pickupContactName: ['', Validators.required],
-      pickupContactPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      dropoffAddress: ['', Validators.required],
-      dropoffLocation: ['', Validators.required],
-      dropoffContactName: ['', Validators.required],
-      dropoffContactPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      specialInstructions: [''],
+      // Step 1: Route Details
+      pickupLocation: ['', [Validators.required, Validators.minLength(3)]],
+      dropoffLocation: ['', [Validators.required, Validators.minLength(3)]],
+      pickupDate: ['', [Validators.required]],
+      pickupTime: ['', [Validators.required]],
       
-      // Step 2: Goods Information
-      goodsType: ['', Validators.required],
-      goodsDescription: ['', Validators.required],
-      goodsWeight: ['', [Validators.required, Validators.min(0.1)]],
-      goodsValue: ['', [Validators.required, Validators.min(1)]],
-      goodsLength: [''],
-      goodsWidth: [''],
-      goodsHeight: [''],
-      fragileGoods: [false],
-      temperatureControlled: [false],
-      hazardousMaterials: [false],
-      loadingUnloadingHelp: [false],
-      insuranceRequired: [false],
+      // Step 2: Goods Details
+      goodsType: ['', [Validators.required]],
+      goodsWeight: ['', [Validators.required, Validators.min(1)]],
+      goodsDescription: ['', [Validators.required, Validators.minLength(10)]],
+      specialHandling: [false],
+      fragile: [false],
+      perishable: [false],
       
-      // Step 4: Customer Information & Confirmation
-      customerName: ['', Validators.required],
-      customerEmail: ['', [Validators.required, Validators.email]],
-      customerPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      emailNotifications: [true],
-      smsNotifications: [true],
-      paymentMethod: ['', Validators.required],
-      agreeTerms: [false, Validators.requiredTrue]
+      // Step 3: Vehicle Selection
+      selectedVehicleType: ['', [Validators.required]],
+      
+      // Step 4: Contact & Payment
+      contactName: ['', [Validators.required, Validators.minLength(3)]],
+      contactPhone: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      contactEmail: ['', [Validators.required, Validators.email]],
+      additionalNotes: [''],
+      paymentMethod: ['', [Validators.required]],
+      agreeToTerms: [false, [Validators.requiredTrue]]
     });
   }
 
   private initializeForm(): void {
-    // Set default values or handle form initialization
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -137,6 +153,11 @@ export class BookTransportComponent implements OnInit {
     });
   }
 
+  private setMinDate(): void {
+    const today = new Date();
+    this.minDate = today.toISOString().split('T')[0];
+  }
+
   private initializeVehicleOptions(): void {
     this.vehicleOptions = [
       {
@@ -144,7 +165,7 @@ export class BookTransportComponent implements OnInit {
         type: 'truck',
         name: 'Small Truck (1-2 Ton)',
         description: 'Perfect for small household moves and deliveries',
-        capacity: 2,
+        capacity: 2000,
         basePrice: 1500,
         pricePerKm: 12,
         icon: 'fas fa-truck',
@@ -158,7 +179,7 @@ export class BookTransportComponent implements OnInit {
         type: 'truck',
         name: 'Medium Truck (3-5 Ton)',
         description: 'Ideal for medium-sized moves and commercial goods',
-        capacity: 5,
+        capacity: 5000,
         basePrice: 2500,
         pricePerKm: 18,
         icon: 'fas fa-truck',
@@ -172,7 +193,7 @@ export class BookTransportComponent implements OnInit {
         type: 'heavy-truck',
         name: 'Large Truck (7-10 Ton)',
         description: 'Best for large commercial shipments and bulk goods',
-        capacity: 10,
+        capacity: 10000,
         basePrice: 4000,
         pricePerKm: 25,
         icon: 'fas fa-truck',
@@ -188,10 +209,17 @@ export class BookTransportComponent implements OnInit {
   // Step navigation
   nextStep(): void {
     if (this.canProceedToNextStep()) {
-      this.currentStep++;
-      if (this.currentStep === 2) {
-        this.getRouteQuote();
+      if (this.currentStep < this.totalSteps) {
+        this.currentStep++;
+        
+        // Load available vehicles when entering step 3
+        if (this.currentStep === 3 && !this.routeQuote) {
+          this.loadAvailableVehicles();
+        }
       }
+    } else {
+      // Mark current step fields as touched to show validation errors
+      this.markStepFieldsAsTouched(this.currentStep);
     }
   }
 
@@ -201,43 +229,92 @@ export class BookTransportComponent implements OnInit {
     }
   }
 
+  previousStep(): void {
+    this.prevStep();
+  }
+
   goToStep(step: number): void {
     if (step >= 1 && step <= this.totalSteps) {
-      this.currentStep = step;
+      // Validate all previous steps before jumping
+      let canJump = true;
+      for (let i = 1; i < step; i++) {
+        if (!this.isStepValid(i)) {
+          canJump = false;
+          break;
+        }
+      }
+      
+      if (canJump) {
+        this.currentStep = step;
+      }
     }
   }
 
   // Route and pricing
   getRouteQuote(): void {
+    const pickup = this.bookingForm.get('pickupLocation')?.value;
+    const dropoff = this.bookingForm.get('dropoffLocation')?.value;
+    
+    if (!pickup || !dropoff) return;
+    
     this.isLoadingQuote = true;
     
-    // Simulate API call
+    // Simulate API call - replace with actual service call
     setTimeout(() => {
+      const distance = Math.floor(Math.random() * 300) + 50; // 50-350 km
+      const basePrice = distance * 8; // $8 per km base rate
+      
       this.routeQuote = {
-        distance: 25.5,
-        estimatedDuration: 45,
-        basePrice: 1800,
+        distance: distance,
+        estimatedDuration: Math.floor(distance / 60), // Assume 60 km/h average
+        basePrice: basePrice,
         additionalCharges: [
-          { name: 'Fuel Surcharge', amount: 200 },
-          { name: 'Toll Charges', amount: 150 }
+          { name: 'Fuel Surcharge', amount: basePrice * 0.1 },
+          { name: 'Toll Charges', amount: 50 }
         ],
-        totalPrice: 2150,
-        availableVehicles: this.vehicleOptions.filter(v => v.availability === 'available')
+        totalPrice: basePrice + (basePrice * 0.1) + 50,
+        availableVehicles: this.vehicleOptions,
+        routeType: 'Highway',
+        fuelCost: basePrice * 0.1
       };
+      
+      this.availableVehicles = this.vehicleOptions;
       this.isLoadingQuote = false;
-    }, 2000);
+    }, 1500);
+  }
+
+  loadAvailableVehicles(): void {
+    this.isLoadingVehicles = true;
+    
+    // Simulate loading vehicles based on route and goods details
+    setTimeout(() => {
+      const weight = this.bookingForm.get('goodsWeight')?.value || 0;
+      
+      // Filter vehicles based on weight capacity
+      this.availableVehicles = this.vehicleOptions.filter(
+        vehicle => vehicle.capacity >= weight
+      ).map(vehicle => ({
+        ...vehicle,
+        availability: Math.random() > 0.3 ? 'available' : 'busy'
+      }));
+      
+      this.isLoadingVehicles = false;
+    }, 1000);
   }
 
   selectVehicle(vehicle: VehicleOption): void {
     this.selectedVehicle = vehicle;
-    this.selectedVehicleId = vehicle.id || '';
+    this.selectedVehicleId = vehicle.id || vehicle.type;
+    this.bookingForm.patchValue({
+      selectedVehicleType: vehicle.type
+    });
   }
 
   calculateVehiclePrice(vehicle: VehicleOption): number {
-    if (!vehicle || !this.routeQuote) {
-      return 0;
-    }
-    return vehicle.basePrice + (vehicle.pricePerKm * this.routeQuote.distance);
+    if (!this.routeQuote) return vehicle.basePrice;
+    
+    const distancePrice = vehicle.pricePerKm * this.routeQuote.distance;
+    return vehicle.basePrice + distancePrice;
   }
 
   getAvailabilityClass(availability: string | undefined): string {
@@ -260,41 +337,83 @@ export class BookTransportComponent implements OnInit {
     return availabilityIcons[availability as keyof typeof availabilityIcons] || 'fa-question-circle';
   }
 
-  previousStep(): void {
-    this.prevStep();
-  }
-
-  viewVehicleDetails(vehicle: VehicleOption | null): void {
-    if (vehicle) {
-      console.log('Viewing vehicle details:', vehicle);
-      // Implement vehicle details modal or navigation
-    }
-  }
-
   // Booking submission
   submitBooking(): void {
     if (this.bookingForm.valid && this.selectedVehicle) {
       this.isSubmittingBooking = true;
       this.isSubmitting = true;
       
-      const bookingData = {
-        ...this.bookingForm.value,
-        selectedVehicle: this.selectedVehicle,
-        routeQuote: this.routeQuote,
-        totalAmount: this.calculateTotalAmount()
+      // Prepare booking payload following the BookingRequest model
+      const bookingPayload: BookingRequest = {
+        // Route Details
+        pickupLocation: this.bookingForm.get('pickupLocation')?.value,
+        dropoffLocation: this.bookingForm.get('dropoffLocation')?.value,
+        pickupDate: this.bookingForm.get('pickupDate')?.value,
+        pickupTime: this.bookingForm.get('pickupTime')?.value,
+        
+        // Goods Details
+        goodsType: this.bookingForm.get('goodsType')?.value,
+        goodsWeight: Number(this.bookingForm.get('goodsWeight')?.value),
+        goodsDescription: this.bookingForm.get('goodsDescription')?.value,
+        specialHandling: this.bookingForm.get('specialHandling')?.value || false,
+        fragile: this.bookingForm.get('fragile')?.value || false,
+        perishable: this.bookingForm.get('perishable')?.value || false,
+        
+        // Vehicle Selection
+        selectedVehicleType: this.selectedVehicle.type,
+        vehicleId: this.selectedVehicle.id,
+        vehicleName: this.selectedVehicle.name,
+        vehicleCapacity: this.selectedVehicle.capacity,
+        
+        // Contact & Payment
+        contactName: this.bookingForm.get('contactName')?.value,
+        contactPhone: this.bookingForm.get('contactPhone')?.value,
+        contactEmail: this.bookingForm.get('contactEmail')?.value,
+        additionalNotes: this.bookingForm.get('additionalNotes')?.value || '',
+        paymentMethod: this.bookingForm.get('paymentMethod')?.value,
+        
+        // Pricing Information
+        basePrice: this.selectedVehicle ? this.calculateVehiclePrice(this.selectedVehicle) : 0,
+        insuranceCost: this.calculateInsuranceCost(),
+        taxAmount: this.calculateTax(),
+        totalAmount: this.calculateTotalAmount(),
+        estimatedDistance: this.routeQuote?.distance,
+        estimatedDuration: this.routeQuote?.estimatedDuration,
+        
+        // Payment Status (initially pending)
+        paymentStatus: 'PENDING'
       };
       
-      // Simulate API call
+      console.log('Booking Payload:', bookingPayload);
+      
+      // TODO: Replace with actual service call
+      // this.bookingService.createBooking(customerId, bookingPayload).subscribe(
+      //   response => {
+      //     // Integrate Razorpay here
+      //     this.initiateRazorpayPayment(response);
+      //   },
+      //   error => {
+      //     console.error('Booking failed:', error);
+      //     this.isSubmittingBooking = false;
+      //     this.isSubmitting = false;
+      //   }
+      // );
+      
+      // Simulate API call for now
       setTimeout(() => {
         this.confirmationNumber = 'BK' + Date.now().toString().slice(-8);
         this.bookingConfirmed = true;
         this.isSubmittingBooking = false;
         this.isSubmitting = false;
-        
-        console.log('Booking submitted:', bookingData);
-        // Navigate to confirmation page or show success message
-      }, 3000);
+      }, 2000);
+    } else {
+      this.markStepFieldsAsTouched(4);
     }
+  }
+
+  // New method to navigate to bookings
+  navigateToBookings(): void {
+    this.router.navigate(['/customer/bookings']);
   }
 
   // Helper methods
@@ -334,11 +453,17 @@ export class BookTransportComponent implements OnInit {
       if (formField.errors['required']) {
         return `${this.getFieldLabel(field)} is required`;
       }
+      if (formField.errors['minlength']) {
+        return `${this.getFieldLabel(field)} must be at least ${formField.errors['minlength'].requiredLength} characters`;
+      }
       if (formField.errors['min']) {
         return `${this.getFieldLabel(field)} must be greater than 0`;
       }
       if (formField.errors['pattern']) {
         return `Please enter a valid ${this.getFieldLabel(field).toLowerCase()}`;
+      }
+      if (formField.errors['email']) {
+        return `Please enter a valid email address`;
       }
     }
     return '';
@@ -346,30 +471,19 @@ export class BookTransportComponent implements OnInit {
 
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      'pickupAddress': 'Pickup Address',
       'pickupLocation': 'Pickup Location',
+      'dropoffLocation': 'Dropoff Location',
       'pickupDate': 'Pickup Date',
       'pickupTime': 'Pickup Time',
-      'pickupDateTime': 'Pickup Date & Time',
-      'pickupContactName': 'Pickup Contact Name',
-      'pickupContactPhone': 'Pickup Contact Phone',
-      'dropoffAddress': 'Dropoff Address',
-      'dropoffLocation': 'Dropoff Location',
-      'dropoffContactName': 'Dropoff Contact Name',
-      'dropoffContactPhone': 'Dropoff Contact Phone',
-      'specialInstructions': 'Special Instructions',
       'goodsType': 'Goods Type',
       'goodsDescription': 'Goods Description',
       'goodsWeight': 'Goods Weight',
-      'goodsValue': 'Goods Value',
-      'goodsLength': 'Goods Length',
-      'goodsWidth': 'Goods Width',
-      'goodsHeight': 'Goods Height',
-      'customerName': 'Customer Name',
-      'customerEmail': 'Customer Email',
-      'customerPhone': 'Customer Phone',
+      'selectedVehicleType': 'Vehicle Type',
+      'contactName': 'Contact Name',
+      'contactEmail': 'Email Address',
+      'contactPhone': 'Phone Number',
       'paymentMethod': 'Payment Method',
-      'agreeTerms': 'Terms and Conditions'
+      'agreeToTerms': 'Terms and Conditions'
     };
     return labels[fieldName] || fieldName;
   }
@@ -391,65 +505,79 @@ export class BookTransportComponent implements OnInit {
 
   // Cost calculations
   calculateInsuranceCost(): number {
-    const goodsValue = this.bookingForm.get('goodsValue')?.value || 0;
-    return Math.round(goodsValue * 0.02); // 2% insurance
+    const basePrice = this.routeQuote?.basePrice || 0;
+    return Math.round(basePrice * 0.05);
   }
 
   calculateTax(): number {
     const basePrice = this.routeQuote?.basePrice || 0;
     const insuranceCost = this.calculateInsuranceCost();
-    return Math.round((basePrice + insuranceCost) * 0.1); // 10% tax
+    return Math.round((basePrice + insuranceCost) * 0.18);
   }
 
   calculateTotalAmount(): number {
-    const basePrice = this.routeQuote?.basePrice || 0;
+    if (!this.routeQuote || !this.selectedVehicle) return 0;
+    
+    const vehiclePrice = this.calculateVehiclePrice(this.selectedVehicle);
     const insuranceCost = this.calculateInsuranceCost();
     const tax = this.calculateTax();
-    return basePrice + insuranceCost + tax;
+    
+    return vehiclePrice + insuranceCost + tax;
   }
 
   // Validation methods
   canProceedToNextStep(): boolean {
-    switch (this.currentStep) {
+    return this.isStepValid(this.currentStep);
+  }
+
+  isStepValid(step: number): boolean {
+    switch (step) {
       case 1:
-        return !!(this.bookingForm.get('pickupAddress')?.valid && 
-                  this.bookingForm.get('dropoffAddress')?.valid);
+        return this.bookingForm.get('pickupLocation')?.valid === true &&
+               this.bookingForm.get('dropoffLocation')?.valid === true &&
+               this.bookingForm.get('pickupDate')?.valid === true &&
+               this.bookingForm.get('pickupTime')?.valid === true;
+      
       case 2:
-        return this.selectedVehicle !== null;
+        return this.bookingForm.get('goodsType')?.valid === true &&
+               this.bookingForm.get('goodsWeight')?.valid === true &&
+               this.bookingForm.get('goodsDescription')?.valid === true;
+      
       case 3:
-        return !!(this.bookingForm.get('goodsType')?.valid && 
-                  this.bookingForm.get('goodsWeight')?.valid);
+        return this.bookingForm.get('selectedVehicleType')?.valid === true;
+      
+      case 4:
+        return this.bookingForm.get('contactName')?.valid === true &&
+               this.bookingForm.get('contactPhone')?.valid === true &&
+               this.bookingForm.get('contactEmail')?.valid === true &&
+               this.bookingForm.get('paymentMethod')?.valid === true &&
+               this.bookingForm.get('agreeToTerms')?.value === true;
+      
       default:
-        return true;
+        return false;
     }
   }
 
-  canSubmitBooking(): boolean {
-    return this.bookingForm.valid && 
-           this.selectedVehicle !== null && 
-           this.bookingForm.get('agreeTerms')?.value === true;
-  }
-
-  // Additional helper methods
-  getTodayDate(): string {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  }
-
-  getVehicleBadgeClass(vehicleType: string): string {
-    const badgeClasses = {
-      'truck': 'badge-truck',
-      'van': 'badge-van',
-      'pickup': 'badge-pickup',
-      'heavy-truck': 'badge-heavy-truck'
-    };
-    return badgeClasses[vehicleType as keyof typeof badgeClasses] || 'badge-default';
-  }
-
-  calculateEstimatedPrice(vehicle: VehicleOption | null): number {
-    if (!vehicle || !this.routeQuote) {
-      return vehicle?.basePrice || 0;
+  markStepFieldsAsTouched(step: number): void {
+    let fields: string[] = [];
+    
+    switch (step) {
+      case 1:
+        fields = ['pickupLocation', 'dropoffLocation', 'pickupDate', 'pickupTime'];
+        break;
+      case 2:
+        fields = ['goodsType', 'goodsWeight', 'goodsDescription'];
+        break;
+      case 3:
+        fields = ['selectedVehicleType'];
+        break;
+      case 4:
+        fields = ['contactName', 'contactPhone', 'contactEmail', 'paymentMethod', 'agreeToTerms'];
+        break;
     }
-    return vehicle.basePrice + (vehicle.pricePerKm * this.routeQuote.distance);
+    
+    fields.forEach(field => {
+      this.bookingForm.get(field)?.markAsTouched();
+    });
   }
 }

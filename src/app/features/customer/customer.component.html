@@ -1,7 +1,12 @@
-<!-- admin-dashboard.component.html -->
-<div class="dashboard-container">
-  
-  <!-- Top Navigation Bar -->
+
+<div class="loading-overlay" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Hold On...</p>
+</div>
+
+
+<div class="dashboard-container" *ngIf="!isLoading && customer">
+
   <nav class="top-navbar">
     <div class="navbar-content">
       <div class="logo-section">
@@ -15,6 +20,7 @@
       
       <div class="navbar-actions">
         <div class="notifications">
+
           <button class="notification-btn">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -24,13 +30,23 @@
           </button>
         </div>
         
+        <!-- DYNAMIC USER PROFILE SECTION -->
         <div class="user-profile" (click)="toggleUserDropdown(); $event.stopPropagation()">
           <div class="user-avatar">
-            <img src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=JD" alt="John Doe">
+            <!-- Show profile photo if it exists -->
+            <img *ngIf="customer?.profile?.profilePhoto" 
+                 [src]="customer.profile.profilePhoto" 
+                 [alt]="customer.profile.firstName">
+                 
+            <!-- Fallback to initials if no photo exists -->
+            <div class="initials-avatar" *ngIf="!customer?.profile?.profilePhoto">
+              {{ customer?.profile?.firstName?.charAt(0) }}{{ customer?.profile?.lastName?.charAt(0) }}
+            </div>
           </div>
           <div class="user-info">
-            <span class="user-name">customer User</span>
-            <span class="user-role">customer</span>
+            <!-- DYNAMIC USER NAME -->
+            <span class="user-name">{{ customer?.profile?.firstName }} {{ customer?.profile?.lastName }}</span>
+            <span class="user-role">Customer</span>
           </div>
           <button class="dropdown-toggle">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -38,7 +54,7 @@
             </svg>
           </button>
           
-          <!-- User Dropdown Menu -->
+          <!-- User Dropdown Menu (remains the same) -->
           <div class="user-dropdown" [class.show]="showUserDropdown">
             <div class="dropdown-item logout-item" (click)="logout()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -54,12 +70,14 @@
     </div>
   </nav>
 
-  <!-- Main Content Area -->
+  <!-- ======================================================== -->
+  <!-- Main Content Area (No changes needed here)               -->
+  <!-- ======================================================== -->
   <div class="main-content-wrapper">
-    <!-- Sidebar Navigation -->
     <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
       <nav class="sidebar-nav">
         <ul class="nav-menu">
+          <!-- (All your nav-items remain exactly the same) -->
           <li class="nav-item">
             <button class="nav-link" routerLink="/customer/dashboard" routerLinkActive="active">
               <i class="fas fa-tachometer-alt nav-icon"></i>
@@ -78,7 +96,7 @@
               <span class="nav-text">My Bookings</span>
             </button>
           </li>
-          <li class="nav-item">
+           <li class="nav-item">
             <button class="nav-link" routerLink="/customer/trips" routerLinkActive="active">
               <i class="fas fa-route nav-icon"></i>
               <span class="nav-text">My Trips</span>
@@ -136,13 +154,11 @@
       </nav>
     </aside>
 
-    <!-- Dashboard Content -->
-    <!-- Dashboard Content -->
     <main class="dashboard-content">
-      <!-- Router outlet for all child components -->
       <section class="content-section">
         <router-outlet></router-outlet>
       </section>
     </main>
   </div>
 </div>
+

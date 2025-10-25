@@ -1069,3 +1069,927 @@ body {
                 width: calc(100% - 1rem);
             }
         }
+        
+/* Modal backdrop (dimmed background) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+
+/* Modal box */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 2px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  min-width: 300px;
+  max-width: 90%;
+  z-index: 1001;
+}
+
+/* Header, body, footer */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.modal-body {
+  padding: 1rem 0;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* 🎨 Enhanced Fare Result Display Styles */
+.fare-result-container {
+  margin-top: 2rem;
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fare-result-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 2rem;
+  color: white;
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="80" r="1" fill="white" opacity="0.05"/></svg>');
+    pointer-events: none;
+  }
+
+  .fare-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      backdrop-filter: blur(10px);
+
+      i {
+        font-size: 1.8rem;
+        color: #4ade80;
+      }
+    }
+
+    h4 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+  }
+
+  .route-info {
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+
+    .route-path {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    .route-point {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+
+      .route-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+
+      &.pickup .route-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      &.delivery .route-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+
+      .route-details {
+        display: flex;
+        flex-direction: column;
+
+        .route-label {
+          font-size: 0.7rem;
+          opacity: 0.8;
+          text-transform: uppercase;
+          font-weight: 600;
+        }
+
+        .route-location {
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .route-connector {
+      display: flex;
+      align-items: center;
+      flex: 0 0 80px;
+      justify-content: center;
+      gap: 0.25rem;
+
+      .connector-line {
+        height: 2px;
+        background: rgba(255, 255, 255, 0.5);
+        flex: 1;
+      }
+
+      .connector-truck {
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+
+        i {
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .fare-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+
+    .fare-card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .fare-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+
+        i {
+          font-size: 1.1rem;
+        }
+      }
+
+      &.distance-card .fare-card-icon {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      }
+
+      &.truck-card .fare-card-icon {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+      }
+
+      &.total-card .fare-card-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+
+      .fare-card-content {
+        .fare-label {
+          display: block;
+          font-size: 0.7rem;
+          opacity: 0.9;
+          text-transform: uppercase;
+          font-weight: 600;
+          margin-bottom: 0.25rem;
+        }
+
+        .fare-value {
+          display: block;
+          font-size: 0.95rem;
+          font-weight: 700;
+
+          &.fare-amount {
+            font-size: 1.3rem;
+            color: #ffd700;
+          }
+        }
+      }
+    }
+  }
+
+  .fare-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+
+    .btn-book-now {
+      flex: 2;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+
+    .btn-recalculate {
+      flex: 1;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .fare-disclaimer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    border-radius: 8px;
+    position: relative;
+    z-index: 1;
+
+    i {
+      color: #fbbf24;
+    }
+  }
+}
+
+/* 📱 Mobile Responsive Design */
+@media (max-width: 768px) {
+  .fare-result-card {
+    padding: 1.5rem;
+
+    .route-info .route-path {
+      flex-direction: column;
+      gap: 1rem;
+
+      .route-point {
+        justify-content: center;
+      }
+
+      .route-connector {
+        transform: rotate(90deg);
+        width: 40px;
+        height: 80px;
+        flex-direction: column;
+
+        .connector-line {
+          width: 2px;
+          height: 20px;
+        }
+      }
+    }
+
+    .fare-breakdown {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+
+      .fare-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+
+        .fare-card-icon {
+          margin: 0;
+          flex-shrink: 0;
+        }
+
+        .fare-card-content {
+          flex: 1;
+
+          .fare-label, .fare-value {
+            display: inline;
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+
+    .fare-actions {
+      flex-direction: column;
+
+      .btn-book-now, .btn-recalculate {
+        flex: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .fare-result-card {
+    margin: 1rem -0.5rem;
+    border-radius: 15px;
+
+    .fare-breakdown .fare-card {
+      padding: 0.75rem;
+
+      .fare-card-icon {
+        width: 35px;
+        height: 35px;
+      }
+    }
+  }
+}
+
+/* 🎨 Professional Fare Overlay Styles */
+.fare-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+
+    .fare-content {
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+.fare-overlay-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.fare-content {
+  background: linear-gradient(135deg, #224499 0%, #3778e8 100%);
+  border-radius: 16px;
+  color: white;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 
+    0 25px 50px rgba(34, 68, 153, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transform: translateY(30px) scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 50%,
+      rgba(55, 120, 232, 0.1) 100%
+    );
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #60a5fa, #3b82f6, #1d4ed8);
+    opacity: 0.8;
+  }
+}
+
+.fare-header {
+  padding: 2.5rem 2.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+
+  .close-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 
+      0 8px 24px rgba(16, 185, 129, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+    i {
+      font-size: 2rem;
+      color: white;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 0.95rem;
+    font-weight: 400;
+  }
+}
+
+.fare-details {
+  padding: 0 2.5rem 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.route-info {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 1.25rem;
+  border-radius: 4px;
+  margin-bottom: 1.75rem;
+  text-align: center;
+  backdrop-filter: blur(8px);
+
+  .route-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+
+    &::before,
+    &::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #60a5fa;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+    }
+  }
+}
+
+.fare-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+
+  .fare-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.25rem;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    i {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      flex: 1;
+      opacity: 0.9;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    strong {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    &:nth-child(1) i {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    &:nth-child(2) i {
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    &.total {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(217, 119, 6, 0.15));
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(135deg, #fbbf24, #d97706);
+        border-radius: 12px 0 0 12px;
+      }
+
+      i {
+        background: linear-gradient(135deg, #fbbf24, #d97706);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+      }
+
+      .fare-amount {
+        color: #fbbf24;
+        font-size: 1.4rem;
+        font-weight: 800;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+}
+
+.fare-actions {
+  display: flex;
+  gap: 1rem;
+
+  .btn-primary, .btn-secondary {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+
+    i {
+      font-size: 0.9rem;
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    flex: 1.5;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Mobile Responsive - Professional */
+@media (max-width: 768px) {
+  .fare-content {
+    margin: 1rem 0.75rem;
+    max-width: calc(100vw - 1.5rem);
+    border-radius: 14px;
+  }
+
+  .fare-header {
+    padding: 2rem 2rem 1.25rem;
+
+    .close-btn {
+      top: 1rem;
+      right: 1rem;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1.25rem;
+
+      i {
+        font-size: 1.75rem;
+      }
+    }
+
+    h3 {
+      font-size: 1.3rem;
+    }
+  }
+
+  .fare-details {
+    padding: 0 2rem 2rem;
+  }
+
+  .route-info {
+    padding: 1rem;
+
+    .route-text {
+      font-size: 1rem;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      &::before,
+      &::after {
+        display: none;
+      }
+    }
+  }
+
+  .fare-grid {
+    .fare-item {
+      padding: 1rem;
+
+      i {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+      }
+
+      span {
+        font-size: 0.9rem;
+      }
+
+      strong {
+        font-size: 0.95rem;
+      }
+
+      &.total .fare-amount {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .fare-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .btn-primary, .btn-secondary {
+      flex: none;
+      padding: 0.875rem 1.25rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .fare-content {
+    margin: 0.75rem 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .fare-header {
+    padding: 1.75rem 1.5rem 1rem;
+
+    h3 {
+      font-size: 1.2rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
+
+  .fare-details {
+    padding: 0 1.5rem 1.75rem;
+  }
+}
+
+/* Enhanced Loading State */
+.btn-primary:disabled {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none;
+  }
+}
+
+/* Success Animation */
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.fare-content.success-animation .success-icon {
+  animation: successPulse 0.6s ease-out;
+}

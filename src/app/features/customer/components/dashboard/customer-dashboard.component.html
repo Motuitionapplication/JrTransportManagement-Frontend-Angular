@@ -24,61 +24,46 @@
         <div class="header-text">
           <h1 class="dashboard-title">
             <span class="greeting">{{ getGreeting() }}</span>
-            <span *ngIf="customerProfile?.name" class="customer-name">{{ customerProfile?.name }}!</span>
-            <span *ngIf="!customerProfile?.name" class="default-greeting">Welcome Back!</span>
+            <!-- Use the real customer name -->
+            <span *ngIf="customer?.profile?.firstName" class="customer-name">{{ customer?.profile?.firstName }}!</span>
+            <span *ngIf="!customer?.profile?.firstName" class="default-greeting">Welcome Back!</span>
           </h1>
           <p class="dashboard-subtitle">Your JR Transport Management Portal</p>
           <div class="last-updated" *ngIf="lastUpdated">
             <mat-icon>schedule</mat-icon>
-            <span>Last updated: {{ formatDate(lastUpdated) }}</span>
+            <!-- Use formatDateTime for a more precise timestamp -->
+            <span>Last updated: {{ formatDateTime(lastUpdated) }}</span>
           </div>
         </div>
         <div class="header-actions">
-          <button mat-icon-button 
-                  [disabled]="isRefreshing" 
-                  (click)="refreshDashboard()" 
-                  matTooltip="Refresh Dashboard"
-                  class="refresh-btn">
+          <button mat-icon-button [disabled]="isRefreshing" (click)="refreshDashboard()" matTooltip="Refresh Dashboard"
+            class="refresh-btn">
             <mat-icon [class.rotating]="isRefreshing">refresh</mat-icon>
           </button>
-          <button mat-icon-button 
-                  matTooltip="Notifications"
-                  [matBadge]="getNotificationCount()"
-                  [matBadgeHidden]="getNotificationCount() === 0"
-                  matBadgeColor="warn"
-                  (click)="navigateToNotifications()">
+          <!-- This can be made dynamic later if notifications are fetched -->
+          <button mat-icon-button [disabled]="isRefreshing" (click)="notifications()" matTooltip="Notifications">
             <mat-icon>notifications</mat-icon>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- Stats Grid (This section should work as is with real data) -->
     <div class="stats-section">
       <h2 class="section-title">Dashboard Overview</h2>
       <div class="stats-grid">
-        <div class="stat-card" 
-             *ngFor="let stat of statsData; trackBy: trackStats" 
-             [class.loading]="!stat.value && stat.value !== 0"
-             [class.clickable]="stat.clickable"
-             (click)="onStatCardClick(stat)">
-          <div class="stat-icon" [style.background]="stat.color || 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)'">
-            <mat-icon>{{ stat.icon }}</mat-icon>
+        <div class="stat-card" *ngFor="let stat of statsData; trackBy: trackStats" [class.clickable]="stat.clickable"
+          (click)="onStatCardClick(stat)">
+          <div class="stat-icon" [ngStyle]="{'background-color': getColor(stat.color || '')}">
+            <mat-icon fontSet="material-symbols-outlined" class="material-symbols-outlined">
+              {{ stat.icon }}
+            </mat-icon>
           </div>
           <div class="stat-content">
-            <h3 class="stat-value">
-              <span *ngIf="stat.value || stat.value === 0">{{ stat.value }}</span>
-              <span *ngIf="!stat.value && stat.value !== 0" class="loading-placeholder">Loading...</span>
-            </h3>
+            <h3 class="stat-value">{{ stat.value }}</h3>
             <p class="stat-title">{{ stat.title }}</p>
             <span class="stat-change" [ngClass]="stat.changeType">
-              <mat-icon class="change-icon">{{ getChangeIcon(stat.changeType) }}</mat-icon>
-              {{ stat.change || 'Loading...' }}
-            </span>
-          </div>
-          <div class="stat-actions" *ngIf="stat.trend !== undefined">
-            <span class="trend" [ngClass]="stat.changeType">
-              {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}
+              {{ stat.change }}
             </span>
           </div>
         </div>
@@ -87,28 +72,28 @@
 
     <!-- Dashboard Row -->
     <div class="dashboard-row">
-      <!-- Quick Actions Card -->
+      <!-- Quick Actions Card (Simplified to one main action) -->
       <mat-card class="actions-card">
         <mat-card-header>
           <mat-card-title>
             <mat-icon>flash_on</mat-icon>
             Quick Actions
           </mat-card-title>
-          <mat-card-subtitle>Get things done faster</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="actions-grid">
-            <button *ngFor="let action of quickActions; trackBy: trackActions" 
-                    mat-stroked-button 
-                    class="quick-action-btn"
-                    [disabled]="!action.isEnabled"
-                    (click)="handleQuickAction(action)"
-                    [matTooltip]="action.description">
+            <button mat-stroked-button class="quick-action-btn" (click)="navigateToBooking('')"
+              matTooltip="Schedule a new trip">
               <div class="action-content">
-                <mat-icon>{{ action.icon }}</mat-icon>
-                <span class="action-title">{{ action.title }}</span>
-                <span *ngIf="action.badgeCount && action.badgeCount > 0" 
-                      class="action-badge">{{ action.badgeCount }}</span>
+                <mat-icon>add</mat-icon>
+                <span class="action-title">Book Transport</span>
+              </div>
+            </button>
+            <button mat-stroked-button class="quick-action-btn" (click)="viewAllBookings()"
+              matTooltip="View all your bookings">
+              <div class="action-content">
+                <mat-icon>list_alt</mat-icon>
+                <span class="action-title">My Bookings</span>
               </div>
             </button>
           </div>
@@ -122,9 +107,8 @@
             <mat-icon>history</mat-icon>
             Recent Activity
           </mat-card-title>
-          <mat-card-subtitle>Your latest activities</mat-card-subtitle>
           <div class="header-actions">
-            <button mat-icon-button (click)="viewAllActivities()" matTooltip="View All">
+            <button mat-icon-button (click)="viewAllBookings()" matTooltip="View All Bookings">
               <mat-icon>open_in_new</mat-icon>
             </button>
           </div>
@@ -133,31 +117,23 @@
           <div *ngIf="recentActivities.length === 0" class="empty-state">
             <mat-icon>inbox</mat-icon>
             <p>No recent activity</p>
-            <small>Your recent bookings and transactions will appear here</small>
           </div>
           <div class="activity-list" *ngIf="recentActivities.length > 0">
-            <div class="activity-item" 
-                 *ngFor="let activity of recentActivities; trackBy: trackActivity"
-                 (click)="navigateToActivity(activity)"
-                 [class.unread]="!activity.read">
-              <div class="activity-icon" [ngClass]="getActivityClass(activity.type)">
-                <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
+            <!-- Iterate over the real recentActivities array -->
+            <div class="activity-item" *ngFor="let activity of recentActivities; trackBy: trackActivity"
+              (click)="navigateToBooking(activity.id)">
+              <div class="activity-icon" [ngClass]="'activity-' + activity.type">
+                <mat-icon>info</mat-icon>
               </div>
               <div class="activity-details">
                 <h4 class="activity-title">{{ activity.title }}</h4>
                 <p class="activity-description">{{ activity.subtitle }}</p>
                 <div class="activity-meta">
                   <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
-                  <span *ngIf="activity.actionUrl" 
-                        class="activity-status" 
-                        [ngClass]="getStatusColor(activity.type)">
-                    {{ getActivityStatusText(activity.type) }}
-                  </span>
                 </div>
               </div>
               <div class="activity-actions">
                 <mat-icon class="activity-arrow">chevron_right</mat-icon>
-                <div *ngIf="!activity.read" class="unread-indicator"></div>
               </div>
             </div>
           </div>
@@ -173,48 +149,32 @@
           Upcoming Bookings
           <span class="booking-count">({{ upcomingBookings.length }})</span>
         </mat-card-title>
-        <mat-card-subtitle>Your scheduled transportation</mat-card-subtitle>
-        <div class="header-actions">
-          <button mat-icon-button (click)="viewAllBookings()" matTooltip="View All Bookings">
-            <mat-icon>open_in_new</mat-icon>
-          </button>
-        </div>
       </mat-card-header>
       <mat-card-content>
         <div class="bookings-list">
-          <div class="booking-item" 
-               *ngFor="let booking of upcomingBookings; trackBy: trackBooking"
-               (click)="navigateToBooking(booking.id)"
-               [class.urgent]="isBookingUrgent(booking)">
-            <div class="booking-icon" [ngClass]="getBookingStatusClass(booking.status)">
-              <mat-icon>{{ getBookingIcon(booking.status) }}</mat-icon>
+          <!-- Iterate over the real upcomingBookings array -->
+          <div class="booking-item" *ngFor="let booking of upcomingBookings; trackBy: trackBooking"
+            (click)="navigateToBooking(booking.id)">
+            <div class="booking-icon" [ngClass]="getStatusBadgeClass(booking.status)">
+              <mat-icon>schedule</mat-icon>
             </div>
             <div class="booking-details">
-              <h4 class="booking-title">{{ booking.from }} → {{ booking.to }}</h4>
+              <!-- Use the real properties from the Booking model -->
+              <h4 class="booking-title">{{ booking.pickup.address.city }} → {{ booking.delivery.address.city }}</h4>
               <p class="booking-date">
                 <mat-icon>schedule</mat-icon>
-                Departure: {{ formatDate(booking.departureTime) }}
+                Departure: {{ formatDateTime(booking.pickup.scheduledDate) }}
               </p>
               <div class="booking-meta">
-                <span class="booking-type" *ngIf="booking.vehicle">
-                  <mat-icon>directions_car</mat-icon>
-                  {{ booking.vehicle.type }}
-                </span>
-                <span class="booking-status" [ngClass]="getStatusColor(booking.status)">
-                  <mat-icon>{{ getStatusIcon(booking.status) }}</mat-icon>
-                  {{ getStatusText(booking.status) }}
+                <span class="booking-status" [ngClass]="getStatusBadgeClass(booking.status)">
+                  <mat-icon>hourglass_empty</mat-icon>
+                  {{ booking.status | titlecase }}
                 </span>
               </div>
             </div>
             <div class="booking-time">
-              <div class="eta">
-                <small>ETA</small>
-                <strong>{{ formatTime(booking.estimatedArrival) }}</strong>
-              </div>
-              <div class="urgent-badge" *ngIf="isBookingUrgent(booking)">
-                <mat-icon>priority_high</mat-icon>
-                <span>Urgent</span>
-              </div>
+              <small>Booking #</small>
+              <strong>{{ booking.bookingNumber }}</strong>
             </div>
           </div>
         </div>
@@ -228,7 +188,7 @@
           <mat-icon class="large-icon">event_available</mat-icon>
           <h3>No Upcoming Bookings</h3>
           <p>You don't have any scheduled trips at the moment.</p>
-          <button mat-raised-button color="primary" (click)="createNewBooking()" class="cta-button">
+          <button mat-raised-button color="primary" (click)="navigateToBooking('')" class="cta-button">
             <mat-icon>add</mat-icon>
             Book Your Next Trip
           </button>
@@ -236,75 +196,6 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Performance Insights -->
-    <mat-card class="insights-card" *ngIf="bookingTrends.length > 0">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>trending_up</mat-icon>
-          Your Travel Insights
-        </mat-card-title>
-        <mat-card-subtitle>Booking patterns and statistics</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="insights-grid">
-          <div class="insight-item" *ngFor="let trend of bookingTrends; trackBy: trackTrends">
-            <div class="insight-header">
-              <h4>{{ trend.month }}</h4>
-              <span class="trend-value">{{ trend.bookings }} trips</span>
-            </div>
-            <div class="insight-bar">
-              <div class="bar-fill" [style.width.%]="getTrendPercentage(trend.bookings)"></div>
-            </div>
-            <div class="insight-meta">
-              <span class="revenue">Revenue: {{ formatCurrency(trend.revenue) }}</span>
-              <span class="cancelled" *ngIf="trend.cancelled > 0">
-                Cancelled: {{ trend.cancelled }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Customer Support Quick Access -->
-    <mat-card class="support-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>support_agent</mat-icon>
-          Need Help?
-        </mat-card-title>
-        <mat-card-subtitle>We're here to assist you 24/7</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="support-options">
-          <button mat-stroked-button class="support-btn" (click)="contactSupport('chat')">
-            <mat-icon>chat</mat-icon>
-            <span>Live Chat</span>
-          </button>
-          <button mat-stroked-button class="support-btn" (click)="contactSupport('phone')">
-            <mat-icon>phone</mat-icon>
-            <span>Call Support</span>
-          </button>
-          <button mat-stroked-button class="support-btn" (click)="contactSupport('email')">
-            <mat-icon>email</mat-icon>
-            <span>Email Us</span>
-          </button>
-          <button mat-stroked-button class="support-btn" (click)="viewFAQ()">
-            <mat-icon>help</mat-icon>
-            <span>FAQ</span>
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
   </div>
 
-  <!-- Floating Action Button -->
-  <button mat-fab 
-          color="primary" 
-          class="fab-button"
-          (click)="createNewBooking()"
-          matTooltip="Quick Book"
-          *ngIf="!isLoading">
-    <mat-icon>add</mat-icon>
-  </button>
 </div>
