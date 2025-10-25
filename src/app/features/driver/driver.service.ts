@@ -48,9 +48,6 @@ export interface DriverChartData {
   providedIn: 'root',
 })
 export class DriverService {
-  getAllDrivers() {
-    throw new Error('Method not implemented.');
-  }
   private apiUrl: string;
 
   constructor(
@@ -88,6 +85,26 @@ export class DriverService {
         next: (data) => this.logResponse('getDashboardStats', data),
         error: (error) => this.logError('getDashboardStats', error),
       })
+    );
+  }
+
+  /**
+   * Retrieve the complete driver directory for administrative views.
+   */
+  getAllDrivers(): Observable<Driver[]> {
+    const url = `${this.apiUrl}`;
+    this.logRequest('GET', url);
+    return this.http.get<Driver[]>(url).pipe(
+      tap({
+        next: (data) => this.logResponse('getAllDrivers', data),
+        error: (error) => this.logError('getAllDrivers', error),
+      }),
+      catchError(
+        this.handleError(
+          'getAllDrivers',
+          'Unable to load drivers right now. Please retry shortly.'
+        )
+      )
     );
   }
 
@@ -178,7 +195,8 @@ export class DriverService {
   }
 
   /**
-   * Create a new driver
+   * Get driver details by associated userId.
+   * Endpoint expectation: GET /transport/drivers/profile/userId/{userId}
    */
   getDriverByUserId(userId: string): Observable<Driver> {
     const url = `${this.apiUrl}/profile/userId/${encodeURIComponent(userId)}`;
@@ -354,26 +372,6 @@ export class DriverService {
           error: (error) => this.logError('updateDriverLocation', error),
         })
       );
-  }
-
-  /**
-   * Fetch all drivers (admin use-case)
-   */
-  getAllDrivers(): Observable<Driver[]> {
-    const url = `${this.apiUrl}`;
-    this.logRequest('GET', url);
-    return this.http.get<Driver[]>(url).pipe(
-      tap({
-        next: (data) => this.logResponse('getAllDrivers', data),
-        error: (error) => this.logError('getAllDrivers', error),
-      }),
-      catchError(
-        this.handleError(
-          'getAllDrivers',
-          'Unable to load drivers list. Please try again.'
-        )
-      )
-    );
   }
 
   private logRequest(method: string, url: string, payload?: unknown): void {
