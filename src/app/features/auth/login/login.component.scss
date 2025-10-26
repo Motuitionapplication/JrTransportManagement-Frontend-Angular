@@ -2,9 +2,9 @@
 
 // Custom Variables for JR Transport
 :root {
-  --bs-primary: #1976d2;
+  --bs-primary: #0a59a8;
   --bs-primary-rgb: 25, 118, 210;
-  --bs-secondary: #f44336;
+  --bs-secondary: #0a59a8;
   --bs-secondary-rgb: 244, 67, 54;
 }
 
@@ -201,7 +201,7 @@
   background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%) !important;
   border: 1px solid #f1aeb5 !important;
   border-radius: 8px !important;
-  border-left: 4px solid #dc3545 !important;
+  border-left: 4px solid #0a59a8 !important;
   padding: 0.75rem !important;
   font-size: 0.85rem !important;
   margin-bottom: 1rem !important;
@@ -241,7 +241,7 @@
     background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%) !important;
     border-color: var(--bs-primary) !important;
     transform: translateY(-1px);
-    box-shadow: 0 3px 10px rgba(255, 107, 53, 0.3);
+    box-shadow: 0 3px 10px rgba(24, 93, 222, 0.3);
   }
 }
 
@@ -263,7 +263,7 @@
   }
   
   &:focus {
-    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
+    box-shadow: 0 0 0 0.2rem rgba(24, 93, 222, 0.3) !important;
   }
 }
 
