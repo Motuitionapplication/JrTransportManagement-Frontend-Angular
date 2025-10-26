@@ -4,7 +4,6 @@
 @import "~ag-grid-community/styles/ag-grid.css";
 @import "~ag-grid-community/styles/ag-theme-alpine.css";
 
-
 .ag-theme-alpine .btn {
   padding: 2px 8px;
   font-size: 12px;
@@ -749,17 +748,19 @@ body, html {
 }
 
 // JR Transport Material Dialog Customizations
+// JR Transport Material Dialog Customizations
+// JR Transport Material Dialog Customizations
 .jr-dialog {
   .mat-mdc-dialog-surface {
-    background: var(--jr-gradient);
+    background: transparent !important;  // ← Transparent background
+    background-image: none !important;
   }
   
   .mat-mdc-dialog-container {
+    background: transparent !important;  // ← Transparent container
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 
-      0 25px 50px rgba(25, 118, 210, 0.15),
-      0 0 0 1px rgba(255, 255, 255, 0.2);
+    box-shadow: none !important;  // ← Remove shadow completely
     
     // Prevent scrolling during dialog open/close
     scroll-behavior: auto !important;
@@ -769,9 +770,9 @@ body, html {
   .mat-mdc-dialog-content {
     scroll-behavior: auto !important;
     overflow: visible !important;
+    background: transparent !important;  // ← Transparent content area
   }
 }
-
 // JR Transport Dashboard Widgets
 .dashboard-widget {
   background: linear-gradient(135deg, var(--jr-blue-light) 0%, var(--jr-red-light) 100%);

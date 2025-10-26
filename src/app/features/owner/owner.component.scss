@@ -78,6 +78,10 @@ $transition: all 0.3s ease;
         span:not(.icon) {
           display: none;
         }
+
+        .nav-icon {
+          margin: 0 auto;
+        }
       }
     }
   }
@@ -572,4 +576,80 @@ $transition: all 0.3s ease;
   .page-content {
     padding: 0.75rem;
   }
+}
+
+/* --- ANIMATION CLASSES --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* --- CUSTOM SCROLLBAR --- */
+.dashboard-content {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+
+    &:hover {
+      background: #a0aec0;
+    }
+  }
+}
+
+/* --- UTILITY CLASSES --- */
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #666 !important;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.mt-1 {
+  margin-top: 0.5rem !important;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mt-2 {
+  margin-top: 1rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 1rem !important;
+}
+
+.font-weight-bold {
+  font-weight: 700 !important;
+}
+
+.font-weight-semibold {
+  font-weight: 600 !important;
 }

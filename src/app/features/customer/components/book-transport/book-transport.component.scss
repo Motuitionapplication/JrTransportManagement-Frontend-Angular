@@ -1,0 +1,844 @@
+.book-transport-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+
+  .page-header {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .page-title {
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 4px;
+
+      i {
+        color: #3498db;
+      }
+    }
+
+    .page-subtitle {
+      color: #7f8c8d;
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+
+    .help-section {
+      .btn {
+        border-radius: 6px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // Progress Indicator
+  .progress-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .progress-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+
+      .step-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        font-size: 18px;
+        transition: all 0.3s;
+        border: 3px solid transparent;
+      }
+
+      .step-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6c757d;
+        transition: color 0.3s;
+      }
+
+      &.active {
+        .step-circle {
+          background-color: #3498db;
+          color: white;
+          border-color: #3498db;
+        }
+
+        .step-label {
+          color: #3498db;
+          font-weight: 600;
+        }
+      }
+
+      &.completed {
+        .step-circle {
+          background-color: #28a745;
+          color: white;
+          border-color: #28a745;
+        }
+
+        .step-label {
+          color: #28a745;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .progress-line {
+      height: 2px;
+      background-color: #e9ecef;
+      flex: 1;
+      margin: 0 16px;
+      margin-top: -25px;
+      transition: background-color 0.3s;
+
+      &.active {
+        background-color: #28a745;
+      }
+    }
+  }
+
+  // Step Content
+  .step-content {
+    margin-bottom: 24px;
+
+    .step-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+
+      .card-header {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 20px 24px;
+
+        h4 {
+          margin-bottom: 4px;
+          font-weight: 600;
+
+          i {
+            opacity: 0.9;
+          }
+        }
+
+        p {
+          margin-bottom: 0;
+          opacity: 0.9;
+          font-size: 14px;
+        }
+      }
+
+      .card-body {
+        padding: 24px;
+      }
+    }
+  }
+
+  // Form Styles
+  .section-title {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+
+    i {
+      margin-right: 8px;
+    }
+  }
+
+  .form-label {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 6px;
+
+    &.required::after {
+      content: ' *';
+      color: #dc3545;
+    }
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: all 0.2s;
+
+    &:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    &.is-invalid {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+  }
+
+  .input-group {
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #e9ecef;
+      border-radius: 8px 0 0 8px;
+
+      i {
+        width: 16px;
+        text-align: center;
+      }
+    }
+
+    .form-control {
+      border-radius: 0 8px 8px 0;
+    }
+  }
+
+  .form-text {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+
+    i {
+      margin-right: 4px;
+    }
+  }
+
+  .invalid-feedback {
+    font-size: 12px;
+    color: #dc3545;
+    margin-top: 4px;
+  }
+
+  // Checkbox and Radio Styles
+  .checkbox-group,
+  .payment-methods {
+    .form-check {
+      margin-bottom: 12px;
+      padding-left: 28px;
+
+      .form-check-input {
+        margin-left: -28px;
+        margin-top: 2px;
+
+        &:checked {
+          background-color: #3498db;
+          border-color: #3498db;
+        }
+      }
+
+      .form-check-label {
+        font-size: 14px;
+        color: #495057;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+
+        i {
+          margin-right: 8px;
+          width: 16px;
+          text-align: center;
+        }
+      }
+
+      &.payment-option {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #e9ecef;
+        }
+
+        .form-check-input:checked + .form-check-label {
+          color: #3498db;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // Route Info Card
+  .route-info-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #e9ecef;
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      text-align: center;
+
+      i {
+        font-size: 24px;
+        margin-bottom: 8px;
+        width: 40px;
+      }
+
+      div {
+        flex: 1;
+
+        strong {
+          display: block;
+          color: #2c3e50;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        span {
+          color: #495057;
+          font-size: 16px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // Vehicle Selection
+  .vehicle-options {
+    .vehicle-card {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 0;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      overflow: hidden;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        border-color: #3498db;
+      }
+
+      &.selected {
+        border-color: #28a745;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+
+        .vehicle-badge {
+          background-color: #28a745 !important;
+        }
+      }
+
+      .vehicle-image {
+        position: relative;
+        height: 160px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+          max-height: 120px;
+          max-width: 100%;
+          object-fit: contain;
+        }
+
+        .vehicle-badge {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background-color: #3498db;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+      }
+
+      .vehicle-info {
+        padding: 16px;
+
+        h5 {
+          color: #2c3e50;
+          font-weight: 600;
+          margin-bottom: 8px;
+          font-size: 16px;
+        }
+
+        .vehicle-description {
+          color: #6c757d;
+          font-size: 13px;
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+
+        .vehicle-specs {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 12px;
+
+          .spec-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #495057;
+
+            i {
+              margin-right: 6px;
+              color: #6c757d;
+              width: 14px;
+            }
+          }
+        }
+
+        .vehicle-features {
+          margin-bottom: 12px;
+
+          .feature {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            margin-right: 6px;
+            margin-bottom: 4px;
+
+            i {
+              margin-right: 4px;
+            }
+          }
+        }
+
+        .vehicle-pricing {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+          font-size: 12px;
+
+          .base-price,
+          .per-km-price {
+            display: flex;
+            flex-direction: column;
+
+            .price-label {
+              color: #6c757d;
+              font-size: 10px;
+            }
+
+            .price-value {
+              color: #2c3e50;
+              font-weight: 600;
+              font-size: 14px;
+            }
+          }
+        }
+
+        .estimated-total {
+          text-align: center;
+          padding: 8px;
+          background: #e8f5e8;
+          border-radius: 6px;
+          margin-bottom: 8px;
+          color: #2e7d32;
+          font-size: 14px;
+        }
+
+        .availability {
+          text-align: center;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 4px 8px;
+          border-radius: 12px;
+
+          &.available {
+            background: #e8f5e8;
+            color: #2e7d32;
+          }
+
+          &.limited {
+            background: #fff3e0;
+            color: #f57c00;
+          }
+
+          &.unavailable {
+            background: #ffebee;
+            color: #c62828;
+          }
+
+          i {
+            margin-right: 4px;
+          }
+        }
+      }
+    }
+  }
+
+  .loading-vehicles,
+  .no-vehicles {
+    background: white;
+    border-radius: 12px;
+    padding: 60px 40px;
+    text-align: center;
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      color: #e9ecef;
+      margin-bottom: 24px;
+    }
+
+    h4 {
+      color: #2c3e50;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #7f8c8d;
+      margin-bottom: 24px;
+    }
+  }
+
+  .selected-vehicle-summary {
+    margin-top: 20px;
+
+    .alert {
+      border-radius: 8px;
+      border: none;
+
+      h6 {
+        margin-bottom: 8px;
+
+        i {
+          margin-right: 8px;
+        }
+      }
+
+      p {
+        margin-bottom: 0;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // Booking Summary
+  .booking-summary {
+    .summary-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      padding: 20px;
+
+      .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 14px;
+
+        span:first-child {
+          color: #6c757d;
+          font-weight: 500;
+        }
+
+        span:last-child {
+          color: #2c3e50;
+          font-weight: 500;
+        }
+      }
+
+      .price-breakdown {
+        .price-item {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+          font-size: 14px;
+
+          span:first-child {
+            color: #6c757d;
+          }
+
+          span:last-child {
+            color: #2c3e50;
+            font-weight: 500;
+          }
+
+          &.tax-item {
+            border-top: 1px solid #e9ecef;
+            padding-top: 8px;
+            margin-top: 8px;
+          }
+
+          &.total-item {
+            border-top: 2px solid #3498db;
+            padding-top: 12px;
+            margin-top: 12px;
+            font-size: 16px;
+
+            span {
+              color: #2c3e50 !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Navigation Buttons
+  .navigation-buttons {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 24px;
+
+    .btn {
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      min-width: 120px;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .spinner-border-sm {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}
+
+// Vehicle Badge Classes
+.vehicle-badge {
+  &.small {
+    background-color: #28a745 !important;
+  }
+
+  &.medium {
+    background-color: #ffc107 !important;
+  }
+
+  &.large {
+    background-color: #dc3545 !important;
+  }
+
+  &.extra-large {
+    background-color: #6f42c1 !important;
+  }
+}
+
+// Availability Classes
+.availability {
+  &.available i::before {
+    content: '\f058'; // fa-check-circle
+  }
+
+  &.limited i::before {
+    content: '\f071'; // fa-exclamation-triangle
+  }
+
+  &.unavailable i::before {
+    content: '\f057'; // fa-times-circle
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .book-transport-container {
+    padding: 12px;
+
+    .page-header {
+      padding: 16px;
+      text-align: center;
+
+      .row > div {
+        margin-bottom: 12px;
+      }
+    }
+
+    .progress-section {
+      padding: 16px;
+
+      .progress-container {
+        flex-wrap: wrap;
+
+        .progress-step {
+          margin-bottom: 16px;
+          flex: 1 1 25%;
+          min-width: 120px;
+
+          .step-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+          }
+
+          .step-label {
+            font-size: 11px;
+          }
+        }
+
+        .progress-line {
+          display: none;
+        }
+      }
+    }
+
+    .step-card {
+      .card-header {
+        padding: 16px;
+
+        h4 {
+          font-size: 18px;
+        }
+      }
+
+      .card-body {
+        padding: 16px;
+      }
+    }
+
+    .vehicle-card {
+      margin-bottom: 16px;
+
+      .vehicle-image {
+        height: 120px;
+
+        img {
+          max-height: 80px;
+        }
+      }
+
+      .vehicle-info {
+        padding: 12px;
+
+        .vehicle-specs {
+          flex-direction: column;
+          align-items: flex-start;
+
+          .spec-item {
+            margin-bottom: 4px;
+          }
+        }
+
+        .vehicle-pricing {
+          flex-direction: column;
+
+          .base-price,
+          .per-km-price {
+            margin-bottom: 4px;
+          }
+        }
+      }
+    }
+
+    .booking-summary {
+      .summary-card {
+        padding: 16px;
+      }
+
+      .summary-item,
+      .price-item {
+        flex-direction: column;
+        align-items: flex-start;
+
+        span:last-child {
+          margin-top: 4px;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .navigation-buttons {
+      padding: 16px;
+
+      .btn {
+        width: 100%;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .book-transport-container {
+    .route-info-card {
+      .info-item {
+        margin-bottom: 16px;
+        text-align: left;
+
+        i {
+          margin-right: 12px;
+          margin-bottom: 0;
+        }
+
+        div {
+          strong {
+            font-size: 11px;
+          }
+
+          span {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .checkbox-group,
+    .payment-methods {
+      .form-check {
+        margin-bottom: 8px;
+
+        .form-check-label {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+}

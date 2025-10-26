@@ -1,0 +1,741 @@
+<div class="profile-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Manage your personal information and preferences</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading profile data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="profile-content">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <div class="avatar-circle">
+          <span class="avatar-initials">{{ profile.personalInfo.firstName[0] }}{{ profile.personalInfo.lastName[0] }}</span>
+        </div>
+        <div *ngIf="editMode" class="avatar-upload">
+          <input type="file" (change)="uploadProfilePicture($event)" accept="image/*" id="avatar-upload" hidden>
+          <label for="avatar-upload" class="upload-btn">📷 Change Photo</label>
+        </div>
+      </div>
+      
+      <div class="profile-info">
+        <h2 class="driver-name">{{ profile.personalInfo.firstName }} {{ profile.personalInfo.lastName }}</h2>
+        <div class="driver-details">
+          <div class="detail-item">
+            <span class="detail-icon">🆔</span>
+            <span class="detail-text">ID: {{ profile.workInfo.employeeId }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-icon">📅</span>
+            <span class="detail-text">Joined: {{ formatDate(profile.workInfo.joinDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-icon">⭐</span>
+            <span class="detail-text">{{ profile.statistics.averageRating }} / 5.0 ({{ profile.statistics.customerFeedbackCount }} reviews)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-actions">
+        <button *ngIf="!editMode" class="action-btn edit-btn" (click)="enterEditMode()">
+          ✏️ Edit Profile
+        </button>
+        <div *ngIf="editMode" class="edit-actions">
+          <button class="action-btn save-btn" (click)="saveProfile()" [disabled]="saving">
+            <span *ngIf="!saving">💾 Save Changes</span>
+            <span *ngIf="saving">⏳ Saving...</span>
+          </button>
+          <button class="action-btn cancel-btn" (click)="cancelEdit()" [disabled]="saving">
+            ❌ Cancel
+          </button>
+        </div>
+        
+        <div class="dropdown-menu">
+          <button class="action-btn menu-btn">⋯</button>
+          <div class="dropdown-content">
+            <a (click)="downloadProfile()">📄 Download Profile</a>
+            <a (click)="exportToPDF()">📋 Export to PDF</a>
+            <a (click)="deleteAccount()" class="danger">🗑️ Delete Account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="profile-tabs">
+      <button 
+        *ngFor="let tab of [
+          {key: 'personal', label: 'Personal Info', icon: '👤'},
+          {key: 'vehicle', label: 'Vehicle', icon: '🚗'},
+          {key: 'work', label: 'Work Info', icon: '💼'},
+          {key: 'stats', label: 'Statistics', icon: '📊'},
+          {key: 'preferences', label: 'Preferences', icon: '⚙️'}
+        ]"
+        class="tab-btn"
+        [class.active]="activeTab === tab.key"
+        (click)="switchTabHelper(tab.key)">
+        <span class="tab-icon">{{ tab.icon }}</span>
+        <span class="tab-label">{{ tab.label }}</span>
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Personal Info Tab -->
+      <div *ngIf="activeTab === 'personal'" class="tab-panel">
+        <div class="form-section">
+          <h3 class="section-title">Basic Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First Name</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.firstName"
+                [readonly]="!editMode"
+                [class.error]="formErrors['firstName']"
+                class="form-input">
+              <div *ngIf="formErrors['firstName']" class="error-message">{{ formErrors['firstName'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>Last Name</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.lastName"
+                [readonly]="!editMode"
+                [class.error]="formErrors['lastName']"
+                class="form-input">
+              <div *ngIf="formErrors['lastName']" class="error-message">{{ formErrors['lastName'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input 
+                type="date" 
+                [value]="profile.personalInfo.dateOfBirth | date:'yyyy-MM-dd'"
+                (change)="updateDateOfBirth($event)"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input 
+                type="tel" 
+                [(ngModel)]="profile.personalInfo.phone"
+                [readonly]="!editMode"
+                [class.error]="formErrors['phone']"
+                class="form-input">
+              <div *ngIf="formErrors['phone']" class="error-message">{{ formErrors['phone'] }}</div>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Email Address</label>
+              <input 
+                type="email" 
+                [(ngModel)]="profile.personalInfo.email"
+                [readonly]="!editMode"
+                [class.error]="formErrors['email']"
+                class="form-input">
+              <div *ngIf="formErrors['email']" class="error-message">{{ formErrors['email'] }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Address</h3>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Street Address</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.address.street"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>City</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.address.city"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>State</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.address.state"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>ZIP Code</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.address.zipCode"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Country</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.address.country"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Emergency Contact</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Contact Name</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.emergencyContact.name"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Relationship</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.personalInfo.emergencyContact.relationship"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input 
+                type="tel" 
+                [(ngModel)]="profile.personalInfo.emergencyContact.phone"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Driver Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>License Number</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.driverInfo.licenseNumber"
+                [readonly]="!editMode"
+                [class.error]="formErrors['licenseNumber']"
+                class="form-input">
+              <div *ngIf="formErrors['licenseNumber']" class="error-message">{{ formErrors['licenseNumber'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>License Class</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.driverInfo.licenseClass"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>License Expiry</label>
+              <input 
+                type="date" 
+                [value]="profile.driverInfo.licenseExpiry | date:'yyyy-MM-dd'"
+                (change)="updateLicenseExpiry($event)"
+                [readonly]="!editMode"
+                [class.error]="formErrors['licenseExpiry']"
+                class="form-input">
+              <div *ngIf="formErrors['licenseExpiry']" class="error-message">{{ formErrors['licenseExpiry'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>Years of Experience</label>
+              <input 
+                type="number" 
+                [(ngModel)]="profile.driverInfo.yearsOfExperience"
+                [readonly]="!editMode"
+                min="0"
+                class="form-input">
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <div class="tags-group">
+              <label>Languages Spoken</label>
+              <div class="tags-container">
+                <span *ngFor="let language of profile.driverInfo.languagesSpoken" class="tag">
+                  {{ language }}
+                  <button *ngIf="editMode" type="button" (click)="removeLanguage(language)" class="tag-remove">×</button>
+                </span>
+              </div>
+              <div *ngIf="editMode" class="add-tag">
+                <select (change)="onLanguageChange($event)" class="add-select">
+                  <option value="">Add Language</option>
+                  <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="tags-group">
+              <label>Specializations</label>
+              <div class="tags-container">
+                <span *ngFor="let spec of profile.driverInfo.specializations" class="tag">
+                  {{ spec }}
+                  <button *ngIf="editMode" type="button" (click)="removeSpecialization(spec)" class="tag-remove">×</button>
+                </span>
+              </div>
+              <div *ngIf="editMode" class="add-tag">
+                <select (change)="onSpecializationChange($event)" class="add-select">
+                  <option value="">Add Specialization</option>
+                  <option *ngFor="let spec of specializations" [value]="spec">{{ spec }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle Info Tab -->
+      <div *ngIf="activeTab === 'vehicle'" class="tab-panel">
+        <div class="form-section">
+          <h3 class="section-title">Vehicle Details</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Make</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.vehicleInfo.make"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Model</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.vehicleInfo.model"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Year</label>
+              <input 
+                type="number" 
+                [(ngModel)]="profile.vehicleInfo.year"
+                [readonly]="!editMode"
+                min="1900"
+                max="2025"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Color</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.vehicleInfo.color"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Plate Number</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.vehicleInfo.plateNumber"
+                [readonly]="!editMode"
+                [class.error]="formErrors['plateNumber']"
+                class="form-input">
+              <div *ngIf="formErrors['plateNumber']" class="error-message">{{ formErrors['plateNumber'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>VIN</label>
+              <input 
+                type="text" 
+                [(ngModel)]="profile.vehicleInfo.vin"
+                [readonly]="!editMode"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Passenger Capacity</label>
+              <input 
+                type="number" 
+                [(ngModel)]="profile.vehicleInfo.capacity"
+                [readonly]="!editMode"
+                min="1"
+                max="12"
+                class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label>Registration Expiry</label>
+              <input 
+                type="date" 
+                [value]="profile.vehicleInfo.registrationExpiry | date:'yyyy-MM-dd'"
+                (change)="updateRegistrationExpiry($event)"
+                [readonly]="!editMode"
+                [class.error]="formErrors['registrationExpiry']"
+                class="form-input">
+              <div *ngIf="formErrors['registrationExpiry']" class="error-message">{{ formErrors['registrationExpiry'] }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>Insurance Expiry</label>
+              <input 
+                type="date" 
+                [value]="profile.vehicleInfo.insuranceExpiry | date:'yyyy-MM-dd'"
+                (change)="updateInsuranceExpiry($event)"
+                [readonly]="!editMode"
+                [class.error]="formErrors['insuranceExpiry']"
+                class="form-input">
+              <div *ngIf="formErrors['insuranceExpiry']" class="error-message">{{ formErrors['insuranceExpiry'] }}</div>
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <div class="tags-group">
+              <label>Vehicle Features</label>
+              <div class="tags-container">
+                <span *ngFor="let feature of profile.vehicleInfo.features" class="tag">
+                  {{ feature }}
+                  <button *ngIf="editMode" type="button" (click)="removeVehicleFeature(feature)" class="tag-remove">×</button>
+                </span>
+              </div>
+              <div *ngIf="editMode" class="add-tag">
+                <select (change)="onVehicleFeatureChange($event)" class="add-select">
+                  <option value="">Add Feature</option>
+                  <option *ngFor="let feature of vehicleFeatures" [value]="feature">{{ feature }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Info Tab -->
+      <div *ngIf="activeTab === 'work'" class="tab-panel">
+        <div class="form-section">
+          <h3 class="section-title">Work Schedule</h3>
+          <div class="schedule-grid">
+            <div *ngFor="let day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']" class="schedule-day">
+              <label class="day-label">{{ day | titlecase }}</label>
+              <div class="time-inputs">
+                <input 
+                  type="time" 
+                  [value]="getWorkingHour(day, 'start')"
+                  (input)="onWorkingHourChange($event, day, 'start')"
+                  [readonly]="!editMode"
+                  class="time-input">
+                <span class="time-separator">to</span>
+                <input 
+                  type="time" 
+                  [value]="getWorkingHour(day, 'end')"
+                  (input)="onWorkingHourChange($event, day, 'end')"
+                  [readonly]="!editMode"
+                  class="time-input">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Work Preferences</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Maximum Distance (km)</label>
+              <input 
+                type="number" 
+                [(ngModel)]="profile.workInfo.maxDistance"
+                [readonly]="!editMode"
+                min="1"
+                max="200"
+                class="form-input">
+            </div>
+          </div>
+
+          <div class="tags-section">
+            <div class="tags-group">
+              <label>Preferred Areas</label>
+              <div class="tags-container">
+                <span *ngFor="let area of profile.workInfo.preferredAreas" class="tag">
+                  {{ area }}
+                  <button *ngIf="editMode" type="button" (click)="removePreferredArea(area)" class="tag-remove">×</button>
+                </span>
+              </div>
+              <div *ngIf="editMode" class="add-tag">
+                <select (change)="onPreferredAreaChange($event)" class="add-select">
+                  <option value="">Add Area</option>
+                  <option *ngFor="let area of preferredAreas" [value]="area">{{ area }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Tab -->
+      <div *ngIf="activeTab === 'stats'" class="tab-panel">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-content">
+              <h3>{{ profile.statistics.totalTrips }}</h3>
+              <p>Total Trips</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+              <h3>{{ formatCurrency(profile.statistics.totalEarnings) }}</h3>
+              <p>Total Earnings</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+              <h3>{{ profile.statistics.averageRating }}/5</h3>
+              <p>Average Rating</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3>{{ profile.statistics.completionRate }}%</h3>
+              <p>Completion Rate</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⏰</div>
+            <div class="stat-content">
+              <h3>{{ profile.statistics.onTimePercentage }}%</h3>
+              <p>On-Time Performance</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-content">
+              <h3>{{ profile.statistics.customerFeedbackCount }}</h3>
+              <p>Customer Reviews</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ratings-section">
+          <h3 class="section-title">Detailed Ratings</h3>
+          <div class="ratings-grid">
+            <div class="rating-item">
+              <span class="rating-label">Overall Rating</span>
+              <div class="rating-stars">
+                <span *ngFor="let star of getRatingStars(profile.ratings.overall)" class="star">{{ star }}</span>
+                <span class="rating-value">{{ profile.ratings.overall }}/5</span>
+              </div>
+            </div>
+
+            <div class="rating-item">
+              <span class="rating-label">Punctuality</span>
+              <div class="rating-stars">
+                <span *ngFor="let star of getRatingStars(profile.ratings.punctuality)" class="star">{{ star }}</span>
+                <span class="rating-value">{{ profile.ratings.punctuality }}/5</span>
+              </div>
+            </div>
+
+            <div class="rating-item">
+              <span class="rating-label">Vehicle Condition</span>
+              <div class="rating-stars">
+                <span *ngFor="let star of getRatingStars(profile.ratings.vehicleCondition)" class="star">{{ star }}</span>
+                <span class="rating-value">{{ profile.ratings.vehicleCondition }}/5</span>
+              </div>
+            </div>
+
+            <div class="rating-item">
+              <span class="rating-label">Customer Service</span>
+              <div class="rating-stars">
+                <span *ngFor="let star of getRatingStars(profile.ratings.customerService)" class="star">{{ star }}</span>
+                <span class="rating-value">{{ profile.ratings.customerService }}/5</span>
+              </div>
+            </div>
+
+            <div class="rating-item">
+              <span class="rating-label">Navigation Skills</span>
+              <div class="rating-stars">
+                <span *ngFor="let star of getRatingStars(profile.ratings.navigation)" class="star">{{ star }}</span>
+                <span class="rating-value">{{ profile.ratings.navigation }}/5</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Tab -->
+      <div *ngIf="activeTab === 'preferences'" class="tab-panel">
+        <div class="form-section">
+          <h3 class="section-title">Notification Preferences</h3>
+          <div class="preferences-grid">
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.notifications.tripRequests"
+                  (change)="onNotificationChange('tripRequests', $event)"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Trip Requests
+              </label>
+              <p class="preference-description">Receive notifications for new trip requests</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.notifications.paymentUpdates"
+                  (change)="onNotificationChange('paymentUpdates', $event)"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Payment Updates
+              </label>
+              <p class="preference-description">Notifications about payments and earnings</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.notifications.scheduleChanges"
+                  (change)="onNotificationChange('scheduleChanges', $event)"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Schedule Changes
+              </label>
+              <p class="preference-description">Updates about schedule modifications</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.notifications.systemUpdates"
+                  (change)="onNotificationChange('systemUpdates', $event)"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                System Updates
+              </label>
+              <p class="preference-description">Important system notifications and updates</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.notifications.promotions"
+                  (change)="onNotificationChange('promotions', $event)"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Promotions
+              </label>
+              <p class="preference-description">Marketing messages and promotional offers</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Privacy Settings</h3>
+          <div class="preferences-grid">
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.privacy.shareLocation"
+                  (change)="onPrivacyPreferenceChange($event, 'shareLocation')"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Share Location
+              </label>
+              <p class="preference-description">Allow location sharing for better trip matching</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.privacy.shareStats"
+                  (change)="onPrivacyPreferenceChange($event, 'shareStats')"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Share Statistics
+              </label>
+              <p class="preference-description">Share performance statistics with customers</p>
+            </div>
+
+            <div class="preference-item">
+              <label class="preference-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="profile.preferences.privacy.allowRatings"
+                  (change)="onPrivacyPreferenceChange($event, 'allowRatings')"
+                  [disabled]="!editMode">
+                <span class="checkmark"></span>
+                Allow Customer Ratings
+              </label>
+              <p class="preference-description">Allow customers to rate and review your service</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">App Settings</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Language</label>
+              <select 
+                [(ngModel)]="profile.preferences.language"
+                (change)="onLanguageSelectionChange($event)"
+                [disabled]="!editMode"
+                class="form-select">
+                <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Theme</label>
+              <select 
+                [(ngModel)]="profile.preferences.theme"
+                (change)="onThemeChange($event)"
+                [disabled]="!editMode"
+                class="form-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="auto">Auto (System)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
