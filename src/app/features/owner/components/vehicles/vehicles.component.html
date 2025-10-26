@@ -13,20 +13,21 @@
   <div class="controls-row">
     <div class="controls-container">
       <div class="search-section">
-        <input 
-          type="text" 
-          class="search-input" 
+        <input
+          type="text"
+          class="search-input"
           placeholder="Search vehicles..."
           [(ngModel)]="searchValue"
-          (input)="onQuickFilterChanged()">
+          (input)="onQuickFilterChanged()"
+        />
       </div>
-      
+
       <div class="buttons-section">
         <button class="action-btn btn-warning" (click)="exportToCSV()">
           <i class="fas fa-download"></i>
           Export
         </button>
-        
+
         <button class="action-btn btn-success" (click)="openAddVehicleDialog()">
           <i class="fas fa-plus"></i>
           Add Vehicle
@@ -46,15 +47,23 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <!-- Progress Indicator -->
         <div class="progress-indicator">
-          <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+          <div
+            class="step"
+            [class.active]="currentStep >= 1"
+            [class.completed]="currentStep > 1"
+          >
             <div class="step-number">1</div>
             <span>Basic Info</span>
           </div>
           <div class="step-divider"></div>
-          <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+          <div
+            class="step"
+            [class.active]="currentStep >= 2"
+            [class.completed]="currentStep > 2"
+          >
             <div class="step-number">2</div>
             <span>Documents</span>
           </div>
@@ -74,9 +83,19 @@
           <div formGroupName="basicInfo" class="form-grid">
             <div class="form-field">
               <label>Vehicle Number *</label>
-              <input type="text" formControlName="vehicleNumber" 
-                     placeholder="e.g., MH12AB1234" class="form-input">
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.vehicleNumber')?.invalid && vehicleForm.get('basicInfo.vehicleNumber')?.touched">
+              <input
+                type="text"
+                formControlName="vehicleNumber"
+                placeholder="e.g., MH12AB1234"
+                class="form-input"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.vehicleNumber')?.invalid &&
+                  vehicleForm.get('basicInfo.vehicleNumber')?.touched
+                "
+              >
                 Please enter a valid vehicle number
               </div>
             </div>
@@ -85,45 +104,97 @@
               <label>Vehicle Type *</label>
               <select formControlName="vehicleType" class="form-select">
                 <option value="">Select Type</option>
-                <option *ngFor="let type of vehicleTypes" [value]="type">{{type}}</option>
+                <option *ngFor="let type of vehicleTypes" [value]="type">
+                  {{ type }}
+                </option>
               </select>
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.vehicleType')?.invalid && vehicleForm.get('basicInfo.vehicleType')?.touched">
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.vehicleType')?.invalid &&
+                  vehicleForm.get('basicInfo.vehicleType')?.touched
+                "
+              >
                 Please select a vehicle type
               </div>
             </div>
 
             <div class="form-field">
               <label>Manufacturer *</label>
-              <input type="text" formControlName="manufacturer" 
-                     placeholder="e.g., Tata Motors" class="form-input">
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.manufacturer')?.invalid && vehicleForm.get('basicInfo.manufacturer')?.touched">
+              <input
+                type="text"
+                formControlName="manufacturer"
+                placeholder="e.g., Tata Motors"
+                class="form-input"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.manufacturer')?.invalid &&
+                  vehicleForm.get('basicInfo.manufacturer')?.touched
+                "
+              >
                 Please enter manufacturer name
               </div>
             </div>
 
             <div class="form-field">
               <label>Model *</label>
-              <input type="text" formControlName="model" 
-                     placeholder="e.g., LPT 1613" class="form-input">
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.model')?.invalid && vehicleForm.get('basicInfo.model')?.touched">
+              <input
+                type="text"
+                formControlName="model"
+                placeholder="e.g., LPT 1613"
+                class="form-input"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.model')?.invalid &&
+                  vehicleForm.get('basicInfo.model')?.touched
+                "
+              >
                 Please enter model name
               </div>
             </div>
 
             <div class="form-field">
               <label>Year *</label>
-              <input type="number" formControlName="year" 
-                     [min]="1990" [max]="2025" placeholder="2023" class="form-input">
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.year')?.invalid && vehicleForm.get('basicInfo.year')?.touched">
+              <input
+                type="number"
+                formControlName="year"
+                [min]="1990"
+                [max]="2025"
+                placeholder="2023"
+                class="form-input"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.year')?.invalid &&
+                  vehicleForm.get('basicInfo.year')?.touched
+                "
+              >
                 Please enter a valid year (1990-2025)
               </div>
             </div>
 
             <div class="form-field">
               <label>Capacity (Tons) *</label>
-              <input type="number" formControlName="capacity" 
-                     step="0.1" min="0" placeholder="12.5" class="form-input">
-              <div class="error-message" *ngIf="vehicleForm.get('basicInfo.capacity')?.invalid && vehicleForm.get('basicInfo.capacity')?.touched">
+              <input
+                type="number"
+                formControlName="capacity"
+                step="0.1"
+                min="0"
+                placeholder="12.5"
+                class="form-input"
+              />
+              <div
+                class="error-message"
+                *ngIf="
+                  vehicleForm.get('basicInfo.capacity')?.invalid &&
+                  vehicleForm.get('basicInfo.capacity')?.touched
+                "
+              >
                 Please enter vehicle capacity
               </div>
             </div>
@@ -131,7 +202,9 @@
             <div class="form-field">
               <label>Status *</label>
               <select formControlName="status" class="form-select">
-                <option *ngFor="let status of statusOptions" [value]="status">{{status}}</option>
+                <option *ngFor="let status of statusOptions" [value]="status">
+                  {{ status }}
+                </option>
               </select>
             </div>
           </div>
@@ -141,30 +214,56 @@
         <div *ngIf="currentStep === 2" class="form-step">
           <h4>Vehicle Documents</h4>
           <div formGroupName="documents" class="documents-section">
-            
             <!-- Registration -->
             <div class="document-group" formGroupName="registration">
               <h5><i class="fas fa-file-alt"></i> Registration Certificate</h5>
               <div class="form-row">
                 <div class="form-field">
                   <label>Registration Number *</label>
-                  <input type="text" formControlName="number" 
-                         placeholder="MH12AB123456789012" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.registration.number')?.invalid && vehicleForm.get('documents.registration.number')?.touched">
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="MH12AB123456789012"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.registration.number')
+                        ?.invalid &&
+                      vehicleForm.get('documents.registration.number')?.touched
+                    "
+                  >
                     Registration number is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Expiry Date *</label>
-                  <input type="date" formControlName="expiryDate" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.registration.expiryDate')?.invalid && vehicleForm.get('documents.registration.expiryDate')?.touched">
+                  <input
+                    type="date"
+                    formControlName="expiryDate"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.registration.expiryDate')
+                        ?.invalid &&
+                      vehicleForm.get('documents.registration.expiryDate')
+                        ?.touched
+                    "
+                  >
                     Expiry date is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Document URL</label>
-                  <input type="url" formControlName="documentUrl" 
-                         placeholder="https://example.com/doc.pdf" class="form-input">
+                  <input
+                    type="url"
+                    formControlName="documentUrl"
+                    placeholder="https://example.com/doc.pdf"
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -175,24 +274,56 @@
               <div class="form-row">
                 <div class="form-field">
                   <label>Policy Number *</label>
-                  <input type="text" formControlName="number" 
-                         placeholder="INS987654321" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.number')?.invalid && vehicleForm.get('documents.insurance.number')?.touched">
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="INS987654321"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.insurance.number')?.invalid &&
+                      vehicleForm.get('documents.insurance.number')?.touched
+                    "
+                  >
                     Policy number is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Provider *</label>
-                  <input type="text" formControlName="provider" 
-                         placeholder="HDFC ERGO General Insurance" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.provider')?.invalid && vehicleForm.get('documents.insurance.provider')?.touched">
+                  <input
+                    type="text"
+                    formControlName="provider"
+                    placeholder="HDFC ERGO General Insurance"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.insurance.provider')
+                        ?.invalid &&
+                      vehicleForm.get('documents.insurance.provider')?.touched
+                    "
+                  >
                     Insurance provider is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Expiry Date *</label>
-                  <input type="date" formControlName="expiryDate" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.insurance.expiryDate')?.invalid && vehicleForm.get('documents.insurance.expiryDate')?.touched">
+                  <input
+                    type="date"
+                    formControlName="expiryDate"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.insurance.expiryDate')
+                        ?.invalid &&
+                      vehicleForm.get('documents.insurance.expiryDate')?.touched
+                    "
+                  >
                     Expiry date is required
                   </div>
                 </div>
@@ -205,23 +336,47 @@
               <div class="form-row">
                 <div class="form-field">
                   <label>Permit Number *</label>
-                  <input type="text" formControlName="number" 
-                         placeholder="PRM456789123" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.permit.number')?.invalid && vehicleForm.get('documents.permit.number')?.touched">
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="PRM456789123"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.permit.number')?.invalid &&
+                      vehicleForm.get('documents.permit.number')?.touched
+                    "
+                  >
                     Permit number is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Expiry Date *</label>
-                  <input type="date" formControlName="expiryDate" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.permit.expiryDate')?.invalid && vehicleForm.get('documents.permit.expiryDate')?.touched">
+                  <input
+                    type="date"
+                    formControlName="expiryDate"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.permit.expiryDate')?.invalid &&
+                      vehicleForm.get('documents.permit.expiryDate')?.touched
+                    "
+                  >
                     Expiry date is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Document URL</label>
-                  <input type="url" formControlName="documentUrl" 
-                         placeholder="https://example.com/permit.pdf" class="form-input">
+                  <input
+                    type="url"
+                    formControlName="documentUrl"
+                    placeholder="https://example.com/permit.pdf"
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -232,23 +387,48 @@
               <div class="form-row">
                 <div class="form-field">
                   <label>Certificate Number *</label>
-                  <input type="text" formControlName="number" 
-                         placeholder="FIT789123456" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.fitness.number')?.invalid && vehicleForm.get('documents.fitness.number')?.touched">
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="FIT789123456"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.fitness.number')?.invalid &&
+                      vehicleForm.get('documents.fitness.number')?.touched
+                    "
+                  >
                     Certificate number is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Expiry Date *</label>
-                  <input type="date" formControlName="expiryDate" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.fitness.expiryDate')?.invalid && vehicleForm.get('documents.fitness.expiryDate')?.touched">
+                  <input
+                    type="date"
+                    formControlName="expiryDate"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.fitness.expiryDate')
+                        ?.invalid &&
+                      vehicleForm.get('documents.fitness.expiryDate')?.touched
+                    "
+                  >
                     Expiry date is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Document URL</label>
-                  <input type="url" formControlName="documentUrl" 
-                         placeholder="https://example.com/fitness.pdf" class="form-input">
+                  <input
+                    type="url"
+                    formControlName="documentUrl"
+                    placeholder="https://example.com/fitness.pdf"
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -259,23 +439,48 @@
               <div class="form-row">
                 <div class="form-field">
                   <label>Certificate Number *</label>
-                  <input type="text" formControlName="number" 
-                         placeholder="PUC321654987" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.pollution.number')?.invalid && vehicleForm.get('documents.pollution.number')?.touched">
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="PUC321654987"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.pollution.number')?.invalid &&
+                      vehicleForm.get('documents.pollution.number')?.touched
+                    "
+                  >
                     Certificate number is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Expiry Date *</label>
-                  <input type="date" formControlName="expiryDate" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('documents.pollution.expiryDate')?.invalid && vehicleForm.get('documents.pollution.expiryDate')?.touched">
+                  <input
+                    type="date"
+                    formControlName="expiryDate"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('documents.pollution.expiryDate')
+                        ?.invalid &&
+                      vehicleForm.get('documents.pollution.expiryDate')?.touched
+                    "
+                  >
                     Expiry date is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Document URL</label>
-                  <input type="url" formControlName="documentUrl" 
-                         placeholder="https://example.com/pollution.pdf" class="form-input">
+                  <input
+                    type="url"
+                    formControlName="documentUrl"
+                    placeholder="https://example.com/pollution.pdf"
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -286,42 +491,93 @@
         <div *ngIf="currentStep === 3" class="form-step">
           <h4>Fare Details & Additional Information</h4>
           <div formGroupName="fareAndDetails">
-            
             <!-- Fare Details -->
             <div class="section-group" formGroupName="fareDetails">
               <h5><i class="fas fa-rupee-sign"></i> Fare Information</h5>
               <div class="form-grid">
                 <div class="form-field">
                   <label>Per KM Rate (₹) *</label>
-                  <input type="number" formControlName="perKmRate" 
-                         step="0.1" min="0" placeholder="18.50" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.perKmRate')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.perKmRate')?.touched">
+                  <input
+                    type="number"
+                    formControlName="perKmRate"
+                    step="0.1"
+                    min="0"
+                    placeholder="18.50"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('fareAndDetails.fareDetails.perKmRate')
+                        ?.invalid &&
+                      vehicleForm.get('fareAndDetails.fareDetails.perKmRate')
+                        ?.touched
+                    "
+                  >
                     Per KM rate is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Whole Fare (₹) *</label>
-                  <input type="number" formControlName="wholeFare" 
-                         step="0.1" min="0" placeholder="8500.00" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.wholeFare')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.wholeFare')?.touched">
+                  <input
+                    type="number"
+                    formControlName="wholeFare"
+                    step="0.1"
+                    min="0"
+                    placeholder="8500.00"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('fareAndDetails.fareDetails.wholeFare')
+                        ?.invalid &&
+                      vehicleForm.get('fareAndDetails.fareDetails.wholeFare')
+                        ?.touched
+                    "
+                  >
                     Whole fare is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Sharing Fare (₹) *</label>
-                  <input type="number" formControlName="sharingFare" 
-                         step="0.1" min="0" placeholder="4250.00" class="form-input">
-                  <div class="error-message" *ngIf="vehicleForm.get('fareAndDetails.fareDetails.sharingFare')?.invalid && vehicleForm.get('fareAndDetails.fareDetails.sharingFare')?.touched">
+                  <input
+                    type="number"
+                    formControlName="sharingFare"
+                    step="0.1"
+                    min="0"
+                    placeholder="4250.00"
+                    class="form-input"
+                  />
+                  <div
+                    class="error-message"
+                    *ngIf="
+                      vehicleForm.get('fareAndDetails.fareDetails.sharingFare')
+                        ?.invalid &&
+                      vehicleForm.get('fareAndDetails.fareDetails.sharingFare')
+                        ?.touched
+                    "
+                  >
                     Sharing fare is required
                   </div>
                 </div>
                 <div class="form-field">
                   <label>Moving Insurance (₹)</label>
-                  <input type="number" formControlName="movingInsurance" 
-                         step="0.1" min="0" placeholder="750.00" class="form-input">
+                  <input
+                    type="number"
+                    formControlName="movingInsurance"
+                    step="0.1"
+                    min="0"
+                    placeholder="750.00"
+                    class="form-input"
+                  />
                 </div>
                 <div class="form-field checkbox-field">
-                  <input type="checkbox" formControlName="gstIncluded" id="gstIncluded">
+                  <input
+                    type="checkbox"
+                    formControlName="gstIncluded"
+                    id="gstIncluded"
+                  />
                   <label for="gstIncluded">GST Included</label>
                 </div>
               </div>
@@ -333,19 +589,32 @@
               <div class="form-grid">
                 <div class="form-field full-width">
                   <label>Current Address</label>
-                  <textarea formControlName="currentAddress" 
-                            rows="2" placeholder="Transport Hub, Andheri East, Mumbai" 
-                            class="form-textarea"></textarea>
+                  <textarea
+                    formControlName="currentAddress"
+                    rows="2"
+                    placeholder="Transport Hub, Andheri East, Mumbai"
+                    class="form-textarea"
+                  ></textarea>
                 </div>
                 <div class="form-field">
                   <label>Latitude</label>
-                  <input type="number" formControlName="currentLatitude" 
-                         step="0.000001" placeholder="19.1136" class="form-input">
+                  <input
+                    type="number"
+                    formControlName="currentLatitude"
+                    step="0.000001"
+                    placeholder="19.1136"
+                    class="form-input"
+                  />
                 </div>
                 <div class="form-field">
                   <label>Longitude</label>
-                  <input type="number" formControlName="currentLongitude" 
-                         step="0.000001" placeholder="72.8697" class="form-input">
+                  <input
+                    type="number"
+                    formControlName="currentLongitude"
+                    step="0.000001"
+                    placeholder="72.8697"
+                    class="form-input"
+                  />
                 </div>
               </div>
             </div>
@@ -356,10 +625,18 @@
               <div class="form-grid">
                 <div class="form-field">
                   <label>Next Service Date</label>
-                  <input type="date" formControlName="nextServiceDate" class="form-input">
+                  <input
+                    type="date"
+                    formControlName="nextServiceDate"
+                    class="form-input"
+                  />
                 </div>
                 <div class="form-field checkbox-field">
-                  <input type="checkbox" formControlName="isActive" id="isActive">
+                  <input
+                    type="checkbox"
+                    formControlName="isActive"
+                    id="isActive"
+                  />
                   <label for="isActive">Active Status</label>
                 </div>
               </div>
@@ -375,31 +652,43 @@
 
         <!-- Form Actions -->
         <div class="form-actions">
-          <button type="button" class="btn-secondary" 
-                  (click)="closeAddVehicleForm()">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="closeAddVehicleForm()"
+          >
             <i class="fas fa-times"></i>
             Cancel
           </button>
-          
-          <button type="button" class="btn-secondary" 
-                  *ngIf="currentStep > 1" 
-                  (click)="previousStep()">
+
+          <button
+            type="button"
+            class="btn-secondary"
+            *ngIf="currentStep > 1"
+            (click)="previousStep()"
+          >
             <i class="fas fa-arrow-left"></i>
             Previous
           </button>
-          
-          <button type="button" class="btn-primary" 
-                  *ngIf="currentStep < totalSteps" 
-                  (click)="nextStep()"
-                  [disabled]="!isCurrentStepValid()">
+
+          <button
+            type="button"
+            class="btn-primary"
+            *ngIf="currentStep < totalSteps"
+            (click)="nextStep()"
+            [disabled]="!isCurrentStepValid()"
+          >
             Next
             <i class="fas fa-arrow-right"></i>
           </button>
-          
-          <button type="button" class="btn-success" 
-                  *ngIf="currentStep === totalSteps" 
-                  (click)="onSubmitVehicleForm()"
-                  [disabled]="isFormLoading || !vehicleForm.valid">
+
+          <button
+            type="button"
+            class="btn-success"
+            *ngIf="currentStep === totalSteps"
+            (click)="onSubmitVehicleForm()"
+            [disabled]="isFormLoading || !vehicleForm.valid"
+          >
             <i class="fas fa-save" *ngIf="!isFormLoading"></i>
             <i class="fas fa-spinner fa-spin" *ngIf="isFormLoading"></i>
             <span *ngIf="isFormLoading">Saving...</span>
@@ -426,19 +715,30 @@
           [loadingOverlayComponent]="loadingTemplate"
           [noRowsOverlayComponent]="noRowsTemplate"
           (gridReady)="onGridReady($event)"
-          style="height: 100%; width: 100%;">
+          style="height: 100%; width: 100%"
+        >
         </ag-grid-angular>
       </div>
     </div>
   </div>
 
   <!-- Custom Alert -->
-  <div *ngIf="showCustomMessage" 
-       class="custom-alert" 
-       [ngClass]="{'alert-success': !customMessageIsError, 'alert-error': customMessageIsError}">
+  <div
+    *ngIf="showCustomMessage"
+    class="custom-alert"
+    [ngClass]="{
+      'alert-success': !customMessageIsError,
+      'alert-error': customMessageIsError
+    }"
+  >
     <div class="alert-content">
-      <i class="fas" 
-         [ngClass]="{'fa-check-circle': !customMessageIsError, 'fa-exclamation-circle': customMessageIsError}"></i>
+      <i
+        class="fas"
+        [ngClass]="{
+          'fa-check-circle': !customMessageIsError,
+          'fa-exclamation-circle': customMessageIsError
+        }"
+      ></i>
       <span>{{ customMessage }}</span>
       <button class="alert-close" (click)="showCustomMessage = false">
         <i class="fas fa-times"></i>

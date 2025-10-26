@@ -44,7 +44,7 @@ export class OwnerComponent implements OnInit {
     { label: 'Dashboard', route: 'dashboard', icon: '📊' },
     { label: 'Vehicles', route: 'vehicles', icon: '🚗' },
     { label: 'Drivers', route: 'drivers', icon: '👨‍✈️' },
-    { label: 'Bookings', route: 'bookings', icon: '📅' },
+    // { label: 'Bookings', route: 'bookings', icon: '📅' },
     { label: 'Earnings', route: 'earnings', icon: '💰' },
     { label: 'Maintenance', route: 'maintenance', icon: '🛠️' },
     { label: 'Tracking', route: 'tracking', icon: '📍' },

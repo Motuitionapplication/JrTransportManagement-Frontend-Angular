@@ -1,1 +1,401 @@
 <p>earnings works!</p>
+<div class="earnings-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="title-container">
+        <div class="header-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="header-text">
+          <h2 class="header-title">Earnings Dashboard</h2>
+          <p class="header-subtitle">Track your revenue, expenses, and profit analytics</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="date-range-selector">
+          <button class="date-range-btn" 
+                  [class.active]="selectedPeriod === 'today'"
+                  (click)="setPeriod('today')">Today</button>
+          <button class="date-range-btn" 
+                  [class.active]="selectedPeriod === 'week'"
+                  (click)="setPeriod('week')">This Week</button>
+          <button class="date-range-btn" 
+                  [class.active]="selectedPeriod === 'month'"
+                  (click)="setPeriod('month')">This Month</button>
+          <button class="date-range-btn" 
+                  [class.active]="selectedPeriod === 'custom'"
+                  (click)="setPeriod('custom')">Custom</button>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="action-btn btn-secondary" (click)="exportReport()">
+            <i class="fas fa-download"></i>
+            Export Report
+          </button>
+          <button class="action-btn btn-primary" (click)="refreshData()">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Date Range Modal -->
+  <div *ngIf="showDateRangePicker" class="modal-overlay">
+    <div class="modal-container date-range-modal">
+      <div class="modal-header">
+        <h3>Select Date Range</h3>
+        <button class="close-btn" (click)="closeDateRangePicker()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="date-inputs">
+          <div class="date-field">
+            <label>From Date</label>
+            <input type="date" [(ngModel)]="customDateRange.from" class="date-input">
+          </div>
+          <div class="date-field">
+            <label>To Date</label>
+            <input type="date" [(ngModel)]="customDateRange.to" class="date-input">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDateRangePicker()">Cancel</button>
+        <button class="btn btn-primary" (click)="applyCustomDateRange()">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Cards -->
+  <div class="metrics-section">
+    <div class="metrics-grid">
+      <!-- Total Revenue -->
+      <div class="metric-card revenue-card">
+        <div class="metric-icon">
+          <i class="fas fa-rupee-sign"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">₹{{ formatCurrency(totalRevenue) }}</h3>
+          <p class="metric-label">Total Revenue</p>
+          <div class="metric-trend" [class.positive]="revenueTrend >= 0" [class.negative]="revenueTrend < 0">
+            <i class="fas" [class.fa-arrow-up]="revenueTrend >= 0" [class.fa-arrow-down]="revenueTrend < 0"></i>
+            {{ Math.abs(revenueTrend) }}% from last period
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Expenses -->
+      <div class="metric-card expense-card">
+        <div class="metric-icon">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">₹{{ formatCurrency(totalExpenses) }}</h3>
+          <p class="metric-label">Total Expenses</p>
+          <div class="metric-trend" [class.positive]="expensesTrend <= 0" [class.negative]="expensesTrend > 0">
+            <i class="fas" [class.fa-arrow-down]="expensesTrend <= 0" [class.fa-arrow-up]="expensesTrend > 0"></i>
+            {{ Math.abs(expensesTrend) }}% from last period
+          </div>
+        </div>
+      </div>
+
+      <!-- Net Profit -->
+      <div class="metric-card profit-card">
+        <div class="metric-icon">
+          <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">₹{{ formatCurrency(netProfit) }}</h3>
+          <p class="metric-label">Net Profit</p>
+          <div class="metric-trend" [class.positive]="profitTrend >= 0" [class.negative]="profitTrend < 0">
+            <i class="fas" [class.fa-arrow-up]="profitTrend >= 0" [class.fa-arrow-down]="profitTrend < 0"></i>
+            {{ Math.abs(profitTrend) }}% from last period
+          </div>
+        </div>
+      </div>
+
+      <!-- Profit Margin -->
+      <div class="metric-card margin-card">
+        <div class="metric-icon">
+          <i class="fas fa-percentage"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">{{ profitMargin }}%</h3>
+          <p class="metric-label">Profit Margin</p>
+          <div class="metric-trend" [class.positive]="marginTrend >= 0" [class.negative]="marginTrend < 0">
+            <i class="fas" [class.fa-arrow-up]="marginTrend >= 0" [class.fa-arrow-down]="marginTrend < 0"></i>
+            {{ Math.abs(marginTrend) }}% from last period
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Vehicles -->
+      <div class="metric-card vehicles-card">
+        <div class="metric-icon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">{{ activeVehicles }}</h3>
+          <p class="metric-label">Active Vehicles</p>
+          <div class="metric-detail">
+            {{ completedTrips }} trips completed
+          </div>
+        </div>
+      </div>
+
+      <!-- Average Trip Value -->
+      <div class="metric-card trip-value-card">
+        <div class="metric-icon">
+          <i class="fas fa-route"></i>
+        </div>
+        <div class="metric-content">
+          <h3 class="metric-value">₹{{ formatCurrency(averageTripValue) }}</h3>
+          <p class="metric-label">Avg Trip Value</p>
+          <div class="metric-detail">
+            {{ totalBookings }} total bookings
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="charts-grid">
+      <!-- Revenue Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h4>Revenue Trend</h4>
+          <div class="chart-controls">
+            <button class="chart-control-btn" 
+                    [class.active]="revenueChartType === 'line'"
+                    (click)="setRevenueChartType('line')">
+              <i class="fas fa-chart-line"></i>
+            </button>
+            <button class="chart-control-btn" 
+                    [class.active]="revenueChartType === 'bar'"
+                    (click)="setRevenueChartType('bar')">
+              <i class="fas fa-chart-bar"></i>
+            </button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas #revenueChart></canvas>
+        </div>
+      </div>
+
+      <!-- Expense Breakdown -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h4>Expense Breakdown</h4>
+        </div>
+        <div class="chart-container">
+          <canvas #expenseChart></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Performance Chart -->
+    <div class="chart-card full-width">
+      <div class="chart-header">
+        <h4>Vehicle Performance</h4>
+        <div class="performance-legend">
+          <span class="legend-item">
+            <span class="legend-color revenue"></span>
+            Revenue
+          </span>
+          <span class="legend-item">
+            <span class="legend-color expense"></span>
+            Expenses
+          </span>
+          <span class="legend-item">
+            <span class="legend-color profit"></span>
+            Profit
+          </span>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas #vehiclePerformanceChart></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Tables Section -->
+  <div class="tables-section">
+    <div class="tables-grid">
+      <!-- Top Performing Vehicles -->
+      <div class="table-card">
+        <div class="table-header">
+          <h4>
+            <i class="fas fa-trophy"></i>
+            Top Performing Vehicles
+          </h4>
+          <button class="view-all-btn" (click)="viewAllVehicles()">View All</button>
+        </div>
+        <div class="table-container">
+          <table class="performance-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Vehicle</th>
+                <th>Revenue</th>
+                <th>Trips</th>
+                <th>Efficiency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let vehicle of topVehicles; let i = index" [class.top-performer]="i < 3">
+                <td class="rank-cell">
+                  <span class="rank-badge" [class]="'rank-' + (i + 1)">{{ i + 1 }}</span>
+                </td>
+                <td class="vehicle-cell">
+                  <div class="vehicle-info">
+                    <span class="vehicle-number">{{ vehicle.vehicleNumber }}</span>
+                    <small class="vehicle-type">{{ vehicle.type }}</small>
+                  </div>
+                </td>
+                <td class="revenue-cell">₹{{ formatCurrency(vehicle.revenue) }}</td>
+                <td class="trips-cell">{{ vehicle.trips }}</td>
+                <td class="efficiency-cell">
+                  <div class="efficiency-bar">
+                    <div class="efficiency-fill" [style.width.%]="vehicle.efficiency"></div>
+                  </div>
+                  <span>{{ vehicle.efficiency }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="table-card">
+        <div class="table-header">
+          <h4>
+            <i class="fas fa-history"></i>
+            Recent Transactions
+          </h4>
+          <button class="view-all-btn" (click)="viewAllTransactions()">View All</button>
+        </div>
+        <div class="table-container">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let transaction of recentTransactions">
+                <td class="date-cell">{{ formatDate(transaction.date) }}</td>
+                <td class="type-cell">
+                  <span class="transaction-type" [class]="'type-' + transaction.type">
+                    {{ transaction.type | titlecase }}
+                  </span>
+                </td>
+                <td class="description-cell">{{ transaction.description }}</td>
+                <td class="amount-cell" [class.positive]="transaction.amount > 0" [class.negative]="transaction.amount < 0">
+                  {{ transaction.amount > 0 ? '+' : '' }}₹{{ formatCurrency(Math.abs(transaction.amount)) }}
+                </td>
+                <td class="status-cell">
+                  <span class="status-badge" [class]="'status-' + transaction.status">
+                    {{ transaction.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Summary -->
+  <div class="summary-section">
+    <div class="summary-card">
+      <div class="summary-header">
+        <h4>Financial Summary</h4>
+        <div class="summary-period">{{ getPeriodLabel() }}</div>
+      </div>
+      <div class="summary-content">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="summary-label">Gross Revenue</span>
+            <span class="summary-value positive">₹{{ formatCurrency(grossRevenue) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Fuel Costs</span>
+            <span class="summary-value negative">₹{{ formatCurrency(fuelCosts) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Maintenance</span>
+            <span class="summary-value negative">₹{{ formatCurrency(maintenanceCosts) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Driver Payments</span>
+            <span class="summary-value negative">₹{{ formatCurrency(driverPayments) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Insurance</span>
+            <span class="summary-value negative">₹{{ formatCurrency(insuranceCosts) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Other Expenses</span>
+            <span class="summary-value negative">₹{{ formatCurrency(otherExpenses) }}</span>
+          </div>
+          <div class="summary-item total">
+            <span class="summary-label">Net Profit</span>
+            <span class="summary-value" [class.positive]="netProfit > 0" [class.negative]="netProfit < 0">
+              ₹{{ formatCurrency(netProfit) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <button class="quick-action-btn" (click)="addExpense()">
+      <i class="fas fa-plus"></i>
+      Add Expense
+    </button>
+    <button class="quick-action-btn" (click)="recordPayment()">
+      <i class="fas fa-credit-card"></i>
+      Record Payment
+    </button>
+    <button class="quick-action-btn" (click)="generateInvoice()">
+      <i class="fas fa-file-invoice"></i>
+      Generate Invoice
+    </button>
+    <button class="quick-action-btn" (click)="viewReports()">
+      <i class="fas fa-chart-bar"></i>
+      View Reports
+    </button>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading earnings data...</p>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert-message" *ngIf="showAlert" [class.success]="!isError" [class.error]="isError">
+    <i class="fas" [class.fa-check-circle]="!isError" [class.fa-exclamation-circle]="isError"></i>
+    {{ alertMessage }}
+    <button class="alert-close" (click)="hideAlert()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>

@@ -1,1 +1,292 @@
 <p>notifications works!</p>
+<div class="notifications-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <div class="title-container">
+        <div class="header-icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="header-text">
+          <h2 class="header-title">Notifications</h2>
+          <p class="header-subtitle">Stay updated with important alerts and reminders</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="notification-stats">
+          <span class="stat-item unread">
+            <i class="fas fa-envelope"></i>
+            {{ unreadCount }} Unread
+          </span>
+          <span class="stat-item total">
+            <i class="fas fa-list"></i>
+            {{ notifications.length }} Total
+          </span>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="action-btn btn-secondary" (click)="markAllAsRead()" [disabled]="unreadCount === 0">
+            <i class="fas fa-check-double"></i>
+            Mark All Read
+          </button>
+          <button class="action-btn btn-danger" (click)="clearAllNotifications()" [disabled]="notifications.length === 0">
+            <i class="fas fa-trash"></i>
+            Clear All
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter and Search Section -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="filter-controls">
+        <div class="search-field">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search notifications..." 
+                 [(ngModel)]="searchTerm" (input)="filterNotifications()" class="search-input">
+        </div>
+        
+        <div class="filter-tabs">
+          <button class="filter-tab" 
+                  [class.active]="selectedFilter === 'all'"
+                  (click)="setFilter('all')">
+            All ({{ notifications.length }})
+          </button>
+          <button class="filter-tab" 
+                  [class.active]="selectedFilter === 'unread'"
+                  (click)="setFilter('unread')">
+            Unread ({{ unreadCount }})
+          </button>
+          <button class="filter-tab" 
+                  [class.active]="selectedFilter === 'maintenance'"
+                  (click)="setFilter('maintenance')">
+            Maintenance ({{ getCountByType('maintenance') }})
+          </button>
+          <button class="filter-tab" 
+                  [class.active]="selectedFilter === 'booking'"
+                  (click)="setFilter('booking')">
+            Bookings ({{ getCountByType('booking') }})
+          </button>
+          <button class="filter-tab" 
+                  [class.active]="selectedFilter === 'system'"
+                  (click)="setFilter('system')">
+            System ({{ getCountByType('system') }})
+          </button>
+        </div>
+        
+        <div class="sort-options">
+          <select [(ngModel)]="sortBy" (change)="sortNotifications()" class="sort-select">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="priority">Priority</option>
+            <option value="type">Type</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-content">
+    <div class="notifications-list" *ngIf="filteredNotifications.length > 0">
+      <div class="notification-item" 
+           *ngFor="let notification of paginatedNotifications; trackBy: trackByNotification"
+           [class.unread]="!notification.isRead"
+           [class.high-priority]="notification.priority === 'HIGH'"
+           [class.medium-priority]="notification.priority === 'MEDIUM'"
+           [class.low-priority]="notification.priority === 'LOW'">
+        
+        <!-- Notification Icon -->
+        <div class="notification-icon" [ngClass]="getNotificationIconClass(notification.type)">
+          <i [class]="getNotificationIcon(notification.type)"></i>
+        </div>
+        
+        <!-- Notification Content -->
+        <div class="notification-content" (click)="markAsRead(notification)">
+          <div class="notification-header">
+            <h4 class="notification-title">{{ notification.title }}</h4>
+            <div class="notification-meta">
+              <span class="notification-type" [class]="'type-' + notification.type">
+                {{ notification.type | titlecase }}
+              </span>
+              <span class="notification-time">
+                {{ getTimeAgo(notification.createdAt) }}
+              </span>
+            </div>
+          </div>
+          
+          <p class="notification-message">{{ notification.message }}</p>
+          
+          <div class="notification-details" *ngIf="notification.vehicleNumber || notification.bookingId">
+            <span class="detail-item" *ngIf="notification.vehicleNumber">
+              <i class="fas fa-truck"></i>
+              {{ notification.vehicleNumber }}
+            </span>
+            <span class="detail-item" *ngIf="notification.bookingId">
+              <i class="fas fa-receipt"></i>
+              Booking #{{ notification.bookingId }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Notification Actions -->
+        <div class="notification-actions">
+          <div class="priority-indicator" 
+               [class]="'priority-' + notification.priority.toLowerCase()">
+            {{ notification.priority }}
+          </div>
+          
+          <div class="action-buttons">
+            <button class="action-btn btn-sm" 
+                    *ngIf="notification.actionRequired"
+                    (click)="handleNotificationAction(notification)">
+              <i class="fas fa-external-link-alt"></i>
+              View
+            </button>
+            
+            <button class="action-btn btn-sm btn-success" 
+                    *ngIf="!notification.isRead"
+                    (click)="markAsRead(notification)">
+              <i class="fas fa-check"></i>
+            </button>
+            
+            <button class="action-btn btn-sm btn-danger" 
+                    (click)="deleteNotification(notification)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredNotifications.length === 0">
+      <div class="empty-icon">
+        <i class="fas fa-bell-slash"></i>
+      </div>
+      <h3>No notifications found</h3>
+      <p *ngIf="searchTerm">Try adjusting your search criteria or filters.</p>
+      <p *ngIf="!searchTerm && selectedFilter !== 'all'">
+        No {{ selectedFilter }} notifications at the moment.
+      </p>
+      <p *ngIf="!searchTerm && selectedFilter === 'all'">
+        You're all caught up! No notifications to show.
+      </p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="filteredNotifications.length > pageSize">
+      <div class="pagination-info">
+        Showing {{ getStartIndex() }}-{{ getEndIndex() }} of {{ filteredNotifications.length }} notifications
+      </div>
+      
+      <div class="pagination-controls">
+        <button class="page-btn" 
+                [disabled]="currentPage === 1" 
+                (click)="previousPage()">
+          <i class="fas fa-chevron-left"></i>
+          Previous
+        </button>
+        
+        <div class="page-numbers">
+          <button class="page-number" 
+                  *ngFor="let page of getPageNumbers()"
+                  [class.active]="page === currentPage"
+                  (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </div>
+        
+        <button class="page-btn" 
+                [disabled]="currentPage === getTotalPages()" 
+                (click)="nextPage()">
+          Next
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Settings Panel (Collapsible) -->
+  <div class="settings-panel" [class.expanded]="showSettings">
+    <div class="settings-header" (click)="toggleSettings()">
+      <h4>
+        <i class="fas fa-cog"></i>
+        Notification Settings
+      </h4>
+      <i class="fas fa-chevron-down" [class.rotated]="showSettings"></i>
+    </div>
+    
+    <div class="settings-content" *ngIf="showSettings">
+      <div class="setting-group">
+        <h5>Email Notifications</h5>
+        <label class="setting-item">
+          <input type="checkbox" [(ngModel)]="settings.emailMaintenance">
+          <span class="checkmark"></span>
+          Maintenance reminders
+        </label>
+        <label class="setting-item">
+          <input type="checkbox" [(ngModel)]="settings.emailBookings">
+          <span class="checkmark"></span>
+          Booking updates
+        </label>
+        <label class="setting-item">
+          <input type="checkbox" [(ngModel)]="settings.emailSystem">
+          <span class="checkmark"></span>
+          System notifications
+        </label>
+      </div>
+      
+      <div class="setting-group">
+        <h5>Push Notifications</h5>
+        <label class="setting-item">
+          <input type="checkbox" [(ngModel)]="settings.pushUrgent">
+          <span class="checkmark"></span>
+          Urgent alerts only
+        </label>
+        <label class="setting-item">
+          <input type="checkbox" [(ngModel)]="settings.pushAll">
+          <span class="checkmark"></span>
+          All notifications
+        </label>
+      </div>
+      
+      <div class="setting-group">
+        <h5>Frequency</h5>
+        <select [(ngModel)]="settings.frequency" class="setting-select">
+          <option value="immediate">Immediate</option>
+          <option value="daily">Daily digest</option>
+          <option value="weekly">Weekly summary</option>
+        </select>
+      </div>
+      
+      <button class="save-settings-btn" (click)="saveSettings()">
+        <i class="fas fa-save"></i>
+        Save Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Loading notifications...</p>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert-message" 
+       *ngIf="showAlert" 
+       [class.success]="!isError" 
+       [class.error]="isError">
+    <i class="fas" [class.fa-check-circle]="!isError" [class.fa-exclamation-circle]="isError"></i>
+    {{ alertMessage }}
+    <button class="alert-close" (click)="hideAlert()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>

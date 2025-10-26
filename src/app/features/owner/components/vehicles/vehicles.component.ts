@@ -90,16 +90,16 @@ export class VehiclesComponent implements OnInit {
       field: 'model',
       width: 130
     },
-    {
-      headerName: 'Year',
-      field: 'year',
-      width: 80, // Reduced from 100 to 80
-      maxWidth: 90, // Add max width
-      minWidth: 70, // Add min width
-      flex: 0, // Disable flex for fixed width
-      type: 'numericColumn',
-      cellStyle: { textAlign: 'center' } // Center align the year
-    },
+    // {
+    //   headerName: 'Year',
+    //   field: 'year',
+    //   width: 80, // Reduced from 100 to 80
+    //   maxWidth: 90, // Add max width
+    //   minWidth: 70, // Add min width
+    //   flex: 0, // Disable flex for fixed width
+    //   type: 'numericColumn',
+    //   cellStyle: { textAlign: 'center' } // Center align the year
+    // },
     {
       headerName: 'Capacity (Tons)',
       field: 'capacity',
@@ -839,4 +839,69 @@ Model: ${vehicleData.model || 'N/A'}
     }
     this.loadVehicles();
   }
+  // Validate Registration Number
+onValidateRegistrationNumber(): void {
+  const regControl = this.vehicleForm.get('documents.registration.number');
+  const regNumber = regControl?.value;
+
+  if (!regNumber) {
+    this.showError('Enter a registration number before validation.');
+    return;
+  }
+
+  this.isFormLoading = true;
+  this.vehicleService.validateRegistrationNumber(regNumber).subscribe({
+    next: (response) => {
+      this.isFormLoading = false;
+      if (response && response.data?.ownerName) {
+        this.showSuccess(`Registration valid: Owned by ${response.data.ownerName}`);
+        // Auto-fill vehicle info if available from API
+        this.vehicleForm.patchValue({
+          basicInfo: {
+            manufacturer: response.data.maker || '',
+            model: response.data.model || '',
+            year: response.data.mfgYear || ''
+          }
+        });
+      } else {
+        this.showError('Registration number could not be verified.');
+      }
+    },
+    error: (error) => {
+      this.isFormLoading = false;
+      this.showError(error.message || 'Vehicle number invalid or not found.');
+    }
+  });
+}
+
+// Validate Insurance Policy Number
+onValidateInsurancePolicy(): void {
+  const policyControl = this.vehicleForm.get('documents.insurance.number');
+  const policyNumber = policyControl?.value;
+
+  if (!policyNumber) {
+    this.showError('Enter an insurance policy number before validation.');
+    return;
+  }
+
+  this.isFormLoading = true;
+  this.vehicleService.validateInsurancePolicy(policyNumber).subscribe({
+    next: (response) => {
+      this.isFormLoading = false;
+      if (response && response.valid_till) {
+        this.showSuccess(`Policy active till ${response.valid_till}`);
+        this.vehicleForm.patchValue({
+          documents: { insurance: { expiryDate: response.valid_till } }
+        });
+      } else {
+        this.showError('Insurance policy could not be verified.');
+      }
+    },
+    error: (error) => {
+      this.isFormLoading = false;
+      this.showError(error.message || 'Invalid insurance policy number.');
+    }
+  });
+}
+
 }

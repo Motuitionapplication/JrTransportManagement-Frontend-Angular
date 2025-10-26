@@ -222,4 +222,32 @@ export class VehicleService {
     
     return errors;
   }
+  // Validate Vehicle Registration Number via YOUR backend
+validateRegistrationNumber(registrationNumber: string): Observable<any> {
+  const apiUrl = `${this.apiUrl}/verify/registration`;
+  const payload = { regNo: registrationNumber };
+
+  return this.http.post(apiUrl, payload).pipe(
+    tap(response => console.log('RC validation response:', response)),
+    catchError(error => {
+      console.error('Error validating registration number:', error);
+      return throwError(() => new Error('Failed to validate registration number.'));
+    })
+  );
+}
+
+// Validate Insurance Policy Number via YOUR backend
+validateInsurancePolicy(policyNumber: string): Observable<any> {
+  const apiUrl = `${this.apiUrl}/verify/insurance`;
+  const payload = { policyNumber: policyNumber };
+
+  return this.http.post(apiUrl, payload).pipe(
+    tap(response => console.log('Insurance validation response:', response)),
+    catchError(error => {
+      console.error('Error validating insurance policy:', error);
+      return throwError(() => new Error('Failed to validate insurance policy.'));
+    })
+  );
+}
+
 }
