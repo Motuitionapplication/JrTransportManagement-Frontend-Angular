@@ -12,6 +12,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { DriverRoutingModule } from './driver-routing.module';
 import { DriverComponent } from './driver.component';
@@ -27,6 +28,7 @@ import { DocumentsComponent } from './components/documents/documents.component';
 import { MessagesComponent } from './components/messages/messages.component';
 import { MyTruckComponent } from './components/my-truck/my-truck.component';
 import { SupportComponent } from './components/support/support.component';
+import { LocationPromptComponent } from '../../components/location-prompt/location-prompt.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +43,8 @@ import { SupportComponent } from './components/support/support.component';
     DocumentsComponent,
     MessagesComponent,
     MyTruckComponent,
-    SupportComponent
+    SupportComponent,
+    LocationPromptComponent,
   ],
   imports: [
     CommonModule,
@@ -56,10 +59,9 @@ import { SupportComponent } from './components/support/support.component';
     MatListModule,
     MatSelectModule,
     MatInputModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatSnackBarModule,
   ],
-  exports: [
-    DriverComponent
-  ]
+  exports: [DriverComponent],
 })
-export class DriverModule { }
+export class DriverModule {}

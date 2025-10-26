@@ -27,6 +27,10 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+// Modules
+import { AdminRoutingModule } from './admin-routing.module';
+import { AdminSettingsModule } from './components/settings/admin-settings.module';
+
 // Components
 import { AdminComponent } from './admin.component';
 import { AdminDashboardComponent } from './components/dashboard/admin-dashboard.component';
@@ -36,8 +40,6 @@ import { AdminCustomersComponent } from './components/customers/admin-customers.
 import { AdminTrucksComponent } from './components/trucks/admin-trucks.component';
 import { AdminPaymentsComponent } from './components/payments/admin-payments.component';
 import { AdminReportsComponent } from './components/reports/admin-reports.component';
-import { AdminSettingsComponent } from './components/settings/admin-settings.component';
-import { AdminRoutingModule } from './admin-routing.module';
 
 @NgModule({
   declarations: [
@@ -48,8 +50,7 @@ import { AdminRoutingModule } from './admin-routing.module';
     AdminCustomersComponent,
     AdminTrucksComponent,
     AdminPaymentsComponent,
-    AdminReportsComponent,
-    AdminSettingsComponent
+    AdminReportsComponent
   ],
   imports: [
     CommonModule,
@@ -81,8 +82,9 @@ import { AdminRoutingModule } from './admin-routing.module';
     MatDialogModule,
     MatTooltipModule,
     
-    // Routing
-    AdminRoutingModule
+    // Feature Modules
+    AdminRoutingModule,
+    AdminSettingsModule
   ],
   exports: [AdminComponent]
 })

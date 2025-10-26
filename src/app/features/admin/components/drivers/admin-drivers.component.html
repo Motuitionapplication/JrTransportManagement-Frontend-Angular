@@ -1,0 +1,158 @@
+<div class="drivers-management">
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">Drivers Management</h1>
+    <div class="page-actions">
+      <button class="btn btn-primary" (click)="addNewDriver()">
+        <i class="fas fa-plus"></i>
+        Add Driver
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-row">
+    <div class="stat-card active">
+      <div class="stat-icon">
+        <i class="fas fa-user-check"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getActiveDrivers() }}</h3>
+        <p>Active Drivers</p>
+      </div>
+    </div>
+
+    <div class="stat-card busy">
+      <div class="stat-icon">
+        <i class="fas fa-user-clock"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getBusyDrivers() }}</h3>
+        <p>Busy Drivers</p>
+      </div>
+    </div>
+
+    <div class="stat-card inactive">
+      <div class="stat-icon">
+        <i class="fas fa-user-times"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getInactiveDrivers() }}</h3>
+        <p>Inactive Drivers</p>
+      </div>
+    </div>
+
+    <div class="stat-card rating">
+      <div class="stat-icon">
+        <i class="fas fa-star"></i>
+      </div>
+      <div class="stat-content">
+        <h3>{{ getAverageRating() }}</h3>
+        <p>Average Rating</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search drivers..." 
+        [(ngModel)]="searchTerm" 
+        (input)="filterDrivers()"
+        class="search-input">
+      <i class="fas fa-search search-icon"></i>
+    </div>
+
+    <select [(ngModel)]="selectedStatus" (change)="filterDrivers()" class="status-filter">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="busy">Busy</option>
+      <option value="inactive">Inactive</option>
+    </select>
+
+    <select [(ngModel)]="selectedVehicleType" (change)="filterDrivers()" class="vehicle-filter">
+      <option value="">All Vehicles</option>
+      <option value="truck">Truck</option>
+      <option value="mini-truck">Mini Truck</option>
+      <option value="tempo">Tempo</option>
+      <option value="van">Van</option>
+    </select>
+  </div>
+
+  <!-- Drivers Grid -->
+  <div class="drivers-grid">
+    <div class="driver-card" *ngFor="let driver of filteredDrivers">
+      <div class="driver-header">
+        <div class="driver-avatar">
+          {{ getDriverInitials(driver.name) }}
+        </div>
+        <div class="driver-info">
+          <h3 class="driver-name">{{ driver.name }}</h3>
+          <p class="driver-id">ID: {{ driver.id }}</p>
+          <div class="driver-status">
+            <span class="status-badge" [ngClass]="driver.status">
+              {{ driver.status | titlecase }}
+            </span>
+          </div>
+        </div>
+        <div class="driver-actions">
+          <button class="action-btn" (click)="viewDriver(driver)" title="View Details">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="action-btn" (click)="editDriver(driver)" title="Edit">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="action-btn danger" (click)="removeDriver(driver)" title="Remove">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="driver-details">
+        <div class="detail-item">
+          <i class="fas fa-phone"></i>
+          <span>{{ driver.phone }}</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-envelope"></i>
+          <span>{{ driver.email }}</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-id-card"></i>
+          <span>License: {{ driver.licenseNumber }}</span>
+        </div>
+        <div class="detail-item">
+          <i class="fas fa-truck"></i>
+          <span>{{ driver.vehicleType | titlecase }}</span>
+        </div>
+      </div>
+
+      <div class="driver-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ driver.totalTrips }}</div>
+          <div class="stat-label">Total Trips</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">
+            {{ driver.rating }}
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="stat-label">Rating</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">{{ getJoinedDays(driver.joinDate) }}</div>
+          <div class="stat-label">Days Joined</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredDrivers.length === 0">
+    <i class="fas fa-users"></i>
+    <h3>No drivers found</h3>
+    <p>Try adjusting your search criteria or add a new driver</p>
+  </div>
+</div>

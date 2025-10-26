@@ -11,6 +11,7 @@ import { EnvironmentService } from '../core/services/environment.service';
 export class VehicleService {
   private vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
   public vehicles$ = this.vehiclesSubject.asObservable();
+  private apiUrl = 'YOUR_API_URL_HERE'; // Set your API URL here
 
   constructor(
     private http: HttpClient,
@@ -157,5 +158,10 @@ export class VehicleService {
     } else {
       return of([]);
     }
+  }
+
+  // Add the addTruck method to support creating a new truck
+  addTruck(truck: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl, truck);
   }
 }

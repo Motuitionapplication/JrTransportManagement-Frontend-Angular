@@ -1,17 +1,26 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <title>JR Transport Management System</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="description" content="JR Transport Management - Comprehensive management system for transport operations including vehicle management, driver management, route planning, and customer service.">
+  <meta name="description"
+    content="JR Transport Management - Comprehensive management system for transport operations including vehicle management, driver management, route planning, and customer service.">
   <meta name="keywords" content="jr transport, transport management, vehicle management, drivers, routes, logistics">
   <meta name="author" content="JR Transport Management Team">
-  
-  
-  
-  
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0"
+/>
+
+
+
   <!-- PWA Meta Tags -->
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="assets/jr-transport-favicon.svg">
@@ -20,11 +29,11 @@
   <meta name="background-color" content="#ffffff">
   <meta name="display" content="standalone">
   <meta name="start_url" content="/">
-  
+
   <!-- Additional iOS PWA optimizations -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="application-name" content="JR Transport">
-  
+
   <!-- Apple PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,7 +41,7 @@
   <meta name="apple-touch-fullscreen" content="yes">
   <meta name="format-detection" content="telephone=no">
   <meta name="apple-mobile-web-app-orientations" content="portrait">
-  
+
   <!-- iOS PWA link handling -->
   <meta name="apple-itunes-app" content="app-argument=/">
 
@@ -48,57 +57,69 @@
   <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/icon-152x152.png">
   <link rel="apple-touch-icon" sizes="167x167" href="assets/icons/icon-192x192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-192x192.png">
-  
+
   <!-- Apple Splash Screens for different iOS devices -->
   <!-- iPhone 5/5S/5C/SE -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-640x1136.png"
+    media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- iPhone 6/7/8 -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-750x1334.png"
+    media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- iPhone 6+/7+/8+ -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-1242x2208.png"
+    media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
   <!-- iPhone X/XS/11 Pro -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-1125x2436.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
   <!-- iPhone XR/11 -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-828x1792.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- iPhone XS Max/11 Pro Max -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-1242x2688.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+
   <!-- iPad -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-1536x2048.png"
+    media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- iPad Pro 10.5" -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-1668x2224.png"
+    media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- iPad Pro 12.9" -->
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-2048x2732.png"
+    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+
   <!-- Fallback splash screen -->
   <link rel="apple-touch-startup-image" href="assets/icons/splash-750x1334.png">
-  
+
   <!-- Microsoft PWA Meta Tags -->
   <meta name="msapplication-TileImage" content="assets/icons/icon-144x144.png">
   <meta name="msapplication-TileColor" content="#ff6b35">
   <meta name="msapplication-tap-highlight" content="no">
-  
+
   <!-- Social Media Meta Tags -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="JR Transport Management System">
-  <meta property="og:description" content="JR Transport Management - Comprehensive management system for transport operations">
+  <meta property="og:description"
+    content="JR Transport Management - Comprehensive management system for transport operations">
   <meta property="og:image" content="assets/icons/icon-512x512.png">
   <meta property="og:url" content="/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="JR Transport Management System">
-  <meta name="twitter:description" content="JR Transport Management - Comprehensive management system for transport operations">
+  <meta name="twitter:description"
+    content="JR Transport Management - Comprehensive management system for transport operations">
   <meta name="twitter:image" content="assets/icons/icon-512x512.png">
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
+
 <body>
   <app-root></app-root>
   <noscript>
@@ -108,4 +129,5 @@
     </div>
   </noscript>
 </body>
+
 </html>

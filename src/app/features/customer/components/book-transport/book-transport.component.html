@@ -11,9 +11,8 @@
       </div>
       <div class="col-md-4 text-end">
         <div class="help-section">
-          <button class="btn btn-outline-info btn-sm" (click)="showHelp = !showHelp">
-            <i class="fas fa-question-circle me-1"></i>
-            Need Help?
+          <button class="btn btn-outline-info btn-sm" (click)="toggleHelp()">
+            <i class="fas fa-question-circle me-1"></i> Help
           </button>
         </div>
       </div>
@@ -38,8 +37,26 @@
     </div>
   </div>
 
+  <!-- Booking Confirmation -->
+  <div class="alert alert-success confirmation-alert" *ngIf="bookingConfirmed">
+    <div class="text-center">
+      <i class="fas fa-check-circle fa-3x mb-3"></i>
+      <h4>Booking Confirmed!</h4>
+      <p class="mb-2">Your booking has been successfully confirmed.</p>
+      <p class="confirmation-number">Confirmation Number: <strong>{{ confirmationNumber }}</strong></p>
+      <div class="mt-3">
+        <button class="btn btn-primary me-2" (click)="navigateToBookings()">
+          <i class="fas fa-list me-1"></i> View Bookings
+        </button>
+        <button class="btn btn-outline-primary" (click)="resetForm()">
+          <i class="fas fa-plus me-1"></i> New Booking
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Progress Indicator -->
-  <div class="progress-section">
+  <div class="progress-section" *ngIf="!bookingConfirmed">
     <div class="progress-container">
       <div class="progress-step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
         <div class="step-circle">
@@ -67,7 +84,7 @@
       <div class="progress-line" [class.active]="currentStep > 3"></div>
       <div class="progress-step" [class.active]="currentStep >= 4" [class.completed]="currentStep > 4">
         <div class="step-circle">
-          <i class="fas fa-user" *ngIf="currentStep <= 4"></i>
+          <i class="fas fa-credit-card" *ngIf="currentStep <= 4"></i>
           <i class="fas fa-check" *ngIf="currentStep > 4"></i>
         </div>
         <div class="step-label">Contact & Payment</div>
@@ -76,231 +93,84 @@
   </div>
 
   <!-- Booking Form -->
-  <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()" novalidate>
+  <form [formGroup]="bookingForm" (ngSubmit)="submitBooking()" novalidate *ngIf="!bookingConfirmed">
     
     <!-- Step 1: Route Details -->
     <div class="step-content" *ngIf="currentStep === 1">
       <div class="step-card">
         <div class="card-header">
-          <h4><i class="fas fa-route me-2"></i>Step 1: Route Details</h4>
-          <p>Enter your pickup and drop-off locations</p>
+          <h4><i class="fas fa-map-marker-alt me-2"></i>Step 1: Route Details</h4>
+          <p class="text-muted mb-0">Enter pickup and dropoff locations</p>
         </div>
         <div class="card-body">
           <div class="row">
-            <!-- Pickup Details -->
-            <div class="col-md-6">
-              <h6 class="section-title">
-                <i class="fas fa-play-circle text-success me-2"></i>
-                Pickup Information
-              </h6>
-              
-              <div class="form-group mb-3">
-                <label for="pickupAddress" class="form-label required">Pickup Address</label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="fas fa-map-marker-alt text-success"></i>
-                  </span>
-                  <input
-                    type="text"
-                    id="pickupAddress"
-                    class="form-control"
-                    placeholder="Enter pickup address"
-                    formControlName="pickupAddress"
-                    [class.is-invalid]="getFieldError(bookingForm, 'pickupAddress')"
-                  >
-                </div>
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'pickupAddress')">
-                  {{ getFieldError(bookingForm, 'pickupAddress') }}
-                </div>
-                <div class="form-text">
-                  <i class="fas fa-info-circle me-1"></i>
-                  Enter complete address with landmarks for easy identification
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group mb-3">
-                    <label for="pickupDate" class="form-label required">Pickup Date</label>
-                    <input
-                      type="date"
-                      id="pickupDate"
-                      class="form-control"
-                      formControlName="pickupDate"
-                      [class.is-invalid]="getFieldError(bookingForm, 'pickupDate')"
-                      [min]="getTodayDate()"
-                    >
-                    <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'pickupDate')">
-                      {{ getFieldError(bookingForm, 'pickupDate') }}
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group mb-3">
-                    <label for="pickupTime" class="form-label required">Pickup Time</label>
-                    <select
-                      id="pickupTime"
-                      class="form-select"
-                      formControlName="pickupTime"
-                      [class.is-invalid]="getFieldError(bookingForm, 'pickupTime')"
-                    >
-                      <option value="">Select time</option>
-                      <option *ngFor="let time of availableTimeSlots" [value]="time.value">
-                        {{ time.label }}
-                      </option>
-                    </select>
-                    <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'pickupTime')">
-                      {{ getFieldError(bookingForm, 'pickupTime') }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="pickupContactName" class="form-label required">Contact Person</label>
-                <input
-                  type="text"
-                  id="pickupContactName"
-                  class="form-control"
-                  placeholder="Enter contact person name"
-                  formControlName="pickupContactName"
-                  [class.is-invalid]="getFieldError(bookingForm, 'pickupContactName')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'pickupContactName')">
-                  {{ getFieldError(bookingForm, 'pickupContactName') }}
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="pickupContactPhone" class="form-label required">Contact Phone</label>
-                <input
-                  type="tel"
-                  id="pickupContactPhone"
-                  class="form-control"
-                  placeholder="Enter contact phone number"
-                  formControlName="pickupContactPhone"
-                  [class.is-invalid]="getFieldError(bookingForm, 'pickupContactPhone')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'pickupContactPhone')">
-                  {{ getFieldError(bookingForm, 'pickupContactPhone') }}
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-map-pin me-1"></i>Pickup Location
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="pickupLocation"
+                [class.is-invalid]="isFieldInvalid('pickupLocation')"
+                placeholder="Enter pickup address">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('pickupLocation')">
+                {{ getFieldError('pickupLocation') }}
               </div>
             </div>
 
-            <!-- Drop-off Details -->
-            <div class="col-md-6">
-              <h6 class="section-title">
-                <i class="fas fa-stop-circle text-danger me-2"></i>
-                Drop-off Information
-              </h6>
-              
-              <div class="form-group mb-3">
-                <label for="dropoffAddress" class="form-label required">Drop-off Address</label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="fas fa-map-marker-alt text-danger"></i>
-                  </span>
-                  <input
-                    type="text"
-                    id="dropoffAddress"
-                    class="form-control"
-                    placeholder="Enter drop-off address"
-                    formControlName="dropoffAddress"
-                    [class.is-invalid]="getFieldError(bookingForm, 'dropoffAddress')"
-                  >
-                </div>
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'dropoffAddress')">
-                  {{ getFieldError(bookingForm, 'dropoffAddress') }}
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-map-pin me-1"></i>Dropoff Location
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="dropoffLocation"
+                [class.is-invalid]="isFieldInvalid('dropoffLocation')"
+                placeholder="Enter dropoff address">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('dropoffLocation')">
+                {{ getFieldError('dropoffLocation') }}
               </div>
+            </div>
 
-              <div class="form-group mb-3">
-                <label for="dropoffContactName" class="form-label required">Contact Person</label>
-                <input
-                  type="text"
-                  id="dropoffContactName"
-                  class="form-control"
-                  placeholder="Enter contact person name"
-                  formControlName="dropoffContactName"
-                  [class.is-invalid]="getFieldError(bookingForm, 'dropoffContactName')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'dropoffContactName')">
-                  {{ getFieldError(bookingForm, 'dropoffContactName') }}
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-calendar me-1"></i>Pickup Date
+              </label>
+              <input 
+                type="date" 
+                class="form-control" 
+                formControlName="pickupDate"
+                [class.is-invalid]="isFieldInvalid('pickupDate')"
+                [min]="minDate">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('pickupDate')">
+                {{ getFieldError('pickupDate') }}
               </div>
+            </div>
 
-              <div class="form-group mb-3">
-                <label for="dropoffContactPhone" class="form-label required">Contact Phone</label>
-                <input
-                  type="tel"
-                  id="dropoffContactPhone"
-                  class="form-control"
-                  placeholder="Enter contact phone number"
-                  formControlName="dropoffContactPhone"
-                  [class.is-invalid]="getFieldError(bookingForm, 'dropoffContactPhone')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'dropoffContactPhone')">
-                  {{ getFieldError(bookingForm, 'dropoffContactPhone') }}
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="specialInstructions" class="form-label">Special Instructions</label>
-                <textarea
-                  id="specialInstructions"
-                  class="form-control"
-                  rows="3"
-                  placeholder="Any special instructions for pickup or delivery..."
-                  formControlName="specialInstructions"
-                ></textarea>
-                <div class="form-text">
-                  <i class="fas fa-info-circle me-1"></i>
-                  Optional: Mention any specific requirements or instructions
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-clock me-1"></i>Pickup Time
+              </label>
+              <select 
+                class="form-control" 
+                formControlName="pickupTime"
+                [class.is-invalid]="isFieldInvalid('pickupTime')">
+                <option value="">Select time</option>
+                <option *ngFor="let slot of availableTimeSlots" [value]="slot.value">
+                  {{ slot.label }}
+                </option>
+              </select>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('pickupTime')">
+                {{ getFieldError('pickupTime') }}
               </div>
             </div>
           </div>
 
-          <!-- Distance and Route Info -->
-          <div class="route-info-card" *ngIf="routeQuote">
-            <div class="row">
-              <div class="col-md-3">
-                <div class="info-item">
-                  <i class="fas fa-route text-primary"></i>
-                  <div>
-                    <strong>Distance</strong>
-                    <span>{{ routeQuote?.distance }} km</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="info-item">
-                  <i class="fas fa-clock text-info"></i>
-                  <div>
-                    <strong>Est. Duration</strong>
-                    <span>{{ routeQuote?.estimatedDuration }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="info-item">
-                  <i class="fas fa-road text-success"></i>
-                  <div>
-                    <strong>Route Type</strong>
-                    <span>{{ routeQuote?.routeType }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="info-item">
-                  <i class="fas fa-gas-pump text-warning"></i>
-                  <div>
-                    <strong>Fuel Estimate</strong>
-                    <span>${{ routeQuote?.fuelCost }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Tip:</strong> Provide detailed addresses for accurate quote calculation.
           </div>
         </div>
       </div>
@@ -311,205 +181,91 @@
       <div class="step-card">
         <div class="card-header">
           <h4><i class="fas fa-boxes me-2"></i>Step 2: Goods Details</h4>
-          <p>Describe what you're shipping</p>
+          <p class="text-muted mb-0">Describe what you're shipping</p>
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-md-6">
-              <div class="form-group mb-3">
-                <label for="goodsType" class="form-label required">Type of Goods</label>
-                <select
-                  id="goodsType"
-                  class="form-select"
-                  formControlName="goodsType"
-                  [class.is-invalid]="getFieldError(bookingForm, 'goodsType')"
-                >
-                  <option value="">Select goods type</option>
-                  <option value="household-items">Household Items</option>
-                  <option value="furniture">Furniture</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="construction-materials">Construction Materials</option>
-                  <option value="industrial-equipment">Industrial Equipment</option>
-                  <option value="food-beverages">Food & Beverages</option>
-                  <option value="documents-parcels">Documents & Parcels</option>
-                  <option value="vehicles">Vehicles</option>
-                  <option value="other">Other</option>
-                </select>
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'goodsType')">
-                  {{ getFieldError(bookingForm, 'goodsType') }}
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="goodsDescription" class="form-label required">Description</label>
-                <textarea
-                  id="goodsDescription"
-                  class="form-control"
-                  rows="3"
-                  placeholder="Describe your goods in detail..."
-                  formControlName="goodsDescription"
-                  [class.is-invalid]="getFieldError(bookingForm, 'goodsDescription')"
-                ></textarea>
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'goodsDescription')">
-                  {{ getFieldError(bookingForm, 'goodsDescription') }}
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group mb-3">
-                    <label for="goodsWeight" class="form-label required">Weight (kg)</label>
-                    <input
-                      type="number"
-                      id="goodsWeight"
-                      class="form-control"
-                      placeholder="Enter weight in kg"
-                      formControlName="goodsWeight"
-                      min="1"
-                      max="50000"
-                      [class.is-invalid]="getFieldError(bookingForm, 'goodsWeight')"
-                    >
-                    <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'goodsWeight')">
-                      {{ getFieldError(bookingForm, 'goodsWeight') }}
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group mb-3">
-                    <label for="goodsValue" class="form-label required">Declared Value ($)</label>
-                    <input
-                      type="number"
-                      id="goodsValue"
-                      class="form-control"
-                      placeholder="Enter goods value"
-                      formControlName="goodsValue"
-                      min="1"
-                      [class.is-invalid]="getFieldError(bookingForm, 'goodsValue')"
-                    >
-                    <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'goodsValue')">
-                      {{ getFieldError(bookingForm, 'goodsValue') }}
-                    </div>
-                  </div>
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-tag me-1"></i>Goods Type
+              </label>
+              <select 
+                class="form-control" 
+                formControlName="goodsType"
+                [class.is-invalid]="isFieldInvalid('goodsType')">
+                <option value="">Select goods type</option>
+                <option *ngFor="let type of goodsTypes" [value]="type">{{ type }}</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('goodsType')">
+                {{ getFieldError('goodsType') }}
               </div>
             </div>
 
-            <div class="col-md-6">
-              <div class="row">
-                <div class="col-md-4">
-                  <div class="form-group mb-3">
-                    <label for="goodsLength" class="form-label">Length (m)</label>
-                    <input
-                      type="number"
-                      id="goodsLength"
-                      class="form-control"
-                      placeholder="Length"
-                      formControlName="goodsLength"
-                      min="0.1"
-                      step="0.1"
-                    >
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="form-group mb-3">
-                    <label for="goodsWidth" class="form-label">Width (m)</label>
-                    <input
-                      type="number"
-                      id="goodsWidth"
-                      class="form-control"
-                      placeholder="Width"
-                      formControlName="goodsWidth"
-                      min="0.1"
-                      step="0.1"
-                    >
-                  </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="form-group mb-3">
-                    <label for="goodsHeight" class="form-label">Height (m)</label>
-                    <input
-                      type="number"
-                      id="goodsHeight"
-                      class="form-control"
-                      placeholder="Height"
-                      formControlName="goodsHeight"
-                      min="0.1"
-                      step="0.1"
-                    >
-                  </div>
-                </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-weight me-1"></i>Weight (in kg)
+              </label>
+              <input 
+                type="number" 
+                class="form-control" 
+                formControlName="goodsWeight"
+                [class.is-invalid]="isFieldInvalid('goodsWeight')"
+                placeholder="Enter weight in kg"
+                min="1">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('goodsWeight')">
+                {{ getFieldError('goodsWeight') }}
               </div>
+            </div>
 
-              <!-- Special Requirements -->
-              <div class="form-group mb-3">
-                <label class="form-label">Special Requirements</label>
-                <div class="checkbox-group">
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="fragileGoods"
-                      class="form-check-input"
-                      formControlName="fragileGoods"
-                    >
-                    <label class="form-check-label" for="fragileGoods">
-                      <i class="fas fa-wine-glass me-2"></i>Fragile Items
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="temperatureControlled"
-                      class="form-check-input"
-                      formControlName="temperatureControlled"
-                    >
-                    <label class="form-check-label" for="temperatureControlled">
-                      <i class="fas fa-thermometer-half me-2"></i>Temperature Controlled
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="hazardousMaterials"
-                      class="form-check-input"
-                      formControlName="hazardousMaterials"
-                    >
-                    <label class="form-check-label" for="hazardousMaterials">
-                      <i class="fas fa-exclamation-triangle me-2"></i>Hazardous Materials
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="loadingUnloadingHelp"
-                      class="form-check-input"
-                      formControlName="loadingUnloadingHelp"
-                    >
-                    <label class="form-check-label" for="loadingUnloadingHelp">
-                      <i class="fas fa-hands-helping me-2"></i>Loading/Unloading Help Required
-                    </label>
-                  </div>
-                </div>
+            <div class="col-12 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-file-alt me-1"></i>Goods Description
+              </label>
+              <textarea 
+                class="form-control" 
+                formControlName="goodsDescription"
+                [class.is-invalid]="isFieldInvalid('goodsDescription')"
+                rows="4"
+                placeholder="Provide detailed description of goods (min. 10 characters)"></textarea>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('goodsDescription')">
+                {{ getFieldError('goodsDescription') }}
               </div>
+            </div>
 
-              <!-- Insurance -->
-              <div class="form-group mb-3">
-                <label class="form-label">Insurance Coverage</label>
-                <div class="form-check">
-                  <input
-                    type="checkbox"
-                    id="insuranceRequired"
-                    class="form-check-input"
-                    formControlName="insuranceRequired"
-                  >
-                  <label class="form-check-label" for="insuranceRequired">
-                    <i class="fas fa-shield-alt me-2"></i>
-                    Add Insurance Coverage (Recommended)
-                  </label>
-                </div>
-                <div class="form-text">
-                  <i class="fas fa-info-circle me-1"></i>
-                  Insurance covers up to the declared value of goods
-                </div>
+            <div class="col-12">
+              <label class="form-label">Special Handling Requirements</label>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  formControlName="fragile"
+                  id="fragile">
+                <label class="form-check-label" for="fragile">
+                  <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                  Fragile Items
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  formControlName="perishable"
+                  id="perishable">
+                <label class="form-check-label" for="perishable">
+                  <i class="fas fa-snowflake text-info me-1"></i>
+                  Perishable Goods
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  formControlName="specialHandling"
+                  id="specialHandling">
+                <label class="form-check-label" for="specialHandling">
+                  <i class="fas fa-hand-paper text-danger me-1"></i>
+                  Special Handling Required
+                </label>
               </div>
             </div>
           </div>
@@ -521,111 +277,78 @@
     <div class="step-content" *ngIf="currentStep === 3">
       <div class="step-card">
         <div class="card-header">
-          <h4><i class="fas fa-truck me-2"></i>Step 3: Vehicle Selection</h4>
-          <p>Choose the right vehicle for your needs</p>
+          <h4><i class="fas fa-truck me-2"></i>Step 3: Select Vehicle</h4>
+          <p class="text-muted mb-0">Choose the best vehicle for your needs</p>
         </div>
         <div class="card-body">
           <!-- Loading State -->
-          <div class="loading-vehicles" *ngIf="isLoadingVehicles">
-            <div class="text-center">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading vehicles...</span>
-              </div>
-              <p class="mt-3">Finding the best vehicles for your requirements...</p>
+          <div class="text-center py-5" *ngIf="isLoadingVehicles">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading vehicles...</span>
             </div>
+            <p class="mt-3 text-muted">Finding available vehicles...</p>
           </div>
 
           <!-- Vehicle Options -->
-          <div class="vehicle-options" *ngIf="!isLoadingVehicles && availableVehicles.length > 0">
-            <div class="row">
-              <div class="col-md-6 col-lg-4" *ngFor="let vehicle of availableVehicles">
-                <div class="vehicle-card" [class.selected]="selectedVehicleId === vehicle.id" (click)="selectVehicle(vehicle)">
-                  <div class="vehicle-image">
-                    <img [src]="vehicle.imageUrl" [alt]="vehicle.name" class="img-fluid">
-                    <div class="vehicle-badge" [ngClass]="getVehicleBadgeClass(vehicle.type)">
-                      {{ vehicle.type }}
-                    </div>
+          <div class="row" *ngIf="!isLoadingVehicles">
+            <div class="col-md-4 mb-3" *ngFor="let vehicle of availableVehicles">
+              <div class="vehicle-card" 
+                   [class.selected]="selectedVehicleId === vehicle.id"
+                   (click)="selectVehicle(vehicle)">
+                <div class="vehicle-header">
+                  <div class="vehicle-icon">
+                    <i [class]="vehicle.icon + ' fa-2x'"></i>
                   </div>
-                  <div class="vehicle-info">
-                    <h5>{{ vehicle.name }}</h5>
-                    <p class="vehicle-description">{{ vehicle.description }}</p>
-                    
-                    <div class="vehicle-specs">
-                      <div class="spec-item">
-                        <i class="fas fa-weight-hanging"></i>
-                        <span>{{ vehicle.capacity }}</span>
-                      </div>
-                      <div class="spec-item">
-                        <i class="fas fa-cube"></i>
-                        <span>{{ vehicle.dimensions }}</span>
-                      </div>
-                    </div>
-
-                    <div class="vehicle-features">
-                      <span class="feature" *ngFor="let feature of vehicle.features">
-                        <i class="fas fa-check me-1"></i>{{ feature }}
-                      </span>
-                    </div>
-
-                    <div class="vehicle-pricing">
-                      <div class="base-price">
-                        <span class="price-label">Base Price:</span>
-                        <span class="price-value">${{ vehicle.basePrice }}</span>
-                      </div>
-                      <div class="per-km-price">
-                        <span class="price-label">Per km:</span>
-                        <span class="price-value">${{ vehicle.pricePerKm }}</span>
-                      </div>
-                    </div>
-
-                    <div class="estimated-total" *ngIf="routeQuote">
-                      <strong>
-                        Estimated Total: ${{ calculateEstimatedPrice(vehicle) }}
-                      </strong>
-                    </div>
-
-                    <div class="availability" [ngClass]="getAvailabilityClass(vehicle.availability)">
-                      <i class="fas" [ngClass]="getAvailabilityIcon(vehicle.availability)"></i>
-                      {{ vehicle.availability }}
-                    </div>
+                  <div class="availability-badge" [class]="getAvailabilityClass(vehicle.availability)">
+                    <i [class]="'fas ' + getAvailabilityIcon(vehicle.availability) + ' me-1'"></i>
+                    {{ vehicle.availability || 'Unknown' }}
                   </div>
+                </div>
+                
+                <h5 class="vehicle-name">{{ vehicle.name }}</h5>
+                <p class="vehicle-description">{{ vehicle.description }}</p>
+                
+                <div class="vehicle-specs">
+                  <div class="spec-item">
+                    <i class="fas fa-weight-hanging me-1"></i>
+                    Capacity: {{ vehicle.capacity }} tons
+                  </div>
+                  <div class="spec-item">
+                    <i class="fas fa-ruler-combined me-1"></i>
+                    {{ vehicle.dimensions }}
+                  </div>
+                </div>
+
+                <div class="vehicle-features">
+                  <div class="feature-badge" *ngFor="let feature of vehicle.features">
+                    <i class="fas fa-check-circle me-1"></i>{{ feature }}
+                  </div>
+                </div>
+
+                <div class="vehicle-price">
+                  <div class="price-label">Estimated Price</div>
+                  <div class="price-amount">₹{{ calculateVehiclePrice(vehicle) | number }}</div>
+                  <div class="price-breakdown">
+                    Base: ₹{{ vehicle.basePrice }} + ₹{{ vehicle.pricePerKm }}/km
+                  </div>
+                </div>
+
+                <div class="select-indicator" *ngIf="selectedVehicleId === vehicle.id">
+                  <i class="fas fa-check-circle"></i> Selected
                 </div>
               </div>
             </div>
           </div>
 
           <!-- No Vehicles Available -->
-          <div class="no-vehicles" *ngIf="!isLoadingVehicles && availableVehicles.length === 0">
-            <div class="text-center">
-              <i class="fas fa-truck-moving empty-icon"></i>
-              <h4>No vehicles available</h4>
-              <p>No suitable vehicles found for your requirements. Please modify your search criteria.</p>
-              <button type="button" class="btn btn-primary" (click)="previousStep()">
-                <i class="fas fa-arrow-left me-2"></i>
-                Modify Requirements
-              </button>
-            </div>
+          <div class="alert alert-warning" *ngIf="!isLoadingVehicles && availableVehicles.length === 0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No vehicles available for the specified weight. Please adjust goods weight.
           </div>
 
-          <!-- Selected Vehicle Summary -->
-          <div class="selected-vehicle-summary" *ngIf="selectedVehicle">
-            <div class="alert alert-success">
-              <div class="row align-items-center">
-                <div class="col-md-8">
-                  <h6><i class="fas fa-check-circle me-2"></i>Selected Vehicle</h6>
-                  <p class="mb-0">
-                    <strong>{{ selectedVehicle.name }}</strong> - 
-                    Estimated Cost: <strong>${{ calculateEstimatedPrice(selectedVehicle) }}</strong>
-                  </p>
-                </div>
-                <div class="col-md-4 text-end">
-                  <button type="button" class="btn btn-sm btn-outline-success" (click)="viewVehicleDetails(selectedVehicle)">
-                    <i class="fas fa-eye me-1"></i>
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
+          <!-- Validation Error -->
+          <div class="alert alert-danger mt-3" *ngIf="isFieldInvalid('selectedVehicleType')">
+            {{ getFieldError('selectedVehicleType') }}
           </div>
         </div>
       </div>
@@ -635,228 +358,142 @@
     <div class="step-content" *ngIf="currentStep === 4">
       <div class="step-card">
         <div class="card-header">
-          <h4><i class="fas fa-user me-2"></i>Step 4: Contact & Payment</h4>
-          <p>Final details and payment information</p>
+          <h4><i class="fas fa-credit-card me-2"></i>Step 4: Contact & Payment</h4>
+          <p class="text-muted mb-0">Complete your booking</p>
         </div>
         <div class="card-body">
+          <!-- Contact Information -->
+          <div class="section-header mb-3">
+            <h5><i class="fas fa-user me-2"></i>Contact Information</h5>
+          </div>
+          
           <div class="row">
-            <!-- Contact Information -->
-            <div class="col-md-6">
-              <h6 class="section-title">Contact Information</h6>
-              
-              <div class="form-group mb-3">
-                <label for="customerName" class="form-label required">Full Name</label>
-                <input
-                  type="text"
-                  id="customerName"
-                  class="form-control"
-                  placeholder="Enter your full name"
-                  formControlName="customerName"
-                  [class.is-invalid]="getFieldError(bookingForm, 'customerName')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'customerName')">
-                  {{ getFieldError(bookingForm, 'customerName') }}
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="customerEmail" class="form-label required">Email Address</label>
-                <input
-                  type="email"
-                  id="customerEmail"
-                  class="form-control"
-                  placeholder="Enter your email"
-                  formControlName="customerEmail"
-                  [class.is-invalid]="getFieldError(bookingForm, 'customerEmail')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'customerEmail')">
-                  {{ getFieldError(bookingForm, 'customerEmail') }}
-                </div>
-              </div>
-
-              <div class="form-group mb-3">
-                <label for="customerPhone" class="form-label required">Phone Number</label>
-                <input
-                  type="tel"
-                  id="customerPhone"
-                  class="form-control"
-                  placeholder="Enter your phone number"
-                  formControlName="customerPhone"
-                  [class.is-invalid]="getFieldError(bookingForm, 'customerPhone')"
-                >
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'customerPhone')">
-                  {{ getFieldError(bookingForm, 'customerPhone') }}
-                </div>
-              </div>
-
-              <!-- Notification Preferences -->
-              <div class="form-group mb-3">
-                <label class="form-label">Notification Preferences</label>
-                <div class="checkbox-group">
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="emailNotifications"
-                      class="form-check-input"
-                      formControlName="emailNotifications"
-                    >
-                    <label class="form-check-label" for="emailNotifications">
-                      <i class="fas fa-envelope me-2"></i>Email notifications
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      type="checkbox"
-                      id="smsNotifications"
-                      class="form-check-input"
-                      formControlName="smsNotifications"
-                    >
-                    <label class="form-check-label" for="smsNotifications">
-                      <i class="fas fa-sms me-2"></i>SMS notifications
-                    </label>
-                  </div>
-                </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-user me-1"></i>Full Name
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                formControlName="contactName"
+                [class.is-invalid]="isFieldInvalid('contactName')"
+                placeholder="Enter your full name">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('contactName')">
+                {{ getFieldError('contactName') }}
               </div>
             </div>
 
-            <!-- Payment Information -->
-            <div class="col-md-6">
-              <h6 class="section-title">Payment Method</h6>
-              
-              <div class="payment-methods">
-                <div class="form-check payment-option">
-                  <input
-                    type="radio"
-                    id="creditCard"
-                    name="paymentMethod"
-                    value="credit-card"
-                    class="form-check-input"
-                    formControlName="paymentMethod"
-                  >
-                  <label class="form-check-label" for="creditCard">
-                    <i class="fas fa-credit-card me-2"></i>
-                    Credit/Debit Card
-                  </label>
-                </div>
-                <div class="form-check payment-option">
-                  <input
-                    type="radio"
-                    id="bankTransfer"
-                    name="paymentMethod"
-                    value="bank-transfer"
-                    class="form-check-input"
-                    formControlName="paymentMethod"
-                  >
-                  <label class="form-check-label" for="bankTransfer">
-                    <i class="fas fa-university me-2"></i>
-                    Bank Transfer
-                  </label>
-                </div>
-                <div class="form-check payment-option">
-                  <input
-                    type="radio"
-                    id="wallet"
-                    name="paymentMethod"
-                    value="wallet"
-                    class="form-check-input"
-                    formControlName="paymentMethod"
-                  >
-                  <label class="form-check-label" for="wallet">
-                    <i class="fas fa-wallet me-2"></i>
-                    Digital Wallet
-                  </label>
-                </div>
-                <div class="form-check payment-option">
-                  <input
-                    type="radio"
-                    id="cash"
-                    name="paymentMethod"
-                    value="cash"
-                    class="form-check-input"
-                    formControlName="paymentMethod"
-                  >
-                  <label class="form-check-label" for="cash">
-                    <i class="fas fa-money-bill-wave me-2"></i>
-                    Cash on Delivery
-                  </label>
-                </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-phone me-1"></i>Phone Number
+              </label>
+              <input 
+                type="tel" 
+                class="form-control" 
+                formControlName="contactPhone"
+                [class.is-invalid]="isFieldInvalid('contactPhone')"
+                placeholder="10-digit phone number">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('contactPhone')">
+                {{ getFieldError('contactPhone') }}
               </div>
+            </div>
 
-              <!-- Terms and Conditions -->
-              <div class="form-group mt-4">
-                <div class="form-check">
-                  <input
-                    type="checkbox"
-                    id="agreeTerms"
-                    class="form-check-input"
-                    formControlName="agreeTerms"
-                    [class.is-invalid]="getFieldError(bookingForm, 'agreeTerms')"
-                  >
-                  <label class="form-check-label" for="agreeTerms">
-                    I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a>
-                  </label>
+            <div class="col-md-4 mb-3">
+              <label class="form-label required">
+                <i class="fas fa-envelope me-1"></i>Email Address
+              </label>
+              <input 
+                type="email" 
+                class="form-control" 
+                formControlName="contactEmail"
+                [class.is-invalid]="isFieldInvalid('contactEmail')"
+                placeholder="your.email@example.com">
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('contactEmail')">
+                {{ getFieldError('contactEmail') }}
+              </div>
+            </div>
+
+            <div class="col-12 mb-3">
+              <label class="form-label">
+                <i class="fas fa-sticky-note me-1"></i>Additional Notes
+              </label>
+              <textarea 
+                class="form-control" 
+                formControlName="additionalNotes"
+                rows="3"
+                placeholder="Any special instructions or requirements (optional)"></textarea>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Payment Method -->
+          <div class="section-header mb-3">
+            <h5><i class="fas fa-credit-card me-2"></i>Payment Method</h5>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3" *ngFor="let method of paymentMethods">
+              <div class="payment-option" 
+                   [class.selected]="bookingForm.get('paymentMethod')?.value === method.value"
+                   (click)="bookingForm.patchValue({paymentMethod: method.value})">
+                <div class="payment-icon">
+                  <i [class]="'fas ' + method.icon"></i>
                 </div>
-                <div class="invalid-feedback" *ngIf="getFieldError(bookingForm, 'agreeTerms')">
-                  You must agree to the terms and conditions
+                <div class="payment-label">{{ method.label }}</div>
+                <div class="payment-check" *ngIf="bookingForm.get('paymentMethod')?.value === method.value">
+                  <i class="fas fa-check-circle"></i>
                 </div>
               </div>
             </div>
           </div>
 
+          <div class="alert alert-danger mt-3" *ngIf="isFieldInvalid('paymentMethod')">
+            {{ getFieldError('paymentMethod') }}
+          </div>
+
+          <hr class="my-4">
+
           <!-- Booking Summary -->
-          <div class="booking-summary mt-4" *ngIf="selectedVehicle && routeQuote">
-            <h6 class="section-title">Booking Summary</h6>
-            <div class="summary-card">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="summary-item">
-                    <span>Route:</span>
-                    <span>{{ bookingForm.get('pickupAddress')?.value }} → {{ bookingForm.get('dropoffAddress')?.value }}</span>
-                  </div>
-                  <div class="summary-item">
-                    <span>Distance:</span>
-                    <span>{{ routeQuote.distance }} km</span>
-                  </div>
-                  <div class="summary-item">
-                    <span>Vehicle:</span>
-                    <span>{{ selectedVehicle.name }}</span>
-                  </div>
-                  <div class="summary-item">
-                    <span>Pickup Date:</span>
-                    <span>{{ formatDate(bookingForm.get('pickupDate')?.value) }} at {{ bookingForm.get('pickupTime')?.value }}</span>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="price-breakdown">
-                    <div class="price-item">
-                      <span>Base Price:</span>
-                      <span>${{ selectedVehicle.basePrice }}</span>
-                    </div>
-                    <div class="price-item">
-                      <span>Distance ({{ routeQuote.distance }}km × ${{ selectedVehicle.pricePerKm }}):</span>
-                      <span>${{ (routeQuote.distance * selectedVehicle.pricePerKm).toFixed(2) }}</span>
-                    </div>
-                    <div class="price-item" *ngIf="bookingForm.get('loadingUnloadingHelp')?.value">
-                      <span>Loading/Unloading Help:</span>
-                      <span>$50.00</span>
-                    </div>
-                    <div class="price-item" *ngIf="bookingForm.get('insuranceRequired')?.value">
-                      <span>Insurance:</span>
-                      <span>${{ calculateInsuranceCost() }}</span>
-                    </div>
-                    <div class="price-item tax-item">
-                      <span>Tax (8%):</span>
-                      <span>${{ calculateTax() }}</span>
-                    </div>
-                    <div class="price-item total-item">
-                      <strong>
-                        <span>Total Amount:</span>
-                        <span>${{ calculateTotalAmount() }}</span>
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="section-header mb-3">
+            <h5><i class="fas fa-file-invoice me-2"></i>Booking Summary</h5>
+          </div>
+
+          <div class="booking-summary">
+            <div class="summary-row">
+              <span>Vehicle Price:</span>
+              <span>₹{{ selectedVehicle ? calculateVehiclePrice(selectedVehicle) : 0 | number }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Insurance (5%):</span>
+              <span>₹{{ calculateInsuranceCost() | number }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax (18%):</span>
+              <span>₹{{ calculateTax() | number }}</span>
+            </div>
+            <div class="summary-row total">
+              <span><strong>Total Amount:</strong></span>
+              <span><strong>₹{{ calculateTotalAmount() | number }}</strong></span>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Terms and Conditions -->
+          <div class="form-check mb-3">
+            <input 
+              class="form-check-input" 
+              type="checkbox" 
+              formControlName="agreeToTerms"
+              [class.is-invalid]="isFieldInvalid('agreeToTerms')"
+              id="agreeToTerms">
+            <label class="form-check-label" for="agreeToTerms">
+              I agree to the <a href="/terms" target="_blank">Terms and Conditions</a> and 
+              <a href="/privacy" target="_blank">Privacy Policy</a>
+            </label>
+            <div class="invalid-feedback d-block" *ngIf="isFieldInvalid('agreeToTerms')">
+              {{ getFieldError('agreeToTerms') }}
             </div>
           </div>
         </div>
@@ -867,39 +504,34 @@
     <div class="navigation-buttons">
       <div class="row">
         <div class="col-6">
-          <button
-            type="button"
+          <button 
+            type="button" 
             class="btn btn-outline-secondary"
-            (click)="previousStep()"
-            [disabled]="currentStep === 1"
-          >
-            <i class="fas fa-arrow-left me-2"></i>
-            Previous
+            (click)="prevStep()"
+            [disabled]="currentStep === 1">
+            <i class="fas fa-arrow-left me-1"></i> Previous
           </button>
         </div>
         <div class="col-6 text-end">
-          <button
-            type="button"
+          <button 
+            type="button" 
             class="btn btn-primary"
+            *ngIf="currentStep < totalSteps"
             (click)="nextStep()"
-            *ngIf="currentStep < 4"
-            [disabled]="!canProceedToNextStep()"
-          >
-            Next
-            <i class="fas fa-arrow-right ms-2"></i>
+            [disabled]="!isStepValid(currentStep)">
+            Next <i class="fas fa-arrow-right ms-1"></i>
           </button>
-          <button
-            type="submit"
+          
+          <button 
+            type="submit" 
             class="btn btn-success"
-            *ngIf="currentStep === 4"
-            [disabled]="!canSubmitBooking() || isSubmitting"
-          >
+            *ngIf="currentStep === totalSteps"
+            [disabled]="!bookingForm.valid || !selectedVehicle || isSubmitting">
             <span *ngIf="!isSubmitting">
-              <i class="fas fa-check me-2"></i>
-              Confirm Booking
+              <i class="fas fa-check me-1"></i> Confirm Booking
             </span>
             <span *ngIf="isSubmitting">
-              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
               Processing...
             </span>
           </button>

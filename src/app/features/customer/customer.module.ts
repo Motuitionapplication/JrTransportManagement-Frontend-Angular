@@ -1,6 +1,6 @@
 
 import { NgModule } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -20,10 +20,13 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Components
 import { CustomerComponent } from './customer.component';
 import { CustomerDashboardComponent } from './components/customer-dashboard.component';
+// New Dynamic Dashboard Component
+import { CustomerDashboardComponent as DynamicDashboardComponent } from './components/dashboard/customer-dashboard.component';
 import { MyBookingsComponent } from './components/my-bookings/my-bookings.component';
 // Force refresh - BookTransport component exists and builds successfully
 import { BookTransportComponent } from './components/book-transport/book-transport.component';
@@ -37,6 +40,11 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { SupportComponent } from './components/support/support.component';
 import { NotificationsComponent } from './components/notifications/notifications.component';
 
+// New folder-based components
+import { WalletComponent as NewWalletComponent } from './components/wallet/wallet.component';
+import { MessageComponent } from './components/message/message.component';
+import { TransportHistoryComponent as NewTransportHistoryComponent } from './components/transport-history/transport-history.component';
+
 // Routing
 import { CustomerRoutingModule } from './customer-routing.module';
 
@@ -44,6 +52,7 @@ import { CustomerRoutingModule } from './customer-routing.module';
   declarations: [
     CustomerComponent,
     CustomerDashboardComponent,
+    DynamicDashboardComponent,
     MyBookingsComponent,
     BookTransportComponent,
     MyTripsComponent,
@@ -54,7 +63,11 @@ import { CustomerRoutingModule } from './customer-routing.module';
     PaymentHistoryComponent,
     ProfileComponent,
     SupportComponent,
-    NotificationsComponent
+    NotificationsComponent,
+    // New folder-based components
+    NewWalletComponent,
+    MessageComponent,
+    NewTransportHistoryComponent
   ],
   imports: [
     CommonModule,
@@ -77,14 +90,15 @@ import { CustomerRoutingModule } from './customer-routing.module';
     MatBadgeModule,
     MatMenuModule,
     MatDialogModule,
-    MatStepperModule
+    MatStepperModule,
+    MatTooltipModule
   ],
   providers: [
-    TitleCasePipe
   ],
   exports: [
     CustomerComponent,
     CustomerDashboardComponent,
+    DynamicDashboardComponent,
     MyBookingsComponent,
     BookTransportComponent,
     MyTripsComponent,
@@ -95,7 +109,11 @@ import { CustomerRoutingModule } from './customer-routing.module';
     PaymentHistoryComponent,
     ProfileComponent,
     SupportComponent,
-    NotificationsComponent
+    NotificationsComponent,
+    // New folder-based components
+    NewWalletComponent,
+    MessageComponent,
+    NewTransportHistoryComponent
   ]
 })
 export class CustomerModule {}

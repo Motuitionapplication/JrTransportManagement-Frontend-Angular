@@ -1,0 +1,347 @@
+<div class="wallet-container">
+  <div class="wallet-header">
+    <h2 class="page-title">
+      <i class="fas fa-wallet me-2"></i>
+      My Wallet
+      <span *ngIf="balance" class="badge bg-info ms-2">
+        {{ formatCurrency(availableBalance) }} Available
+      </span>
+    </h2>
+    <div class="header-actions">
+      <button class="btn btn-outline-primary me-2" (click)="downloadStatement()">
+        <i class="fas fa-download me-1"></i>
+        Statement
+      </button>
+      <button class="btn btn-primary" (click)="refreshWallet()" [disabled]="isRefreshing">
+        <i class="fas fa-sync-alt me-1" [class.fa-spin]="isRefreshing"></i>
+        {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading wallet information...</p>
+  </div>
+
+  <!-- Wallet Content -->
+  <div *ngIf="!isLoading">
+    <!-- Balance Card -->
+    <div class="balance-card mb-4">
+      <div class="card bg-gradient-primary text-white">
+        <div class="card-body text-center">
+          <h3 class="card-title">
+            <i class="fas fa-coins me-2"></i>
+            Current Balance
+          </h3>
+          <h1 class="balance-amount">{{ formatCurrency(balance?.balance || 0) }}</h1>
+          <button class="btn btn-light mt-3" (click)="addMoney()">
+            <i class="fas fa-plus me-1"></i>
+            Add Money
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet Statistics -->
+    <div class="wallet-stats mb-4" *ngIf="stats">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-arrow-up fa-2x mb-2"></i>
+              <h6>Total Added</h6>
+              <h4>{{ formatCurrency(stats.totalAdded) }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-danger text-white h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-arrow-down fa-2x mb-2"></i>
+              <h6>Total Spent</h6>
+              <h4>{{ formatCurrency(stats.totalSpent) }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-list fa-2x mb-2"></i>
+              <h6>Transactions</h6>
+              <h4>{{ stats.totalTransactions }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white h-100">
+            <div class="card-body text-center">
+              <i class="fas fa-credit-card fa-2x mb-2"></i>
+              <h6>Preferred Method</h6>
+              <h4>{{ stats.mostUsedPaymentMethod }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions mb-4">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="card h-100 text-center">
+            <div class="card-body">
+              <i class="fas fa-plus-circle fa-2x text-success mb-2"></i>
+              <h6>Add Money</h6>
+              <button class="btn btn-outline-success btn-sm" (click)="addMoney()">
+                Add Funds
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 text-center">
+            <div class="card-body">
+              <i class="fas fa-history fa-2x text-info mb-2"></i>
+              <h6>Transaction History</h6>
+              <span class="badge bg-info">{{ transactions.length }} records</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 text-center">
+            <div class="card-body">
+              <i class="fas fa-download fa-2x text-warning mb-2"></i>
+              <h6>Download Statement</h6>
+              <button class="btn btn-outline-warning btn-sm" (click)="downloadStatement()">
+                Download
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="transactions-section">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Recent Transactions
+          </h5>
+          <span class="badge bg-secondary">{{ transactions.length }} transactions</span>
+        </div>
+        <div class="card-body">
+          <div *ngIf="transactions.length === 0" class="text-center py-4">
+            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No transactions found</p>
+          </div>
+          
+          <div *ngFor="let transaction of transactions; let last = last" class="transaction-item mb-3">
+            <div class="row align-items-center">
+              <div class="col-auto">
+                <div class="transaction-icon" 
+                     [class.bg-success]="transaction.type === 'credit' || transaction.type === 'refund'"
+                     [class.bg-danger]="transaction.type === 'debit' || transaction.type === 'reserved'"
+                     [class.bg-info]="transaction.type === 'released'">
+                  <i class="fas {{ getTransactionIcon(transaction) }}"></i>
+                </div>
+              </div>
+              <div class="col">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h6 class="mb-1">{{ transaction.description }}</h6>
+                    <p class="text-muted mb-0">
+                      <small>{{ transaction.timestamp | date:'medium' }}</small>
+                      <span *ngIf="transaction.referenceId" class="ms-2">
+                        <i class="fas fa-link"></i> {{ transaction.referenceId }}
+                      </span>
+                    </p>
+                    <small *ngIf="transaction.paymentMethod" class="badge bg-light text-dark">
+                      {{ transaction.paymentMethod | titlecase }}
+                    </small>
+                  </div>
+                  <div class="text-end">
+                    <h6 class="mb-1 {{ getTransactionColorClass(transaction) }}">
+                      {{ transaction.type === 'credit' || transaction.type === 'refund' || transaction.type === 'released' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                    </h6>
+                    <span class="badge {{ getStatusBadgeClass(transaction.status) }}">
+                      {{ transaction.status | titlecase }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto">
+                <button class="btn btn-outline-secondary btn-sm" 
+                        (click)="viewTransaction(transaction)"
+                        title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <hr *ngIf="!last">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Money Modal -->
+<div class="modal fade" [class.show]="showAddMoneyModal" [style.display]="showAddMoneyModal ? 'block' : 'none'" 
+     tabindex="-1" *ngIf="showAddMoneyModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Money to Wallet</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form #addMoneyFormRef="ngForm">
+          <div class="mb-3">
+            <label for="amount" class="form-label">Amount <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text">₹</span>
+              <input type="number" 
+                     class="form-control" 
+                     id="amount"
+                     [(ngModel)]="addMoneyForm.amount"
+                     name="amount"
+                     min="10"
+                     max="50000"
+                     step="0.01"
+                     required
+                     placeholder="Enter amount">
+            </div>
+            <small class="form-text text-muted">Minimum: ₹10, Maximum: ₹50,000</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="paymentMethod" class="form-label">Payment Method <span class="text-danger">*</span></label>
+            <select class="form-select" 
+                    id="paymentMethod"
+                    [(ngModel)]="addMoneyForm.paymentMethod"
+                    name="paymentMethod"
+                    required>
+              <option value="upi">UPI</option>
+              <option value="card">Credit/Debit Card</option>
+              <option value="net_banking">Net Banking</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">Description (Optional)</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="description"
+                   [(ngModel)]="addMoneyForm.description"
+                   name="description"
+                   maxlength="100"
+                   placeholder="Add a note (optional)">
+          </div>
+
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            You will be redirected to a secure payment gateway to complete the transaction.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" 
+                class="btn btn-primary" 
+                [disabled]="!addMoneyFormRef.form.valid || addMoneyForm.amount <= 0"
+                (click)="processAddMoney()">
+          <i class="fas fa-plus me-1"></i>
+          Add {{ formatCurrency(addMoneyForm.amount || 0) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal fade" [class.show]="selectedTransaction" [style.display]="selectedTransaction ? 'block' : 'none'" 
+     tabindex="-1" *ngIf="selectedTransaction">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Transaction Details</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Transaction Information</h6>
+            <table class="table table-borderless">
+              <tr>
+                <td><strong>Transaction ID:</strong></td>
+                <td>{{ selectedTransaction.id }}</td>
+              </tr>
+              <tr>
+                <td><strong>Type:</strong></td>
+                <td>
+                  <span class="badge" 
+                        [class.bg-success]="selectedTransaction.type === 'credit' || selectedTransaction.type === 'refund'"
+                        [class.bg-danger]="selectedTransaction.type === 'debit'"
+                        [class.bg-info]="selectedTransaction.type === 'reserved' || selectedTransaction.type === 'released'">
+                    {{ selectedTransaction.type | titlecase }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Amount:</strong></td>
+                <td class="{{ getTransactionColorClass(selectedTransaction) }}">
+                  <strong>{{ formatCurrency(selectedTransaction.amount) }}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Status:</strong></td>
+                <td>
+                  <span class="badge {{ getStatusBadgeClass(selectedTransaction.status) }}">
+                    {{ selectedTransaction.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6>Additional Details</h6>
+            <table class="table table-borderless">
+              <tr>
+                <td><strong>Date & Time:</strong></td>
+                <td>{{ selectedTransaction.timestamp | date:'full' }}</td>
+              </tr>
+              <tr *ngIf="selectedTransaction.paymentMethod">
+                <td><strong>Payment Method:</strong></td>
+                <td>{{ selectedTransaction.paymentMethod | titlecase }}</td>
+              </tr>
+              <tr *ngIf="selectedTransaction.referenceId">
+                <td><strong>Reference ID:</strong></td>
+                <td>{{ selectedTransaction.referenceId }}</td>
+              </tr>
+              <tr>
+                <td><strong>Description:</strong></td>
+                <td>{{ selectedTransaction.description }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Close</button>
+        <button type="button" class="btn btn-primary" (click)="downloadStatement()">
+          <i class="fas fa-download me-1"></i>
+          Download Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="showAddMoneyModal || selectedTransaction" (click)="closeModal()"></div>

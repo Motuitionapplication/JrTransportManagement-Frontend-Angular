@@ -1,0 +1,126 @@
+<div class="admin-dashboard">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1 class="dashboard-title">Admin Dashboard</h1>
+    <p class="dashboard-subtitle">Welcome to JR Transport Management System</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let stat of statsData">
+      <div class="stat-icon">
+        <span class="stat-icon-text">{{ getStatAbbreviation(stat.title) }}</span>
+      </div>
+      <div class="stat-content">
+        <h3 class="stat-value">{{ stat.value }}</h3>
+        <p class="stat-title">{{ stat.title }}</p>
+        <span class="stat-change" [ngClass]="stat.changeType">
+          {{ stat.change }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts and Activity Row -->
+  <div class="dashboard-row">
+    <!-- Revenue Chart Card -->
+  <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Revenue Overview</mat-card-title>
+        <mat-card-subtitle>Monthly revenue tracking</mat-card-subtitle>
+      </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas #revenueChart class="revenue-canvas"></canvas>
+            </div>
+          </mat-card-content>
+    </mat-card>
+
+    <!-- Recent Activity Card -->
+    <mat-card class="activity-card">
+      <mat-card-header>
+        <mat-card-title>Recent Activity</mat-card-title>
+        <mat-card-subtitle>Latest system activities</mat-card-subtitle>
+      </mat-card-header>
+          <mat-card-content>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let activity of recentActivitiesSlice; let i = index" [class.unread]="!activity.isRead">
+            <button class="activity-row" (click)="openActivity(activity)">
+              <div class="activity-icon" [ngClass]="activity.type">
+                <mat-icon>{{ getActivityIcon(activity.type) }}</mat-icon>
+              </div>
+              <div class="activity-details">
+                <h4 class="activity-title">{{ activity.title }}</h4>
+                <p class="activity-subtitle" *ngIf="activity.subtitle">{{ activity.subtitle }}</p>
+                <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
+              </div>
+            </button>
+            <div class="activity-actions">
+              <button mat-icon-button aria-label="mark read" (click)="toggleRead(activity, $event)">
+                <mat-icon>{{ activity.isRead ? 'done' : 'markunread' }}</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="activity-controls" *ngIf="recentActivities.length > visibleActivities">
+            <button mat-button (click)="loadMore()">Load more</button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="actions-grid">
+      <mat-card class="action-card" routerLink="/admin/bookings">
+        <h3>Manage Bookings</h3>
+        <p>View and manage all transport bookings</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Manage Bookings') }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/admin/drivers">
+        <h3>Driver Management</h3>
+        <p>Manage driver profiles and assignments</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Driver Management') }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/admin/customers">
+        <h3>Customer Management</h3>
+        <p>Manage customer accounts and profiles</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Customer Management') }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/admin/trucks">
+        <h3>Vehicle Management</h3>
+        <p>Manage vehicles and maintenance</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Vehicle Management') }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/admin/payments">
+        <h3>Payment Management</h3>
+        <p>Process payments and transactions</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Payment Management') }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="action-card" routerLink="/admin/reports">
+        <h3>Reports & Analytics</h3>
+        <p>Generate reports and view analytics</p>
+        <div class="action-icon">
+          <span class="action-icon-text">{{ getStatAbbreviation('Reports & Analytics') }}</span>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>

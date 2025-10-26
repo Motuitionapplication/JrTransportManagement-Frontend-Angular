@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "scan:impl": "node scripts/scan-angular-implementation.js",
     "start": "ng serve",
     "build": "ng build --configuration production",
     "build:dev": "ng build",

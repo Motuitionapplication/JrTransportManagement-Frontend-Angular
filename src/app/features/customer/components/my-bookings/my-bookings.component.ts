@@ -1,10 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, combineLatest } from 'rxjs';
+import { takeUntil, finalize, switchMap } from 'rxjs/operators';
+import { BookingService } from '../../../../services/booking.service';
+import { CustomerService } from '../../customer.service';
+import { Customer } from 'src/app/models/customer.model';
 
 export interface BookingSummary {
   total: number;
   pending: number;
+  confirmed: number;
   inTransit: number;
   completed: number;
+  cancelled: number;
+  totalAmount: number;
+  averageAmount: number;
 }
 
 export interface Booking {
@@ -76,7 +85,7 @@ export interface TrackingInfo {
   templateUrl: './my-bookings.component.html',
   styleUrls: ['./my-bookings.component.scss']
 })
-export class MyBookingsComponent implements OnInit {
+export class MyBookingsComponent implements OnInit, OnDestroy {
   // Component state
   bookings: Booking[] = [];
   filteredBookings: Booking[] = [];
@@ -84,8 +93,12 @@ export class MyBookingsComponent implements OnInit {
   bookingSummary: BookingSummary = {
     total: 0,
     pending: 0,
+    confirmed: 0,
     inTransit: 0,
-    completed: 0
+    completed: 0,
+    cancelled: 0,
+    totalAmount: 0,
+    averageAmount: 0
   };
   
   // Modal controls
@@ -96,29 +109,105 @@ export class MyBookingsComponent implements OnInit {
   searchQuery: string = '';
   statusFilter: string = 'all';
   dateFilter: string = 'all';
-  sortBy: string = 'date';
+  sortBy: string = 'date-desc';
   
   // Pagination
   currentPage: number = 1;
   totalPages: number = 1;
-  pageNumbers: number[] = [];
+  pageSize: number = 10;
+  totalBookings: number = 0;
   
   // Tracking data
   trackingInfo: TrackingInfo | null = null;
   
   // Loading states
   isLoading: boolean = false;
+  isRefreshing: boolean = false;
+  
+  // Export options
+  exportFormat: 'csv' | 'excel' = 'csv';
+    customer: Customer | null = null;
+  
+  // Customer ID (should come from auth service)
+  private customerId: string = 'CUST-001'; // Mock customer ID
+  
+  private destroy$ = new Subject<void>();
 
-  constructor() {}
+  constructor(private bookingService: BookingService,private customerservice : CustomerService) {}
 
   ngOnInit(): void {
-    this.loadBookings();
+    this.loadBookingsData();
+    this.subscribeToBookingsUpdates();
   }
 
-  // Load bookings data
-  loadBookings(): void {
-    // Mock data - replace with actual API call
-    this.bookings = [
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Subscribe to booking updates
+   */
+  private subscribeToBookingsUpdates(): void {
+    this.bookingService.bookings$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(bookings => {
+        this.bookings = this.mapServiceBookings(bookings);
+        this.filterBookings();
+        this.calculateSummary();
+      });
+  }
+
+  /**
+   * Load bookings data from service
+   */
+  private loadBookingsData(): void {
+  this.isLoading = true;
+  const userId = localStorage.getItem('userId');
+
+  if (!userId) {
+    console.error('❌ No user ID found in localStorage');
+    this.generateMockBookings();
+    this.isLoading = false;
+    return;
+  }
+
+  this.customerservice.getCustomerByUserId(userId).pipe(
+    switchMap(customer => {
+      console.log('✅ Fetched customer:', customer.id);
+      this.customer = customer;
+      this.customerId = customer.id;
+      // Now fetch booking history for this customer
+      return this.customerservice.getBookingHistory(customer.id);
+    }),
+    takeUntil(this.destroy$),
+    finalize(() => this.isLoading = false)
+  ).subscribe({
+    next: (bookings) => {
+      console.log('✅ Bookings loaded:', bookings.length);
+      if (bookings.length === 0) {
+        this.generateMockBookings();
+      } else {
+        // Use your mapping function to convert the data
+        this.bookings = this.mapServiceBookings(bookings);
+        // You must also call filter and summary after loading
+        this.filterBookings();
+        this.calculateSummary();
+      }
+    },
+    error: (error) => {
+      console.error('❌ Error loading bookings:', error);
+      this.generateMockBookings();
+    }
+  });
+}
+
+
+  /**
+   * Generate mock bookings for demonstration
+   */
+  private generateMockBookings(): void {
+    const mockBookings: Booking[] = [
       {
         id: 'BK-001',
         bookingNumber: 'JRT-2024-001',
@@ -273,12 +362,159 @@ export class MyBookingsComponent implements OnInit {
         }
       }
     ];
+    
+    // Generate additional dynamic bookings
+    this.generateDynamicBookings();
     this.filterBookings();
+    this.calculateSummary();
   }
 
-  // Filter bookings based on search and filters
+  /**
+   * Generate additional dynamic bookings
+   */
+  private generateDynamicBookings(): void {
+    const vehicleTypes = ['car', 'van', 'truck', 'pickup', 'motorcycle'];
+    const statuses = ['pending', 'confirmed', 'in-transit', 'completed', 'cancelled'];
+    const paymentStatuses = ['pending', 'paid', 'failed', 'refunded'];
+    const cities = ['Downtown', 'Airport', 'Mall', 'University', 'Hospital', 'Station', 'Office Park'];
+    
+    // Generate 10-20 additional bookings
+    const additionalCount = Math.floor(Math.random() * 11) + 10;
+    
+    for (let i = 0; i < additionalCount; i++) {
+      const createdAt = new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000); // Last 60 days
+      const status = statuses[Math.floor(Math.random() * statuses.length)] as any;
+      const vehicleType = vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)] as any;
+      const pickupCity = cities[Math.floor(Math.random() * cities.length)];
+      const dropoffCity = cities[Math.floor(Math.random() * cities.length)];
+      
+      const booking: Booking = {
+        id: `BK-DYN-${Date.now()}-${i}`,
+        bookingNumber: `JRT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999) + 1000).padStart(4, '0')}`,
+        pickupLocation: pickupCity,
+        dropoffLocation: dropoffCity,
+        pickupAddress: `${pickupCity} Hub, Main Street`,
+        dropoffAddress: `${dropoffCity} Center, Central Avenue`,
+        pickupDateTime: new Date(createdAt.getTime() + Math.random() * 48 * 60 * 60 * 1000),
+        dropoffDateTime: status === 'completed' ? new Date(createdAt.getTime() + Math.random() * 72 * 60 * 60 * 1000) : undefined,
+        vehicleType,
+        status,
+        paymentStatus: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)] as any,
+        estimatedCost: Math.round((Math.random() * 200 + 30) * 100) / 100,
+        actualCost: status === 'completed' ? Math.round((Math.random() * 200 + 30) * 100) / 100 : undefined,
+        totalAmount: Math.round((Math.random() * 200 + 30) * 100) / 100,
+        distance: Math.round((Math.random() * 50 + 3) * 10) / 10,
+        specialInstructions: Math.random() > 0.7 ? 'Please handle with care' : undefined,
+        driverInfo: status !== 'pending' ? {
+          id: `DRV-${Math.floor(Math.random() * 999) + 100}`,
+          name: ['Alex Kumar', 'Priya Sharma', 'Raj Patel', 'Nina Singh', 'Amit Verma'][Math.floor(Math.random() * 5)],
+          phone: `+91-${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+          rating: Math.round((Math.random() * 2 + 3) * 10) / 10,
+          licenseNumber: `DL${Math.floor(Math.random() * 1000000000)}`
+        } : undefined,
+        vehicleInfo: status !== 'pending' ? {
+          id: `VEH-${Math.floor(Math.random() * 999) + 100}`,
+          registrationNumber: `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(Math.random() * 999) + 100}`,
+          make: ['Tata', 'Mahindra', 'Maruti', 'Hyundai', 'Honda'][Math.floor(Math.random() * 5)],
+          model: ['Ace', 'Bolero', 'Swift', 'i20', 'City'][Math.floor(Math.random() * 5)],
+          type: vehicleType,
+          capacity: Math.floor(Math.random() * 5000) + 500,
+          plateNumber: `HR-${Math.floor(Math.random() * 99) + 10}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(Math.random() * 9999) + 1000}`,
+          year: 2018 + Math.floor(Math.random() * 6)
+        } : undefined,
+        createdAt,
+        updatedAt: new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000),
+        trackingInfo: ['in-transit', 'confirmed'].includes(status) ? {
+          lastUpdate: new Date(),
+          currentStatus: status === 'in-transit' ? 'En route' : 'Confirmed',
+          statusHistory: [
+            { status: 'Booked', timestamp: createdAt, description: 'Booking confirmed' },
+            ...(status !== 'pending' ? [{ status: 'Driver Assigned', timestamp: new Date(createdAt.getTime() + 30 * 60 * 1000), description: 'Driver assigned' }] : []),
+            ...(status === 'in-transit' ? [{ status: 'In Transit', timestamp: new Date(createdAt.getTime() + 60 * 60 * 1000), description: 'Vehicle en route' }] : [])
+          ]
+        } : undefined
+      };
+      
+      this.bookings.push(booking);
+    }
+  }
+
+  /**
+   * Map service bookings to component booking format
+   */
+  private mapServiceBookings(serviceBookings: any[]): Booking[] {
+    return serviceBookings.map(booking => {
+      // Helper variables for addresses
+      const pAddress = booking.pickup?.address;
+      const dAddress = booking.delivery?.address;
+
+      // Create formatted address strings
+      const pickupAddressString = pAddress
+        ? `${pAddress.street}, ${pAddress.city}, ${pAddress.state}`
+        : 'Unknown';
+        
+      const dropoffAddressString = dAddress
+        ? `${dAddress.street}, ${dAddress.city}, ${dAddress.state}`
+        : 'Unknown';
+
+      return {
+        id: booking.id,
+        bookingNumber: booking.bookingNumber,
+
+        pickupLocation: pickupAddressString,
+        dropoffLocation: dropoffAddressString,
+        pickupAddress: pickupAddressString,
+        dropoffAddress: dropoffAddressString,
+        pickupDateTime: new Date(booking.pickup?.scheduledDate || Date.now()),
+        dropoffDateTime: booking.delivery?.scheduledDate ? new Date(booking.delivery.scheduledDate) : undefined,
+        vehicleType: booking.vehicle?.type || 'truck',
+        status: booking.status,
+        paymentStatus: booking.payment?.status || 'pending',
+        estimatedCost: booking.pricing?.baseFare || 0,
+        actualCost: booking.pricing?.finalAmount || undefined,
+        totalAmount: booking.pricing?.finalAmount || booking.pricing?.baseFare || 0,
+        distance: booking.distance || 0,
+        specialInstructions: booking.specialInstructions,
+        createdAt: new Date(booking.createdAt),
+        updatedAt: new Date(booking.updatedAt)
+      };
+    });
+  }
+  private calculateSummary(): void {
+    const summary = this.bookings.reduce((acc, booking) => {
+      acc.total++;
+      acc.totalAmount += booking.totalAmount;
+      
+      switch (booking.status) {
+        case 'pending': acc.pending++; break;
+        case 'confirmed': acc.confirmed++; break;
+        case 'in-transit': acc.inTransit++; break;
+        case 'completed': acc.completed++; break;
+        case 'cancelled': acc.cancelled++; break;
+      }
+      
+      return acc;
+    }, {
+      total: 0,
+      pending: 0,
+      confirmed: 0,
+      inTransit: 0,
+      completed: 0,
+      cancelled: 0,
+      totalAmount: 0,
+      averageAmount: 0
+    });
+    
+    summary.averageAmount = summary.total > 0 ? summary.totalAmount / summary.total : 0;
+    this.bookingSummary = summary;
+  }
+
+  /**
+   * Filter bookings based on search and filters
+   */
   filterBookings(): void {
-    this.filteredBookings = this.bookings.filter(booking => {
+    // Apply filters
+    let filtered = this.bookings.filter(booking => {
       const matchesSearch = !this.searchQuery ||
         booking.bookingNumber.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
         booking.pickupLocation.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
@@ -289,6 +525,38 @@ export class MyBookingsComponent implements OnInit {
       const matchesDate = this.dateFilter === 'all' || this.checkDateFilter(booking.pickupDateTime);
 
       return matchesSearch && matchesStatus && matchesDate;
+    });
+
+    // Apply sorting
+    filtered = this.sortBookings(filtered);
+    
+    // Calculate pagination
+    this.totalBookings = filtered.length;
+    this.totalPages = Math.ceil(this.totalBookings / this.pageSize);
+    
+    // Apply pagination
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.filteredBookings = filtered.slice(startIndex, endIndex);
+  }
+
+  /**
+   * Sort bookings based on sortBy criteria
+   */
+  private sortBookings(bookings: Booking[]): Booking[] {
+    return bookings.sort((a, b) => {
+      switch (this.sortBy) {
+        case 'date-desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'date-asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'amount':
+          return b.totalAmount - a.totalAmount;
+        case 'status':
+          return a.status.localeCompare(b.status);
+        default:
+          return 0;
+      }
     });
   }
 
@@ -336,12 +604,32 @@ export class MyBookingsComponent implements OnInit {
     }
   }
 
+  /**
+   * Cancel booking
+   */
   cancelBooking(booking: Booking): void {
     if (booking.status === 'pending' || booking.status === 'confirmed') {
-      if (confirm(`Are you sure you want to cancel booking ${booking.bookingNumber}?`)) {
-        booking.status = 'cancelled';
-        booking.updatedAt = new Date();
-        this.filterBookings();
+      const reason = prompt(`Please provide a reason for cancelling booking ${booking.bookingNumber}:`);
+      if (reason) {
+        this.bookingService.cancelBooking(booking.id, reason, this.customerId)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (success) => {
+              if (success) {
+                console.log('✅ Booking cancelled successfully');
+                booking.status = 'cancelled';
+                booking.updatedAt = new Date();
+                this.filterBookings();
+                this.calculateSummary();
+              } else {
+                alert('Failed to cancel booking. Please try again.');
+              }
+            },
+            error: (error) => {
+              console.error('❌ Error cancelling booking:', error);
+              alert('Error cancelling booking. Please try again.');
+            }
+          });
       }
     }
   }
@@ -467,20 +755,52 @@ export class MyBookingsComponent implements OnInit {
     }).format(date);
   }
 
+  /**
+   * Export bookings to CSV/Excel
+   */
   exportBookings() {
     console.log('Exporting bookings...');
-    // Implementation for exporting bookings to PDF/Excel
+    
+    const headers = [
+      'Booking Number', 'Date', 'Pickup Location', 'Dropoff Location', 
+      'Vehicle Type', 'Status', 'Amount', 'Payment Status'
+    ];
+    
+    const csvData = this.filteredBookings.map(booking => [
+      booking.bookingNumber,
+      this.formatDate(booking.createdAt),
+      booking.pickupLocation,
+      booking.dropoffLocation,
+      this.getVehicleTypeName(booking.vehicleType),
+      this.getStatusText(booking.status),
+      this.formatCurrency(booking.totalAmount),
+      booking.paymentStatus
+    ]);
+    
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   refreshBookings() {
     console.log('Refreshing bookings...');
-    this.loadBookings();
+    this.isRefreshing = true;
+    this.loadBookingsData();
+    setTimeout(() => this.isRefreshing = false, 1000);
   }
 
   goToPage(page: number) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.loadBookings();
+      this.filterBookings();
     }
   }
 
@@ -528,7 +848,12 @@ export class MyBookingsComponent implements OnInit {
 
   resetFilters() {
     // Reset filters and reload bookings
-    this.loadBookings();
+    this.searchQuery = '';
+    this.statusFilter = 'all';
+    this.dateFilter = 'all';
+    this.sortBy = 'date-desc';
+    this.currentPage = 1;
+    this.filterBookings();
   }
 
   // Additional missing methods
@@ -547,6 +872,8 @@ export class MyBookingsComponent implements OnInit {
     return markerClasses[status as keyof typeof markerClasses] || 'timeline-secondary';
   }
 
+
+
   // Additional methods needed by HTML template
   canTrackBooking(booking: Booking): boolean {
     return booking.status === 'in-transit' || booking.status === 'confirmed';
@@ -558,9 +885,20 @@ export class MyBookingsComponent implements OnInit {
 
   getPaginationPages(): number[] {
     const pages: number[] = [];
-    for (let i = 1; i <= this.totalPages; i++) {
+    const maxPages = 5; // Show max 5 page numbers
+    
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage < maxPages - 1) {
+      startPage = Math.max(1, endPage - maxPages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
+    
     return pages;
   }
 }

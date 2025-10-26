@@ -1,713 +1,661 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
-export interface SupportTicket {
-  id: string;
-  ticketNumber: string;
-  subject: string;
-  description: string;
-  category: 'booking' | 'payment' | 'technical' | 'account' | 'complaint' | 'other';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'pending' | 'in-progress' | 'waiting-response' | 'resolved' | 'closed';
-  createdDate: Date;
-  createdAt: Date;
-  lastUpdated: Date;
-  updatedAt: Date;
-  assignedAgent?: string;
-  messages: SupportMessage[];
-  attachments?: FileAttachment[];
-  unreadMessages?: number;
-}
-
-export interface SupportMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  senderType: 'customer' | 'agent' | 'system';
-  message: string;
-  content?: string;
-  timestamp: Date;
-  isRead: boolean;
-  isFromUser?: boolean;
-  attachments?: FileAttachment[];
-}
-
-export interface FileAttachment {
-  id: string;
-  fileName: string;
-  name?: string;
-  fileSize: number;
-  fileType: string;
-  uploadDate: Date;
-  downloadUrl: string;
-  url?: string;
-}
-
-export interface FAQItem {
-  id: string;
-  category: string;
-  question: string;
-  answer: string;
-  isHelpful?: boolean;
-  tags: string[];
-  isOpen?: boolean;
-}
-
-export interface ContactInfo {
-  phone: string;
-  email: string;
-  whatsapp?: string;
-  telegram?: string;
-  supportHours: {
-    weekdays: string;
-    weekends: string;
-    timezone: string;
-  };
-  emergencyContact?: string;
-}
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { Subject, Observable, combineLatest } from 'rxjs';
+import { takeUntil, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { 
+  SupportService, 
+  SupportTicket, 
+  SupportMessage, 
+  FileAttachment, 
+  FAQItem, 
+  ContactInfo, 
+  UserGuide,
+  OfficeHour,
+  CreateTicketRequest,
+  SendMessageRequest,
+  QuickContactRequest,
+  SupportStats
+} from '../../../../services/support.service';
 
 @Component({
   selector: 'app-support',
   templateUrl: './support.component.html',
   styleUrls: ['./support.component.scss']
 })
-export class SupportComponent implements OnInit {
-  // Active view
-  activeView: 'tickets' | 'new-ticket' | 'faq' | 'contact' = 'tickets';
+export class SupportComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   
-  // Forms
-  newTicketForm!: FormGroup;
-  messageForm!: FormGroup;
-  searchForm!: FormGroup;
+  // Observables
+  tickets$!: Observable<SupportTicket[]>;
+  faqItems$!: Observable<FAQItem[]>;
+  contactInfo$!: Observable<ContactInfo | null>;
+  userGuides$!: Observable<UserGuide[]>;
+  supportStats$!: Observable<SupportStats | null>;
+  loading$!: Observable<boolean>;
+  error$!: Observable<string | null>;
+  liveChatStatus$!: Observable<boolean>;
   
-  // Data
+  // Active tab management
+  activeTab: string = 'tickets';
+  
+  // Support tickets
   supportTickets: SupportTicket[] = [];
   filteredTickets: SupportTicket[] = [];
-  selectedTicket: SupportTicket | null = null;
-  faqItems: FAQItem[] = [];
-  filteredFAQs: FAQItem[] = [];
-  contactInfo: ContactInfo | null = null;
-  
-  // UI State
-  showTicketModal: boolean = false;
-  showMessageModal: boolean = false;
-  selectedFiles: File[] = [];
-  
-  // Filters
-  statusFilter: string = 'all';
-  categoryFilter: string = 'all';
-  priorityFilter: string = 'all';
-  searchQuery: string = '';
-  faqSearchQuery: string = '';
-  
-  // Loading states
-  isLoading: boolean = false;
-  isSubmitting: boolean = false;
-  isSendingMessage: boolean = false;
-  isUploadingFiles: boolean = false;
-  
-  // Additional properties expected by HTML template
-  activeTab: string = 'tickets';
   selectedTicketFilter: string = 'all';
-  liveChatAvailable: boolean = false;
-  faqSearchTerm: string = '';
+  selectedTicket: SupportTicket | null = null;
+  
+  // FAQ
+  faqItems: FAQItem[] = [];
   filteredFaqs: FAQItem[] = [];
-  faqCategories: Array<{id: string; name: string; icon: string; count: number;}> = [];
+  faqSearchTerm: string = '';
   selectedFaqCategory: string = 'all';
-  supportInfo: any = null;
-  quickContactForm!: FormGroup;
+  faqCategories = [
+    { id: 'all', name: 'All', icon: 'fas fa-list', count: 0 },
+    { id: 'booking', name: 'Booking', icon: 'fas fa-calendar-check', count: 0 },
+    { id: 'payment', name: 'Payment', icon: 'fas fa-credit-card', count: 0 },
+    { id: 'technical', name: 'Technical', icon: 'fas fa-cog', count: 0 },
+    { id: 'account', name: 'Account', icon: 'fas fa-user', count: 0 }
+  ];
+  
+  // Contact information
+  supportInfo: ContactInfo | null = null;
+  
+  // User guides
+  userGuides: UserGuide[] = [];
+  
+  // Statistics
+  supportStats: SupportStats | null = null;
+  
+  // Forms
   supportTicketForm!: FormGroup;
+  messageForm!: FormGroup;
+  searchForm!: FormGroup;
+  quickContactForm!: FormGroup;
   replyForm!: FormGroup;
-  selectedAttachments: File[] = [];
-  ticketAttachments: File[] = [];
+  
+  // UI state
+  showTicketModal: boolean = false;
+  liveChatAvailable: boolean = false;
   isSending: boolean = false;
   isCreating: boolean = false;
-  replyAttachments: FileAttachment[] = [];
-  userGuides: Array<{id: string; title: string; description: string; difficulty: string; icon: string; duration: string;}> = [];
+  isLoading: boolean = false;
+  error: string | null = null;
+  
+  // File handling
+  selectedAttachments: File[] = [];
+  ticketAttachments: File[] = [];
+  replyAttachments: File[] = [];
 
-  constructor(private formBuilder: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private supportService: SupportService
+  ) {
     this.initializeForms();
+    this.initializeObservables();
+  }
+
+  /**
+   * Initialize observables
+   */
+  private initializeObservables(): void {
+    this.tickets$ = this.supportService.tickets$;
+    this.faqItems$ = this.supportService.faqItems$;
+    this.contactInfo$ = this.supportService.contactInfo$;
+    this.userGuides$ = this.supportService.userGuides$;
+    this.supportStats$ = this.supportService.supportStats$;
+    this.loading$ = this.supportService.loading$;
+    this.error$ = this.supportService.error$;
+    this.liveChatStatus$ = this.supportService.liveChatStatus$;
   }
 
   ngOnInit(): void {
-    this.loadSupportTickets();
-    this.loadFAQs();
-    this.loadContactInfo();
+    this.loadData();
+    this.setupSubscriptions();
   }
 
-  // Initialize forms
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Initialize all forms
+   */
   private initializeForms(): void {
-    this.newTicketForm = this.formBuilder.group({
-      subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
-      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
+    this.supportTicketForm = this.fb.group({
+      subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
+      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
       category: ['', [Validators.required]],
+      priority: ['medium', [Validators.required]],
+      relatedBooking: ['']
+    });
+
+    this.messageForm = this.fb.group({
+      message: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(1000)]]
+    });
+
+    this.searchForm = this.fb.group({
+      query: ['']
+    });
+
+    this.quickContactForm = this.fb.group({
+      subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
+      category: ['', [Validators.required]],
+      message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
       priority: ['medium', [Validators.required]]
     });
 
-    this.messageForm = this.formBuilder.group({
-      message: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(500)]]
-    });
-
-    this.searchForm = this.formBuilder.group({
-      query: ['']
+    this.replyForm = this.fb.group({
+      message: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(1000)]]
     });
   }
 
-  // Load support tickets
-  loadSupportTickets(): void {
-    this.isLoading = true;
-    // Mock data - replace with actual API call
-    setTimeout(() => {
-      this.supportTickets = [
-        {
-          id: 'TKT-001',
-          ticketNumber: 'SUP-2024-001',
-          subject: 'Payment not processed correctly',
-          description: 'My payment was deducted but booking was not confirmed. Transaction ID: TXN-123456',
-          category: 'payment',
-          priority: 'high',
-          status: 'in-progress',
-          createdDate: new Date('2024-01-20T10:30:00'),
-          createdAt: new Date('2024-01-20T10:30:00'),
-          lastUpdated: new Date('2024-01-20T14:15:00'),
-          updatedAt: new Date('2024-01-20T14:15:00'),
-          assignedAgent: 'Sarah Wilson',
-          messages: [
-            {
-              id: 'MSG-001',
-              senderId: 'CUST-001',
-              senderName: 'John Doe',
-              senderType: 'customer',
-              message: 'My payment was deducted but booking was not confirmed. Transaction ID: TXN-123456',
-              timestamp: new Date('2024-01-20T10:30:00'),
-              isRead: true
-            },
-            {
-              id: 'MSG-002',
-              senderId: 'AGENT-001',
-              senderName: 'Sarah Wilson',
-              senderType: 'agent',
-              message: 'Hello John, I understand your concern. Let me check the transaction status and get back to you shortly.',
-              timestamp: new Date('2024-01-20T11:45:00'),
-              isRead: true
-            },
-            {
-              id: 'MSG-003',
-              senderId: 'AGENT-001',
-              senderName: 'Sarah Wilson',
-              senderType: 'agent',
-              message: 'I have reviewed your transaction. There was a temporary processing delay. Your booking has been confirmed now. Booking ID: BK-789.',
-              timestamp: new Date('2024-01-20T14:15:00'),
-              isRead: false
-            }
-          ]
-        },
-        {
-          id: 'TKT-002',
-          ticketNumber: 'SUP-2024-002',
-          subject: 'Unable to track my shipment',
-          description: 'The tracking link is not working for booking JRT-2024-015',
-          category: 'technical',
-          priority: 'medium',
-          status: 'waiting-response',
-          createdDate: new Date('2024-01-18T16:20:00'),
-          createdAt: new Date('2024-01-18T16:20:00'),
-          lastUpdated: new Date('2024-01-19T09:30:00'),
-          updatedAt: new Date('2024-01-19T09:30:00'),
-          assignedAgent: 'Mike Johnson',
-          messages: [
-            {
-              id: 'MSG-004',
-              senderId: 'CUST-001',
-              senderName: 'John Doe',
-              senderType: 'customer',
-              message: 'The tracking link is not working for booking JRT-2024-015',
-              timestamp: new Date('2024-01-18T16:20:00'),
-              isRead: true
-            },
-            {
-              id: 'MSG-005',
-              senderId: 'AGENT-002',
-              senderName: 'Mike Johnson',
-              senderType: 'agent',
-              message: 'Thank you for reporting this issue. Our technical team is working on fixing the tracking system. You should be able to track your shipment within 2 hours.',
-              timestamp: new Date('2024-01-19T09:30:00'),
-              isRead: true
-            }
-          ]
-        },
-        {
-          id: 'TKT-003',
-          ticketNumber: 'SUP-2024-003',
-          subject: 'Refund request for cancelled booking',
-          description: 'Requesting refund for booking JRT-2024-010 that was cancelled due to vehicle breakdown',
-          category: 'complaint',
-          priority: 'medium',
-          status: 'resolved',
-          createdDate: new Date('2024-01-15T12:00:00'),
-          createdAt: new Date('2024-01-15T12:00:00'),
-          lastUpdated: new Date('2024-01-17T10:45:00'),
-          updatedAt: new Date('2024-01-17T10:45:00'),
-          assignedAgent: 'Emily Davis',
-          messages: [
-            {
-              id: 'MSG-006',
-              senderId: 'CUST-001',
-              senderName: 'John Doe',
-              senderType: 'customer',
-              message: 'Requesting refund for booking JRT-2024-010 that was cancelled due to vehicle breakdown',
-              timestamp: new Date('2024-01-15T12:00:00'),
-              isRead: true
-            },
-            {
-              id: 'MSG-007',
-              senderId: 'AGENT-003',
-              senderName: 'Emily Davis',
-              senderType: 'agent',
-              message: 'I apologize for the inconvenience. Your refund has been processed and will be credited to your account within 3-5 business days.',
-              timestamp: new Date('2024-01-17T10:45:00'),
-              isRead: true
-            }
-          ]
-        }
-      ];
+  /**
+   * Load all data
+   */
+  private loadData(): void {
+    this.supportService.loadSupportData();
+  }
+
+  /**
+   * Setup reactive subscriptions
+   */
+  private setupSubscriptions(): void {
+    // Subscribe to tickets
+    this.tickets$.pipe(takeUntil(this.destroy$)).subscribe(tickets => {
+      this.supportTickets = tickets;
       this.filterTickets();
-      this.isLoading = false;
-    }, 1000);
-  }
+    });
 
-  // Load FAQ items
-  loadFAQs(): void {
-    // Mock data - replace with actual API call
-    this.faqItems = [
-      {
-        id: 'FAQ-001',
-        category: 'Booking',
-        question: 'How do I book a transport service?',
-        answer: 'To book a transport service, go to the "Book Transport" section, fill in your pickup and drop-off details, select your preferred vehicle type, and confirm your booking. You will receive a confirmation email with booking details.',
-        tags: ['booking', 'transport', 'how-to']
-      },
-      {
-        id: 'FAQ-002',
-        category: 'Payment',
-        question: 'What payment methods are accepted?',
-        answer: 'We accept credit cards, debit cards, digital wallets, bank transfers, and cash payments. All online payments are processed securely through our encrypted payment gateway.',
-        tags: ['payment', 'methods', 'security']
-      },
-      {
-        id: 'FAQ-003',
-        category: 'Tracking',
-        question: 'How can I track my shipment?',
-        answer: 'Once your booking is confirmed, you will receive a tracking link via email and SMS. You can also track your shipment from the "My Bookings" section in your dashboard.',
-        tags: ['tracking', 'shipment', 'status']
-      },
-      {
-        id: 'FAQ-004',
-        category: 'Cancellation',
-        question: 'What is the cancellation policy?',
-        answer: 'You can cancel your booking up to 2 hours before the scheduled pickup time for a full refund. Cancellations made within 2 hours may incur a cancellation fee.',
-        tags: ['cancellation', 'refund', 'policy']
-      },
-      {
-        id: 'FAQ-005',
-        category: 'Technical',
-        question: 'I forgot my password. How do I reset it?',
-        answer: 'Click on "Forgot Password" on the login page, enter your email address, and you will receive a password reset link. Follow the instructions in the email to create a new password.',
-        tags: ['password', 'reset', 'account']
-      }
-    ];
-    this.filteredFAQs = [...this.faqItems];
-  }
+    // Subscribe to FAQ items
+    this.faqItems$.pipe(takeUntil(this.destroy$)).subscribe(faqs => {
+      this.faqItems = faqs;
+      this.updateFAQCategories();
+      this.filterFAQs();
+    });
 
-  // Load contact information
-  loadContactInfo(): void {
-    // Mock data - replace with actual API call
-    this.contactInfo = {
-      phone: '+1-800-JR-TRANS',
-      email: 'support@jrtransport.com',
-      whatsapp: '+1-555-0123',
-      telegram: '@jrtransport',
-      supportHours: {
-        weekdays: '9:00 AM - 6:00 PM',
-        weekends: '10:00 AM - 4:00 PM',
-        timezone: 'EST'
-      },
-      emergencyContact: '+1-800-EMERGENCY'
-    };
-  }
+    // Subscribe to contact info
+    this.contactInfo$.pipe(takeUntil(this.destroy$)).subscribe(info => {
+      this.supportInfo = info;
+    });
 
-  // View management
-  setActiveView(view: 'tickets' | 'new-ticket' | 'faq' | 'contact'): void {
-    this.activeView = view;
-  }
+    // Subscribe to user guides
+    this.userGuides$.pipe(takeUntil(this.destroy$)).subscribe(guides => {
+      this.userGuides = guides;
+    });
 
-  // Ticket management
-  createNewTicket(): void {
-    if (this.newTicketForm.valid) {
-      this.isSubmitting = true;
-      const formValue = this.newTicketForm.value;
-      
-      const newTicket: SupportTicket = {
-        id: 'TKT-' + Date.now(),
-        ticketNumber: 'SUP-2024-' + String(this.supportTickets.length + 1).padStart(3, '0'),
-        subject: formValue.subject,
-        description: formValue.description,
-        category: formValue.category,
-        priority: formValue.priority,
-        status: 'open',
-        createdDate: new Date(),
-        createdAt: new Date(),
-        lastUpdated: new Date(),
-        updatedAt: new Date(),
-        messages: [
-          {
-            id: 'MSG-' + Date.now(),
-            senderId: 'CUST-001',
-            senderName: 'John Doe',
-            senderType: 'customer',
-            message: formValue.description,
-            timestamp: new Date(),
-            isRead: true
-          }
-        ]
-      };
-      
-      // Mock API call
-      setTimeout(() => {
-        this.supportTickets.unshift(newTicket);
-        this.filterTickets();
-        this.newTicketForm.reset();
-        this.newTicketForm.patchValue({ priority: 'medium' });
-        this.isSubmitting = false;
-        this.activeView = 'tickets';
-        alert('Support ticket created successfully!');
-      }, 1500);
-    } else {
-      this.markFormGroupTouched(this.newTicketForm);
-    }
-  }
+    // Subscribe to stats
+    this.supportStats$.pipe(takeUntil(this.destroy$)).subscribe(stats => {
+      this.supportStats = stats;
+    });
 
-  // View ticket details
-  viewTicketDetails(ticket: SupportTicket): void {
-    this.selectedTicket = ticket;
-    this.showTicketModal = true;
-    
-    // Mark unread messages as read
-    ticket.messages.forEach(message => {
-      if (message.senderType !== 'customer' && !message.isRead) {
-        message.isRead = true;
-      }
+    // Subscribe to loading state
+    this.loading$.pipe(takeUntil(this.destroy$)).subscribe(loading => {
+      this.isLoading = loading;
+    });
+
+    // Subscribe to error state
+    this.error$.pipe(takeUntil(this.destroy$)).subscribe(error => {
+      this.error = error;
+    });
+
+    // Subscribe to live chat status
+    this.liveChatStatus$.pipe(takeUntil(this.destroy$)).subscribe(status => {
+      this.liveChatAvailable = status;
     });
   }
 
-  // Send message in ticket
-  sendMessage(): void {
-    if (this.messageForm.valid && this.selectedTicket) {
-      this.isSendingMessage = true;
-      const messageText = this.messageForm.value.message;
-      
-      const newMessage: SupportMessage = {
-        id: 'MSG-' + Date.now(),
-        senderId: 'CUST-001',
-        senderName: 'John Doe',
-        senderType: 'customer',
-        message: messageText,
-        timestamp: new Date(),
-        isRead: true,
-        attachments: this.selectedFiles.length > 0 ? this.convertFilesToAttachments() : undefined
-      };
-      
-      // Mock API call
-      setTimeout(() => {
-        if (this.selectedTicket) {
-          this.selectedTicket.messages.push(newMessage);
-          this.selectedTicket.lastUpdated = new Date();
-          this.selectedTicket.status = 'waiting-response';
-        }
-        this.messageForm.reset();
-        this.selectedFiles = [];
-        this.isSendingMessage = false;
-        console.log('Message sent:', messageText);
-      }, 1000);
-    } else {
-      this.markFormGroupTouched(this.messageForm);
-    }
-  }
-
-  // File upload handling
-  onFilesSelected(event: Event): void {
-    const files = (event.target as HTMLInputElement).files;
-    if (files) {
-      const validFiles = Array.from(files).filter(file => {
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        const allowedTypes = ['image/', 'application/pdf', 'text/', 'application/msword', 'application/vnd.openxmlformats'];
-        
-        if (file.size > maxSize) {
-          alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-          return false;
-        }
-        
-        if (!allowedTypes.some(type => file.type.startsWith(type))) {
-          alert(`File ${file.name} type is not supported.`);
-          return false;
-        }
-        
-        return true;
-      });
-      
-      this.selectedFiles = [...this.selectedFiles, ...validFiles];
-    }
-  }
-
-  removeSelectedFile(index: number): void {
-    this.selectedFiles.splice(index, 1);
-  }
-
-  private convertFilesToAttachments(): FileAttachment[] {
-    return this.selectedFiles.map(file => ({
-      id: 'ATT-' + Date.now() + '-' + Math.random(),
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      uploadDate: new Date(),
-      downloadUrl: '/uploads/' + file.name // Mock URL
-    }));
-  }
-
-  // Filtering and search
+  /**
+   * Filter tickets based on selected filter
+   */
   filterTickets(): void {
-    let filtered = this.supportTickets.filter(ticket => {
-      const matchesStatus = this.statusFilter === 'all' || ticket.status === this.statusFilter;
-      const matchesCategory = this.categoryFilter === 'all' || ticket.category === this.categoryFilter;
-      const matchesPriority = this.priorityFilter === 'all' || ticket.priority === this.priorityFilter;
-      const matchesSearch = !this.searchQuery ||
-        ticket.subject.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        ticket.ticketNumber.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-        ticket.description.toLowerCase().includes(this.searchQuery.toLowerCase());
-
-      return matchesStatus && matchesCategory && matchesPriority && matchesSearch;
-    });
-
-    // Sort by last updated (newest first)
-    filtered.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
-    this.filteredTickets = filtered;
-  }
-
-  searchFAQs(): void {
-    if (!this.faqSearchQuery) {
-      this.filteredFAQs = [...this.faqItems];
+    if (this.selectedTicketFilter === 'all') {
+      this.filteredTickets = this.supportTickets;
     } else {
-      const query = this.faqSearchQuery.toLowerCase();
-      this.filteredFAQs = this.faqItems.filter(faq =>
-        faq.question.toLowerCase().includes(query) ||
-        faq.answer.toLowerCase().includes(query) ||
-        faq.tags.some(tag => tag.toLowerCase().includes(query))
+      this.filteredTickets = this.supportTickets.filter(ticket => 
+        ticket.status === this.selectedTicketFilter
       );
     }
   }
 
-  // FAQ feedback
-  markFAQHelpful(faq: FAQItem, helpful: boolean): void {
-    faq.isHelpful = helpful;
-    console.log('FAQ feedback:', faq.id, helpful);
-    // Send feedback to API
-  }
-
-  // Modal controls
-  closeTicketModal(): void {
-    this.showTicketModal = false;
-    this.selectedTicket = null;
-    this.messageForm.reset();
-    this.selectedFiles = [];
-  }
-
-  // Utility methods
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
+  /**
+   * Update FAQ categories with counts
+   */
+  private updateFAQCategories(): void {
+    this.faqCategories.forEach(category => {
+      if (category.id === 'all') {
+        category.count = this.faqItems.length;
+      } else {
+        category.count = this.faqItems.filter(faq => faq.category === category.id).length;
+      }
     });
   }
 
-  getFieldError(form: FormGroup, fieldName: string): string {
-    const field = form.get(fieldName);
-    if (field?.errors && field.touched) {
-      if (field.errors['required']) return `${fieldName} is required`;
-      if (field.errors['minlength']) return `Minimum length is ${field.errors['minlength'].requiredLength}`;
-      if (field.errors['maxlength']) return `Maximum length is ${field.errors['maxlength'].requiredLength}`;
+  /**
+   * Filter FAQs based on search and category
+   */
+  filterFAQs(): void {
+    let filtered = this.faqItems;
+
+    // Filter by category
+    if (this.selectedFaqCategory !== 'all') {
+      filtered = filtered.filter(faq => faq.category === this.selectedFaqCategory);
     }
-    return '';
-  }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'open': return 'badge bg-primary';
-      case 'in-progress': return 'badge bg-warning';
-      case 'waiting-response': return 'badge bg-info';
-      case 'resolved': return 'badge bg-success';
-      case 'closed': return 'badge bg-secondary';
-      default: return 'badge bg-secondary';
+    // Filter by search term
+    if (this.faqSearchTerm.trim()) {
+      const searchTerm = this.faqSearchTerm.toLowerCase();
+      filtered = filtered.filter(faq => 
+        faq.question.toLowerCase().includes(searchTerm) ||
+        faq.answer.toLowerCase().includes(searchTerm) ||
+        faq.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+      );
     }
+
+    this.filteredFaqs = filtered;
   }
 
-  getPriorityClass(priority: string): string {
-    switch (priority) {
-      case 'low': return 'badge bg-light text-dark';
-      case 'medium': return 'badge bg-warning';
-      case 'high': return 'badge bg-danger';
-      case 'urgent': return 'badge bg-dark';
-      default: return 'badge bg-secondary';
-    }
-  }
-
-  getCategoryIcon(category: string): string {
-    switch (category) {
-      case 'booking': return 'fas fa-calendar-alt';
-      case 'payment': return 'fas fa-credit-card';
-      case 'technical': return 'fas fa-cogs';
-      case 'account': return 'fas fa-user-circle';
-      case 'complaint': return 'fas fa-exclamation-triangle';
-      case 'other': return 'fas fa-question-circle';
-      default: return 'fas fa-ticket-alt';
-    }
-  }
-
-  formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }
-
-  formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(date));
-  }
-
-  getUnreadMessageCount(ticket: SupportTicket): number {
-    return ticket.messages.filter(msg => msg.senderType !== 'customer' && !msg.isRead).length;
-  }
-
-  hasUnreadMessages(ticket: SupportTicket): boolean {
-    return this.getUnreadMessageCount(ticket) > 0;
-  }
-
-  // Additional methods expected by HTML template
+  /**
+   * Set active tab
+   */
   setActiveTab(tab: string): void {
     this.activeTab = tab;
   }
 
-  createSupportTicket(): void {
-    this.setActiveTab('new-ticket');
-  }
-
+  /**
+   * Get active tickets count
+   */
   getActiveTicketsCount(): number {
     return this.supportTickets.filter(ticket => 
       ticket.status === 'open' || ticket.status === 'in-progress'
     ).length;
   }
 
-  openLiveChat(): void {
-    // Implement live chat functionality
-    console.log('Opening live chat...');
+  /**
+   * Create new support ticket
+   */
+  createSupportTicket(): void {
+    this.selectedTicket = null;
+    this.supportTicketForm.reset({
+      priority: 'medium'
+    });
+    this.ticketAttachments = [];
+    this.showTicketModal = true;
   }
 
-  getTimeAgo(date: Date): string {
-    return this.formatDate(date);
+  /**
+   * Submit support ticket
+   */
+  submitSupportTicket(): void {
+    if (this.supportTicketForm.valid && !this.isCreating) {
+      this.isCreating = true;
+      
+      const formData = this.supportTicketForm.value;
+      const request: CreateTicketRequest = {
+        subject: formData.subject,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        relatedBooking: formData.relatedBooking || undefined,
+        attachments: this.ticketAttachments.length > 0 ? this.ticketAttachments : undefined
+      };
+
+      this.supportService.createTicket(request).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (ticket) => {
+          this.isCreating = false;
+          this.closeTicketModal();
+          this.setActiveTab('tickets');
+          // Show success message
+        },
+        error: (error) => {
+          this.isCreating = false;
+          console.error('Error creating ticket:', error);
+        }
+      });
+    }
   }
 
-  // Additional methods for FAQ functionality
+  /**
+   * View ticket details
+   */
+  viewTicketDetails(ticket: SupportTicket): void {
+    this.selectedTicket = ticket;
+    this.replyForm.reset();
+    this.replyAttachments = [];
+    this.showTicketModal = true;
+  }
+
+  /**
+   * Close ticket modal
+   */
+  closeTicketModal(): void {
+    this.showTicketModal = false;
+    this.selectedTicket = null;
+    this.supportTicketForm.reset();
+    this.replyForm.reset();
+    this.ticketAttachments = [];
+    this.replyAttachments = [];
+  }
+
+  /**
+   * Send reply to ticket
+   */
+  sendReply(): void {
+    if (this.replyForm.valid && this.selectedTicket && !this.isSending) {
+      this.isSending = true;
+      
+      const request: SendMessageRequest = {
+        ticketId: this.selectedTicket.id,
+        content: this.replyForm.value.message,
+        attachments: this.replyAttachments.length > 0 ? this.replyAttachments as File[] : undefined
+      };
+
+      this.supportService.sendMessage(request).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (message) => {
+          this.isSending = false;
+          this.replyForm.reset();
+          this.replyAttachments = [];
+          // Message will be automatically added to ticket via service subscription
+        },
+        error: (error) => {
+          this.isSending = false;
+          console.error('Error sending message:', error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Close ticket
+   */
+  closeTicket(ticketId: string): void {
+    this.supportService.updateTicketStatus(ticketId, 'closed').pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.closeTicketModal();
+      },
+      error: (error) => {
+        console.error('Error closing ticket:', error);
+      }
+    });
+  }
+
+  /**
+   * Refresh ticket data
+   */
+  refreshTicket(): void {
+    this.supportService.refreshData();
+  }
+
+  /**
+   * Search FAQ
+   */
   searchFAQ(): void {
-    this.searchFAQs();
+    this.filterFAQs();
   }
 
+  /**
+   * Select FAQ category
+   */
   selectFaqCategory(categoryId: string): void {
     this.selectedFaqCategory = categoryId;
-    this.searchFAQs();
+    this.filterFAQs();
   }
 
+  /**
+   * Toggle FAQ item
+   */
   toggleFaq(faqId: string): void {
-    // Toggle FAQ expand/collapse
-    console.log('Toggling FAQ:', faqId);
+    this.filteredFaqs = this.filteredFaqs.map(faq => {
+      if (faq.id === faqId) {
+        return { ...faq, isOpen: !faq.isOpen };
+      }
+      return faq;
+    });
   }
 
+  /**
+   * Rate FAQ
+   */
   rateFaq(faqId: string, helpful: boolean): void {
-    const faq = this.faqItems.find(f => f.id === faqId);
-    if (faq) {
-      faq.isHelpful = helpful;
-    }
+    this.supportService.rateFAQ(faqId, helpful).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        // Rating updated successfully
+      },
+      error: (error) => {
+        console.error('Error rating FAQ:', error);
+      }
+    });
   }
 
-  // Additional methods for quick contact
+  /**
+   * Send quick contact message
+   */
   sendQuickMessage(): void {
-    this.sendMessage();
-  }
+    if (this.quickContactForm.valid && !this.isSending) {
+      this.isSending = true;
+      
+      const formData = this.quickContactForm.value;
+      const request: QuickContactRequest = {
+        subject: formData.subject,
+        category: formData.category,
+        message: formData.message,
+        priority: formData.priority,
+        attachments: this.selectedAttachments.length > 0 ? this.selectedAttachments : undefined
+      };
 
-  // File attachment methods
-  onAttachmentSelected(event: any): void {
-    const files = event.target.files;
-    if (files) {
-      this.selectedAttachments = Array.from(files);
+      this.supportService.sendQuickContact(request).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.isSending = false;
+          this.quickContactForm.reset({
+            priority: 'medium'
+          });
+          this.selectedAttachments = [];
+          // Show success message
+        },
+        error: (error) => {
+          this.isSending = false;
+          console.error('Error sending quick contact:', error);
+        }
+      });
     }
   }
 
+  /**
+   * Open live chat
+   */
+  openLiveChat(): void {
+    if (this.liveChatAvailable) {
+      // Open live chat interface
+      alert('Live chat feature will be implemented soon!');
+    } else {
+      alert('Live chat is currently offline. Please try again later or create a support ticket.');
+    }
+  }
+
+  /**
+   * Open user guide
+   */
+  openGuide(guide: UserGuide): void {
+    // Navigate to guide or open in modal
+    alert(`Opening guide: ${guide.title}`);
+  }
+
+  /**
+   * Handle attachment selection for quick contact
+   */
+  onAttachmentSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    this.selectedAttachments = files.filter(file => this.validateFile(file));
+  }
+
+  /**
+   * Handle attachment selection for new ticket
+   */
+  onTicketAttachmentSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    this.ticketAttachments = files.filter(file => this.validateFile(file));
+  }
+
+  /**
+   * Handle attachment selection for reply
+   */
+  onReplyAttachmentSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    this.replyAttachments = files.filter(file => this.validateFile(file));
+  }
+
+  /**
+   * Validate file
+   */
+  private validateFile(file: File): boolean {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 
+                         'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    if (file.size > maxSize) {
+      alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+      return false;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      alert(`File ${file.name} is not a supported format.`);
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Remove attachment
+   */
   removeAttachment(index: number): void {
     this.selectedAttachments.splice(index, 1);
   }
 
-  onTicketAttachmentSelected(event: any): void {
-    const files = event.target.files;
-    if (files) {
-      this.ticketAttachments = Array.from(files);
-    }
-  }
-
+  /**
+   * Remove ticket attachment
+   */
   removeTicketAttachment(index: number): void {
     this.ticketAttachments.splice(index, 1);
   }
 
-  onReplyAttachmentSelected(event: any): void {
-    // Handle reply attachments
-    console.log('Reply attachment selected:', event);
-  }
-
-  // User guides methods
-  openGuide(guide: any): void {
-    console.log('Opening guide:', guide);
-  }
-
-  getDifficultyClass(difficulty: string): string {
-    return `difficulty-${difficulty}`;
-  }
-
-  // Support ticket methods
-  submitSupportTicket(): void {
-    this.createNewTicket();
-  }
-
-  refreshTicket(): void {
-    // Refresh current ticket
-    console.log('Refreshing ticket');
-  }
-
-  closeTicket(ticketId: string): void {
-    console.log('Closing ticket:', ticketId);
-  }
-
-  sendReply(): void {
-    this.sendMessage();
-  }
-
+  /**
+   * Remove reply attachment
+   */
   removeReplyAttachment(index: number): void {
     this.replyAttachments.splice(index, 1);
-    console.log('Reply attachment removed');
   }
 
+  /**
+   * Get status CSS class
+   */
+  getStatusClass(status: string): string {
+    const statusClasses: { [key: string]: string } = {
+      'open': 'bg-primary',
+      'in-progress': 'bg-warning',
+      'waiting-response': 'bg-info',
+      'resolved': 'bg-success',
+      'closed': 'bg-secondary'
+    };
+    return statusClasses[status] || 'bg-secondary';
+  }
 
+  /**
+   * Get priority CSS class
+   */
+  getPriorityClass(priority: string): string {
+    const priorityClasses: { [key: string]: string } = {
+      'low': 'priority-low',
+      'medium': 'priority-medium',
+      'high': 'priority-high',
+      'urgent': 'priority-urgent'
+    };
+    return priorityClasses[priority] || 'priority-medium';
+  }
+
+  /**
+   * Get difficulty CSS class for guides
+   */
+  getDifficultyClass(difficulty: string): string {
+    const difficultyClasses: { [key: string]: string } = {
+      'beginner': 'difficulty-beginner',
+      'intermediate': 'difficulty-intermediate',
+      'advanced': 'difficulty-advanced'
+    };
+    return difficultyClasses[difficulty] || 'difficulty-beginner';
+  }
+
+  /**
+   * Format date
+   */
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * Get time ago
+   */
+  getTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    }
+  }
+
+  /**
+   * Get field error message
+   */
+  getFieldError(form: FormGroup, fieldName: string): string | null {
+    const field = form.get(fieldName);
+    if (field && field.invalid && (field.dirty || field.touched)) {
+      const errors = field.errors;
+      if (errors) {
+        if (errors['required']) return `${this.getFieldLabel(fieldName)} is required`;
+        if (errors['minlength']) return `${this.getFieldLabel(fieldName)} must be at least ${errors['minlength'].requiredLength} characters`;
+        if (errors['maxlength']) return `${this.getFieldLabel(fieldName)} must not exceed ${errors['maxlength'].requiredLength} characters`;
+        if (errors['email']) return 'Please enter a valid email address';
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Get field label
+   */
+  private getFieldLabel(fieldName: string): string {
+    const labels: { [key: string]: string } = {
+      'subject': 'Subject',
+      'description': 'Description',
+      'category': 'Category',
+      'priority': 'Priority',
+      'message': 'Message',
+      'relatedBooking': 'Related Booking'
+    };
+    return labels[fieldName] || fieldName;
+  }
 }

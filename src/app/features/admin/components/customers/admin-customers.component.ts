@@ -2,9 +2,16 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
+import { CustomerService } from 'src/app/features/customer/customer.service';
+import { Customer } from 'src/app/models/customer.model';
+// For Excel export
+import * as XLSX from 'xlsx';
+// For PDF export
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
-export interface Customer {
-  id: number;
+interface CustomerView {
+  id: string;
   name: string;
   email: string;
   phone: string;
@@ -30,7 +37,7 @@ export class AdminCustomersComponent implements OnInit {
 
   // Table configuration
   displayedColumns: string[] = ['id', 'name', 'email', 'phone', 'company', 'totalBookings', 'totalSpent', 'status', 'lastActivity', 'actions'];
-  dataSource = new MatTableDataSource<Customer>();
+  dataSource = new MatTableDataSource<CustomerView>();
 
   // Filter states
   statusFilter: string = 'all';
@@ -56,11 +63,15 @@ export class AdminCustomersComponent implements OnInit {
     { value: 'suspended', label: 'Suspended' }
   ];
 
-  constructor() { }
+  loading = false;
+  error: string | null = null;
+  // UI control for export format
+  exportFormat: 'xlsx' | 'pdf' | 'both' = 'both';
+
+  constructor(private customerService: CustomerService) { }
 
   ngOnInit(): void {
     this.loadCustomers();
-    this.calculateStats();
   }
 
   ngAfterViewInit(): void {
@@ -68,7 +79,7 @@ export class AdminCustomersComponent implements OnInit {
     this.dataSource.sort = this.sort;
 
     // Custom filter predicate
-    this.dataSource.filterPredicate = (data: Customer, filter: string) => {
+    this.dataSource.filterPredicate = (data: CustomerView, filter: string) => {
       const searchString = filter.toLowerCase();
       return (
         data.name.toLowerCase().includes(searchString) ||
@@ -84,78 +95,39 @@ export class AdminCustomersComponent implements OnInit {
    * Load customers data (replace with actual service call)
    */
   loadCustomers(): void {
-    const mockCustomers: Customer[] = [
-      {
-        id: 1,
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        phone: '+1-234-567-8901',
-        company: 'ABC Corp',
-        totalBookings: 45,
-        totalSpent: 12500.00,
-        status: 'active',
-        registeredDate: new Date('2023-01-15'),
-        lastActivity: new Date('2024-01-10'),
-        rating: 4.8,
-        location: 'New York, NY'
-      },
-      {
-        id: 2,
-        name: 'Sarah Johnson',
-        email: 'sarah.j@company.com',
-        phone: '+1-234-567-8902',
-        company: 'Tech Solutions Inc',
-        totalBookings: 32,
-        totalSpent: 8900.00,
-        status: 'active',
-        registeredDate: new Date('2023-03-20'),
-        lastActivity: new Date('2024-01-08'),
-        rating: 4.6,
-        location: 'San Francisco, CA'
-      },
-      {
-        id: 3,
-        name: 'Mike Wilson',
-        email: 'mike.wilson@gmail.com',
-        phone: '+1-234-567-8903',
-        totalBookings: 18,
-        totalSpent: 4200.00,
-        status: 'inactive',
-        registeredDate: new Date('2023-05-10'),
-        lastActivity: new Date('2023-12-15'),
-        rating: 4.2,
-        location: 'Chicago, IL'
-      },
-      {
-        id: 4,
-        name: 'Emily Davis',
-        email: 'emily.davis@business.com',
-        phone: '+1-234-567-8904',
-        company: 'Global Enterprises',
-        totalBookings: 67,
-        totalSpent: 18900.00,
-        status: 'active',
-        registeredDate: new Date('2022-11-05'),
-        lastActivity: new Date('2024-01-09'),
-        rating: 4.9,
-        location: 'Los Angeles, CA'
-      },
-      {
-        id: 5,
-        name: 'Robert Brown',
-        email: 'r.brown@email.com',
-        phone: '+1-234-567-8905',
-        totalBookings: 8,
-        totalSpent: 1800.00,
-        status: 'suspended',
-        registeredDate: new Date('2023-08-12'),
-        lastActivity: new Date('2023-11-20'),
-        rating: 3.1,
-        location: 'Miami, FL'
-      }
-    ];
+    this.loading = true;
+    this.error = null;
+    this.customerService.getAllCustomers().subscribe({ next: (list) => {
+      this.dataSource.data = list.map(c => this.mapToView(c));
+      this.loading = false;
+      this.calculateStats();
+    }, error: (err) => { console.error('Failed to load customers', err); this.error = 'Failed to load customers'; this.loading = false; } });
+  }
+  private mapToView(c: Customer): CustomerView {
+    const name = `${c.profile?.firstName || ''} ${c.profile?.lastName || ''}`.trim() || 'Customer';
+    const email = c.profile?.email || '';
+    const phone = c.profile?.phoneNumber || '';
+    const location = c.profile?.address ? `${c.profile.address.city}, ${c.profile.address.state}` : '';
+    const totalBookings = Array.isArray(c.bookingHistory) ? c.bookingHistory.length : 0;
+    const totalSpent = Array.isArray(c.wallet?.transactions) ? c.wallet.transactions.reduce((s, t) => s + (t.type === 'debit' ? t.amount : 0), 0) : 0;
+    const rating = c.rating?.averageRating || undefined;
+    const registeredDate = c.createdAt ? new Date(c.createdAt) : new Date();
+    const lastActivity = c.lastLogin ? new Date(c.lastLogin) : (c.updatedAt ? new Date(c.updatedAt) : new Date());
 
-    this.dataSource.data = mockCustomers;
+    return {
+      id: c.id,
+      name,
+      email,
+      phone,
+      company: undefined,
+      totalBookings,
+      totalSpent,
+      status: c.accountStatus === 'active' ? 'active' : (c.accountStatus === 'suspended' ? 'suspended' : 'inactive'),
+      registeredDate,
+      lastActivity,
+      rating,
+      location
+    };
   }
 
   /**
@@ -214,13 +186,98 @@ export class AdminCustomersComponent implements OnInit {
    */
   exportCustomers(): void {
     console.log('Exporting customers data...');
-    // Implement export functionality (CSV, PDF, etc.)
+    // Default to exporting both formats when called without args
+    this.exportCustomersAs('both');
+  }
+
+  /**
+   * Export customers as Excel and/or PDF.
+   * format: 'xlsx' | 'pdf' | 'both'
+   */
+  exportCustomersAs(format: 'xlsx' | 'pdf' | 'both' = 'both'): void {
+    const data = this.dataSource.data || [];
+    if (!data || data.length === 0) {
+      alert('No customers available to export.');
+      return;
+    }
+
+    // Normalize rows into plain objects suitable for XLSX/pdf
+    const rows = data.map(r => ({
+      ID: r.id,
+      Name: r.name,
+      Email: r.email,
+      Phone: r.phone,
+      Company: r.company || '',
+      TotalBookings: r.totalBookings,
+      TotalSpent: this.formatCurrency(r.totalSpent),
+      Status: r.status,
+      Registered: this.formatDate(r.registeredDate),
+      LastActivity: this.formatDate(r.lastActivity),
+      Location: r.location || ''
+    }));
+
+    // Excel
+    if (format === 'xlsx' || format === 'both') {
+      try {
+        const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(rows);
+        const wb: XLSX.WorkBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Customers');
+        XLSX.writeFile(wb, 'customers.xlsx');
+      } catch (err) {
+        console.error('Failed to export XLSX', err);
+        alert('Failed to export Excel file.');
+      }
+    }
+
+    // PDF
+    if (format === 'pdf' || format === 'both') {
+      try {
+        const doc = new jsPDF({ unit: 'pt' });
+        const head = [Object.keys(rows[0])];
+        const body = rows.map(r => Object.values(r));
+
+        autoTable(doc, {
+          head,
+          body,
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [33, 150, 243] }
+        });
+
+        doc.save('customers.pdf');
+      } catch (err) {
+        console.error('Failed to export PDF', err);
+        alert('Failed to export PDF file.');
+      }
+    }
+  }
+
+  export(mode: string): void {
+    if (mode === 'pdf') {
+      this.exportPDF();
+    } else if (mode === 'excel') {
+      this.exportExcel();
+    }
+  }
+
+  exportPDF(): void {
+    const doc = new jsPDF();
+    const head = [['ID', 'Name', 'Email', 'Phone']];
+    const body = this.dataSource.data.map(customer => [customer.id, customer.name, customer.email, customer.phone]);
+    autoTable(doc, { head, body, styles: { fontSize: 8 } });
+    doc.save('customers_report.pdf');
+  }
+
+  exportExcel(): void {
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.dataSource.data);
+    const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Customers');
+    XLSX.writeFile(workbook, 'customers_report.xlsx');
   }
 
   /**
    * View customer details
    */
-  viewCustomer(customer: Customer): void {
+  viewCustomer(customer: CustomerView): void {
     console.log('Viewing customer:', customer);
     // Navigate to customer detail page or open modal
   }
@@ -228,7 +285,7 @@ export class AdminCustomersComponent implements OnInit {
   /**
    * Edit customer
    */
-  editCustomer(customer: Customer): void {
+  editCustomer(customer: CustomerView): void {
     console.log('Editing customer:', customer);
     // Navigate to customer edit page or open modal
   }
@@ -236,21 +293,33 @@ export class AdminCustomersComponent implements OnInit {
   /**
    * Delete customer
    */
-  deleteCustomer(customer: Customer): void {
-    console.log('Deleting customer:', customer);
-    // Show confirmation dialog and delete customer
+  deleteCustomer(customer: CustomerView): void {
+    if (!confirm(`Delete customer ${customer.name}?`)) return;
+    this.loading = true;
+    this.customerService.deleteCustomer(String(customer.id)).subscribe({ next: () => {
+      this.dataSource.data = this.dataSource.data.filter(c => c.id !== customer.id);
+      this.calculateStats();
+      this.loading = false;
+    }, error: (err) => { console.error('Failed to delete', err); alert('Failed to delete'); this.loading = false; } });
   }
 
   /**
    * Toggle customer status
    */
-  toggleCustomerStatus(customer: Customer): void {
-    if (customer.status === 'active') {
-      customer.status = 'inactive';
-    } else if (customer.status === 'inactive') {
-      customer.status = 'active';
-    }
-    console.log('Customer status updated:', customer);
+  toggleCustomerStatus(customer: CustomerView): void {
+    const newStatus = customer.status === 'active' ? 'inactive' : 'active';
+    this.loading = true;
+    // Fetch full backend customer, update accountStatus, then PUT
+    this.customerService.getCustomerById(String(customer.id)).subscribe({ next: (full) => {
+      if (!full) { this.loading = false; alert('Customer not found'); return; }
+  // Map view status to backend accountStatus. Treat 'inactive' as 'suspended' for backend.
+  full.accountStatus = newStatus === 'active' ? 'active' : 'suspended';
+      this.customerService.updateCustomer(String(customer.id), full).subscribe({ next: () => {
+        customer.status = newStatus as any;
+        this.calculateStats();
+        this.loading = false;
+      }, error: (err) => { console.error('Failed to update status', err); alert('Failed to update status'); this.loading = false; } });
+    }, error: (err) => { console.error('Failed to fetch customer', err); this.loading = false; alert('Failed to update status'); } });
   }
 
   /**

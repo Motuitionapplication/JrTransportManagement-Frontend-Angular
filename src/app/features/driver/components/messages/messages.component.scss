@@ -6,6 +6,11 @@
   position: relative;
 }
 
+/* CSS variable for app header height (used by mobile rules) */
+:root {
+  --app-header-height: 64px; /* set to 72px if your app header is taller */
+}
+
 // Loading State
 .loading-container {
   display: flex;
@@ -1306,44 +1311,127 @@
 }
 
 @media (max-width: 768px) {
+  /* Keep header content aligned and add mobile padding */
   .page-header {
+    .header-content {
+      max-width: 100%;
+      padding: 0 12px;
+    }
+
     .title-section {
       .sidebar-toggle {
         display: block;
       }
     }
-    
+
     .stats-summary {
       display: none;
     }
   }
-  
+
+  /* Make the layout a single column flow on mobile */
+  .messages-layout {
+    display: block;
+    position: relative;
+  }
+
+  /* Sidebar becomes a full-width block in flow (no off-canvas transforms on narrow screens)
+     but keep a fixed-panel option for slide behaviour when needed. */
   .messages-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    z-index: 100;
+    position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: none;
+    transform: none !important;
+    border-right: none;
+    background: white;
+    z-index: 1200;
   }
-  
-  .chat-main, .no-chat-selected {
+
+  /* Conversations list: padded cards, independent scrolling */
+  .conversations-list {
+    padding: 12px;
+    box-sizing: border-box;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .conversations-list .conversation-item {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-bottom: none;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(2,6,23,0.04);
+  }
+
+  /* Default: show conversation list; hide chat until a conversation is selected */
+  .messages-layout:not(.show-chat) .chat-main {
+    display: none;
+  }
+
+  /* When a conversation is selected (show-chat), hide the sidebar and show chat full width */
+  .messages-layout.show-chat .messages-sidebar {
+    display: none;
+  }
+
+  .chat-main {
     margin-left: 0;
+    width: 100%;
   }
-  
-  .chat-main .chat-header {
-    .back-btn {
-      display: block;
-    }
+
+  /* Messages area: independent scrolling and height accounting for header + input
+     (these are conservative defaults that should work across mobile chrome/safari) */
+  .messages-area {
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
+
+  /* Keep the input sticky at the bottom */
+  .message-input-area {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 1300;
+  }
+
+  /* Ensure back button appears inside chat header when visible */
+  .chat-header .back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: #374151;
+  }
+
+  /* Text wrapping and prevent horizontal overflow */
+  .messages-container,
+  .conversations-list,
+  .messages-area,
+  .message-bubble,
+  .conversation-content {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  /* Keep existing mobile niceties */
   .message-bubble {
+    padding: 10px 12px;
     max-width: 85%;
   }
-  
+
   .message-input-area {
     padding: 0.75rem 1rem;
+  }
+
+  /* Prevent horizontal overflow globally within messages */
+  .messages-container, .messages-layout, .messages-sidebar, .chat-main {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }
 
@@ -1377,5 +1465,100 @@
   .message-bubble {
     max-width: 90%;
     padding: 0.5rem 0.75rem;
+  }
+
+  /* ===== mobile header + sidebar fix ===== */
+  .page-header .header-content {
+    max-width: 100%;
+    padding: 0 12px;
+  }
+
+  @media (max-width: 768px) {
+    /* stack layout on mobile */
+    .messages-layout { display: block; }
+
+    /* Sidebar/drawer should start below header and not cover it */
+    .messages-sidebar {
+      position: fixed;
+      top: var(--app-header-height);
+      left: 0;
+      width: 100%;
+      height: calc(100vh - var(--app-header-height));
+      max-width: none;
+      transform: none !important;
+      z-index: 150; /* lower than header */
+      background: white;
+      border-right: none;
+      transition: transform 0.28s ease;
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+
+    /* conversations list breathing room */
+    .conversations-list {
+      padding: 12px;
+      box-sizing: border-box;
+      max-height: calc(100vh - var(--app-header-height) - 140px); /* header + input area buffer */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* when not in chat mode, hide chat area; when show-chat is present, hide sidebar */
+    .messages-layout:not(.show-chat) .chat-main { display: none !important; }
+    .messages-layout.show-chat .messages-sidebar { display: none !important; }
+
+    .chat-main {
+      margin-left: 0;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    .messages-area {
+      height: calc(100vh - var(--app-header-height) - 120px); /* adjust for header and input */
+      overflow-y: auto;
+    }
+
+    .message-input-area {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      background: white;
+    }
+  }
+
+  /* avoid horizontal overflow from long words/numbers */
+  .messages-container, .conversations-list, .messages-area, .message-bubble, .conversation-content {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* ===== messages-stats inside sidebar (compact summary) ===== */
+  .messages-stats {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    padding: 12px 1.25rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fff;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .messages-stats .stat-item { text-align: center; min-width: 64px; }
+  .messages-stats .stat-number { font-size: 1.25rem; font-weight: 700; color: #1f2937; }
+  .messages-stats .stat-label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+
+  /* Hide the original header-level stats to avoid duplicates */
+  .page-header .stats-summary { display: none; }
+
+  @media (max-width: 768px) {
+    .messages-stats {
+      flex-wrap: nowrap;
+      gap: 12px;
+      padding: 10px 12px;
+      overflow-x: auto;
+    }
+    .messages-stats .stat-item { min-width: 72px; }
   }
 }

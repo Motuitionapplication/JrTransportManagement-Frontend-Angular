@@ -36,11 +36,11 @@ export interface CustomerTrip {
   createdAt: Date;
   updatedAt: Date;
   trackingInfo?: {
-    currentLocation?: string;
-    estimatedArrival?: Date;
+    currentLocation: string | null;
+    estimatedArrival: Date | null;
     progress: number; // percentage
-    lastUpdate: Date;
-  };
+    lastUpdate: Date | null;
+  } | null;
 }
 
 export interface TripSummary {
@@ -155,7 +155,8 @@ export class MyTripsComponent implements OnInit {
           trackingInfo: {
             currentLocation: 'Delivered at Delhi Red Fort',
             progress: 100,
-            lastUpdate: new Date('2024-01-21T08:30:00')
+            lastUpdate: new Date('2024-01-21T08:30:00'),
+            estimatedArrival: null
           }
         },
         {
@@ -253,7 +254,8 @@ export class MyTripsComponent implements OnInit {
           trackingInfo: {
             currentLocation: 'Delivered at Bhubaneswar Railway Station',
             progress: 100,
-            lastUpdate: new Date('2024-01-18T20:15:00')
+            lastUpdate: new Date('2024-01-18T20:15:00'),
+            estimatedArrival: null
           }
         }
       ];
@@ -473,7 +475,8 @@ export class MyTripsComponent implements OnInit {
     return `${h}h ${m}m`;
   }
 
-  formatDateTime(date: Date): string {
+  formatDateTime(date: Date | null | undefined): string {
+    if (!date) return 'N/A';
     return new Intl.DateTimeFormat('en-IN', {
       year: 'numeric',
       month: 'short',
@@ -483,7 +486,8 @@ export class MyTripsComponent implements OnInit {
     }).format(date);
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: Date | null | undefined): string {
+    if (!date) return 'N/A';
     return new Intl.DateTimeFormat('en-IN', {
       year: 'numeric',
       month: 'short',
@@ -498,7 +502,8 @@ export class MyTripsComponent implements OnInit {
     }).format(date);
   }
 
-  getTimeAgo(date: Date): string {
+  getTimeAgo(date: Date | null | undefined): string {
+    if (!date) return 'N/A';
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
