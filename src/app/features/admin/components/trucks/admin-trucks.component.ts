@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { VehicleService } from 'src/app/services/vehicle.service';
+import { VehicleService } from '../../../../services/vehicle.service';
 import { Vehicle } from 'src/app/models/vehicle.model';
 // For Excel export
 import * as XLSX from 'xlsx';
