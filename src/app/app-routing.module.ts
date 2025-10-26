@@ -18,7 +18,8 @@ const routes: Routes = [
   // Vehicle Owner routes
   {
     path: 'owner',
-    loadChildren: () => import('./features/owner/owner.module').then(m => m.OwnerModule)
+    loadChildren: () => import('./features/owner/owner.module').then(m => m.OwnerModule),
+    
   },
   
   // Driver routes

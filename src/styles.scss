@@ -1048,3 +1048,6 @@ body {
 .cdk-overlay-backdrop {
   backdrop-filter: blur(2px) !important;
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

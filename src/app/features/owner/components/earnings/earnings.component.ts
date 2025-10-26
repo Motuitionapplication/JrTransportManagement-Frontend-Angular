@@ -1,204 +1,478 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Chart, registerables, ChartConfiguration, ChartType } from 'chart.js';
+
+Chart.register(...registerables);
+
+interface Transaction {
+  id: string;
+  date: Date;
+  type: 'revenue' | 'expense';
+  description: string;
+  amount: number;
+  status: 'completed' | 'pending' | 'cancelled';
+  vehicleNumber?: string;
+  bookingId?: string;
+}
+
+interface VehiclePerformance {
+  vehicleNumber: string;
+  type: string;
+  revenue: number;
+  trips: number;
+  efficiency: number;
+  expenses: number;
+  profit: number;
+}
 
 @Component({
   selector: 'app-earnings',
   templateUrl: './earnings.component.html',
   styleUrls: ['./earnings.component.scss']
 })
-export class EarningsComponent implements OnInit {
+export class EarningsComponent implements OnInit, AfterViewInit {
 
-  selectedPeriod = 'monthly';
-  selectedYear = new Date().getFullYear();
+  @ViewChild('revenueChart') revenueChartRef!: ElementRef;
+  @ViewChild('expenseChart') expenseChartRef!: ElementRef;
+  @ViewChild('vehiclePerformanceChart') vehiclePerformanceChartRef!: ElementRef;
 
-  earningsData = {
-    today: {
-      gross: 8500,
-      commission: 1275,
-      net: 7225,
-      trips: 12,
-      avgPerTrip: 708.33
-    },
-    thisWeek: {
-      gross: 45600,
-      commission: 6840,
-      net: 38760,
-      trips: 68,
-      avgPerTrip: 670.59
-    },
-    thisMonth: {
-      gross: 185600,
-      commission: 27840,
-      net: 157760,
-      trips: 245,
-      avgPerTrip: 757.55
-    },
-    thisYear: {
-      gross: 1856000,
-      commission: 278400,
-      net: 1577600,
-      trips: 2450,
-      avgPerTrip: 757.55
-    }
+  // Date Range
+  selectedPeriod = 'month';
+  showDateRangePicker = false;
+  customDateRange = {
+    from: '',
+    to: ''
   };
 
-  monthlyEarnings = [
-    { month: 'Jan 2024', gross: 142000, commission: 21300, net: 120700, trips: 178 },
-    { month: 'Feb 2024', gross: 156000, commission: 23400, net: 132600, trips: 195 },
-    { month: 'Mar 2024', gross: 178000, commission: 26700, net: 151300, trips: 223 },
-    { month: 'Apr 2024', gross: 165000, commission: 24750, net: 140250, trips: 207 },
-    { month: 'May 2024', gross: 189000, commission: 28350, net: 160650, trips: 236 },
-    { month: 'Jun 2024', gross: 198000, commission: 29700, net: 168300, trips: 248 },
-    { month: 'Jul 2024', gross: 205000, commission: 30750, net: 174250, trips: 256 },
-    { month: 'Aug 2024', green: 195000, commission: 29250, net: 165750, trips: 244 },
-    { month: 'Sep 2024', gross: 185600, commission: 27840, net: 157760, trips: 245 }
-  ];
+  // Loading and UI States
+  isLoading = false;
+  isRefreshing = false;
+  showAlert = false;
+  alertMessage = '';
+  isError = false;
 
-  vehicleEarnings = [
-    {
-      vehicleId: 'V001',
-      vehiclePlate: 'MH-12-AB-1234',
-      driverName: 'Rajesh Kumar',
-      monthlyGross: 68500,
-      monthlyCommission: 10275,
-      monthlyNet: 58225,
-      monthlyTrips: 89,
-      avgEarningsPerTrip: 769.66,
-      fuelCost: 12400,
-      maintenanceCost: 3200,
-      totalExpenses: 15600,
-      profitMargin: 73.5
-    },
-    {
-      vehicleId: 'V002',
-      vehiclePlate: 'MH-12-CD-5678',
-      driverName: 'Suresh Patil',
-      monthlyGross: 62800,
-      monthlyCommission: 9420,
-      monthlyNet: 53380,
-      monthlyTrips: 78,
-      avgEarningsPerTrip: 805.13,
-      fuelCost: 11200,
-      maintenanceCost: 2800,
-      totalExpenses: 14000,
-      profitMargin: 73.8
-    },
-    {
-      vehicleId: 'V003',
-      vehiclePlate: 'MH-12-EF-9012',
-      driverName: 'Amit Sharma',
-      monthlyGross: 54300,
-      monthlyCommission: 8145,
-      monthlyNet: 46155,
-      monthlyTrips: 78,
-      avgEarningsPerTrip: 696.15,
-      fuelCost: 9800,
-      maintenanceCost: 4200,
-      totalExpenses: 14000,
-      profitMargin: 69.7
-    }
-  ];
+  // Key Metrics
+  totalRevenue = 245000;
+  totalExpenses = 180000;
+  netProfit = 65000;
+  profitMargin = 26.5;
+  activeVehicles = 8;
+  completedTrips = 145;
+  totalBookings = 152;
+  averageTripValue = 1611;
 
-  earningsBreakdown = {
-    shortDistance: { earnings: 45600, percentage: 24.6, trips: 123 },
-    mediumDistance: { earnings: 89500, percentage: 48.2, trips: 98 },
-    longDistance: { earnings: 50500, percentage: 27.2, trips: 24 },
-    peak: { earnings: 67800, percentage: 36.5, trips: 87 },
-    offPeak: { earnings: 117800, percentage: 63.5, trips: 158 }
-  };
+  // Trends (percentage change from previous period)
+  revenueTrend = 12.5;
+  expensesTrend = -8.2;
+  profitTrend = 18.7;
+  marginTrend = 3.2;
 
-  expenseCategories = [
-    { category: 'Fuel', amount: 33400, percentage: 42.1 },
-    { category: 'Maintenance', amount: 10200, percentage: 12.8 },
-    { category: 'Insurance', amount: 8500, percentage: 10.7 },
-    { category: 'Platform Commission', amount: 27840, percentage: 35.1 },
-    { category: 'Other', amount: 1200, percentage: 1.5 }
-  ];
+  // Financial Breakdown
+  grossRevenue = 245000;
+  fuelCosts = 85000;
+  maintenanceCosts = 32000;
+  driverPayments = 45000;
+  insuranceCosts = 12000;
+  otherExpenses = 6000;
 
-  constructor() { }
+  // Chart Types - Fixed typing
+  revenueChartType: 'line' | 'bar' = 'line';
+
+  // Data Arrays
+  topVehicles: VehiclePerformance[] = [];
+  recentTransactions: Transaction[] = [];
+
+  // Charts
+  private revenueChart?: Chart;
+  private expenseChart?: Chart;
+  private vehiclePerformanceChart?: Chart;
+
+  constructor() {
+    this.Math = Math; // Make Math available in template
+  }
 
   ngOnInit(): void {
-    console.log('Earnings component initialized');
+    this.loadEarningsData();
+    this.loadTopVehicles();
+    this.loadRecentTransactions();
   }
 
-  get currentPeriodData() {
-    switch(this.selectedPeriod) {
-      case 'daily': return this.earningsData.today;
-      case 'weekly': return this.earningsData.thisWeek;
-      case 'monthly': return this.earningsData.thisMonth;
-      case 'yearly': return this.earningsData.thisYear;
-      default: return this.earningsData.thisMonth;
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.initializeCharts();
+    }, 100);
+  }
+
+  // Data Loading Methods
+  private loadEarningsData(): void {
+    this.isLoading = true;
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Data is already initialized in component properties
+      this.isLoading = false;
+      this.showSuccessAlert('Earnings data loaded successfully');
+    }, 1000);
+  }
+
+  private loadTopVehicles(): void {
+    this.topVehicles = [
+      {
+        vehicleNumber: 'MH 12 AB 1234',
+        type: 'TRUCK',
+        revenue: 45000,
+        trips: 28,
+        efficiency: 92,
+        expenses: 25000,
+        profit: 20000
+      },
+      {
+        vehicleNumber: 'KA 05 EF 9012',
+        type: 'TRUCK',
+        revenue: 38000,
+        trips: 24,
+        efficiency: 88,
+        expenses: 22000,
+        profit: 16000
+      },
+      {
+        vehicleNumber: 'DL 8C A 4567',
+        type: 'VAN',
+        revenue: 32000,
+        trips: 35,
+        efficiency: 85,
+        expenses: 18000,
+        profit: 14000
+      },
+      {
+        vehicleNumber: 'GJ 01 HH 8901',
+        type: 'CONTAINER',
+        revenue: 55000,
+        trips: 18,
+        efficiency: 90,
+        expenses: 35000,
+        profit: 20000
+      },
+      {
+        vehicleNumber: 'TN 33 CC 2345',
+        type: 'TRAILER',
+        revenue: 42000,
+        trips: 22,
+        efficiency: 78,
+        expenses: 28000,
+        profit: 14000
+      }
+    ];
+  }
+
+  private loadRecentTransactions(): void {
+    this.recentTransactions = [
+      {
+        id: 'T001',
+        date: new Date(2025, 9, 18),
+        type: 'revenue',
+        description: 'Mumbai to Pune delivery - MH 12 AB 1234',
+        amount: 8500,
+        status: 'completed',
+        vehicleNumber: 'MH 12 AB 1234'
+      },
+      {
+        id: 'T002',
+        date: new Date(2025, 9, 17),
+        type: 'expense',
+        description: 'Fuel cost - KA 05 EF 9012',
+        amount: -3200,
+        status: 'completed',
+        vehicleNumber: 'KA 05 EF 9012'
+      },
+      {
+        id: 'T003',
+        date: new Date(2025, 9, 17),
+        type: 'revenue',
+        description: 'Delhi to Jaipur transport',
+        amount: 12000,
+        status: 'pending'
+      },
+      {
+        id: 'T004',
+        date: new Date(2025, 9, 16),
+        type: 'expense',
+        description: 'Vehicle maintenance - DL 8C A 4567',
+        amount: -7500,
+        status: 'completed'
+      },
+      {
+        id: 'T005',
+        date: new Date(2025, 9, 16),
+        type: 'revenue',
+        description: 'Container transport - GJ 01 HH 8901',
+        amount: 25000,
+        status: 'completed'
+      }
+    ];
+  }
+
+  // Chart Initialization
+  private initializeCharts(): void {
+    this.createRevenueChart();
+    this.createExpenseChart();
+    this.createVehiclePerformanceChart();
+  }
+
+  private createRevenueChart(): void {
+    if (!this.revenueChartRef?.nativeElement) return;
+    
+    const ctx = this.revenueChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    
+    // Fixed chart configuration with proper typing
+    const config: ChartConfiguration = {
+      type: this.revenueChartType as ChartType, // Explicit casting
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+        datasets: [{
+          label: 'Revenue',
+          data: [180000, 195000, 210000, 185000, 220000, 235000, 225000, 240000, 250000, 245000],
+          borderColor: '#667eea',
+          backgroundColor: this.revenueChartType === 'line' ? 'transparent' : '#667eea',
+          tension: 0.4,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => '₹' + (Number(value) / 1000) + 'K'
+            }
+          }
+        }
+      }
+    };
+    
+    this.revenueChart = new Chart(ctx, config);
+  }
+
+  private createExpenseChart(): void {
+    if (!this.expenseChartRef?.nativeElement) return;
+    
+    const ctx = this.expenseChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    
+    const config: ChartConfiguration = {
+      type: 'doughnut',
+      data: {
+        labels: ['Fuel', 'Maintenance', 'Driver Pay', 'Insurance', 'Others'],
+        datasets: [{
+          data: [85000, 32000, 45000, 12000, 6000],
+          backgroundColor: [
+            '#ff9a9e',
+            '#fecfef',
+            '#a8edea',
+            '#fed6e3',
+            '#d299c2'
+          ],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 20
+            }
+          }
+        }
+      }
+    };
+    
+    this.expenseChart = new Chart(ctx, config);
+  }
+
+  private createVehiclePerformanceChart(): void {
+    if (!this.vehiclePerformanceChartRef?.nativeElement) return;
+    
+    const ctx = this.vehiclePerformanceChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: this.topVehicles.map(v => v.vehicleNumber),
+        datasets: [
+          {
+            label: 'Revenue',
+            data: this.topVehicles.map(v => v.revenue),
+            backgroundColor: '#667eea'
+          },
+          {
+            label: 'Expenses',
+            data: this.topVehicles.map(v => v.expenses),
+            backgroundColor: '#ff9a9e'
+          },
+          {
+            label: 'Profit',
+            data: this.topVehicles.map(v => v.profit),
+            backgroundColor: '#a8edea'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => '₹' + (Number(value) / 1000) + 'K'
+            }
+          }
+        }
+      }
+    };
+    
+    this.vehiclePerformanceChart = new Chart(ctx, config);
+  }
+
+  // Period Selection Methods
+  setPeriod(period: string): void {
+    if (period === 'custom') {
+      this.showDateRangePicker = true;
+    } else {
+      this.selectedPeriod = period;
+      this.refreshData();
     }
   }
 
-  get topPerformingVehicle() {
-    return this.vehicleEarnings.reduce((top, vehicle) => 
-      vehicle.monthlyNet > top.monthlyNet ? vehicle : top
-    );
+  closeDateRangePicker(): void {
+    this.showDateRangePicker = false;
   }
 
-  get averageEarningsPerTrip() {
-    const totalEarnings = this.vehicleEarnings.reduce((sum, v) => sum + v.monthlyGross, 0);
-    const totalTrips = this.vehicleEarnings.reduce((sum, v) => sum + v.monthlyTrips, 0);
-    return totalTrips > 0 ? totalEarnings / totalTrips : 0;
+  applyCustomDateRange(): void {
+    if (this.customDateRange.from && this.customDateRange.to) {
+      this.selectedPeriod = 'custom';
+      this.showDateRangePicker = false;
+      this.refreshData();
+    }
   }
 
-  get totalExpenses() {
-    return this.expenseCategories.reduce((sum, category) => sum + category.amount, 0);
+  getPeriodLabel(): string {
+    switch (this.selectedPeriod) {
+      case 'today':
+        return 'Today';
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'custom':
+        return `${this.customDateRange.from} to ${this.customDateRange.to}`;
+      default:
+        return 'This Month';
+    }
   }
 
-  setPeriod(period: string): void {
-    this.selectedPeriod = period;
+  // Chart Control Methods
+  setRevenueChartType(type: 'line' | 'bar'): void {
+    this.revenueChartType = type;
+    if (this.revenueChart) {
+      this.revenueChart.destroy();
+      this.createRevenueChart();
+    }
   }
 
-  viewVehicleDetails(vehicleId: string): void {
-    console.log('Viewing vehicle earnings details:', vehicleId);
+  // Action Methods
+  refreshData(): void {
+    this.isRefreshing = true;
+    setTimeout(() => {
+      this.isRefreshing = false;
+      this.loadEarningsData();
+      this.showSuccessAlert('Data refreshed successfully');
+    }, 2000);
   }
 
-  exportEarningsReport(): void {
-    console.log('Exporting earnings report for period:', this.selectedPeriod);
+  exportReport(): void {
+    // Implement report export logic
+    this.showSuccessAlert('Report exported successfully');
   }
 
-  downloadTaxStatement(): void {
-    console.log('Downloading tax statement');
+  addExpense(): void {
+    // Navigate to add expense page or open modal
+    console.log('Add expense clicked');
   }
 
-  viewEarningsTrends(): void {
-    console.log('Viewing earnings trends analysis');
+  recordPayment(): void {
+    // Navigate to record payment page or open modal
+    console.log('Record payment clicked');
   }
 
-  optimizeEarnings(): void {
-    console.log('Opening earnings optimization suggestions');
+  generateInvoice(): void {
+    // Navigate to invoice generation or open modal
+    console.log('Generate invoice clicked');
   }
 
+  viewReports(): void {
+    // Navigate to reports page
+    console.log('View reports clicked');
+  }
+
+  viewAllVehicles(): void {
+    // Navigate to vehicles performance page
+    console.log('View all vehicles clicked');
+  }
+
+  viewAllTransactions(): void {
+    // Navigate to transactions page
+    console.log('View all transactions clicked');
+  }
+
+  // Utility Methods
   formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0
-    }).format(amount);
+    return new Intl.NumberFormat('en-IN').format(amount);
   }
 
-  getPerformanceColor(value: number, benchmark: number): string {
-    const ratio = value / benchmark;
-    if (ratio >= 1.1) return '#10b981'; // Green for above benchmark
-    if (ratio >= 0.9) return '#f59e0b'; // Yellow for near benchmark
-    return '#ef4444'; // Red for below benchmark
+  formatDate(date: Date): string {
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 
-  getExpenseCategoryColor(category: string): string {
-    const colors = {
-      'Fuel': '#ef4444',
-      'Maintenance': '#f59e0b',
-      'Insurance': '#3b82f6',
-      'Platform Commission': '#8b5cf6',
-      'Other': '#6b7280'
-    };
-    return colors[category as keyof typeof colors] || '#6b7280';
+  // Alert Methods
+  private showSuccessAlert(message: string): void {
+    this.alertMessage = message;
+    this.isError = false;
+    this.showAlert = true;
+    setTimeout(() => this.hideAlert(), 3000);
   }
 
-  calculateGrowthPercentage(current: number, previous: number): number {
-    if (previous === 0) return 0;
-    return ((current - previous) / previous) * 100;
+  private showErrorAlert(message: string): void {
+    this.alertMessage = message;
+    this.isError = true;
+    this.showAlert = true;
+    setTimeout(() => this.hideAlert(), 5000);
   }
 
+  hideAlert(): void {
+    this.showAlert = false;
+  }
+
+  // Make Math available in template
+  Math = Math;
 }

@@ -1,0 +1,88 @@
+<p>dashboard1 works!</p>
+<div class="dashboard">
+  <h2>Vehicle Owner Dashboard</h2>
+
+  <!-- Top Stats -->
+  <div class="stats">
+    <div class="card">Total Vehicles <h3>{{ totalVehicles }}</h3></div>
+    <div class="card">Active Bookings <h3>{{ activeBookings }}</h3></div>
+    <div class="card">Today's Earnings <h3>\${{ todaysEarnings }}</h3></div>
+    <div class="card">Maintenance Alerts <h3>{{ maintenanceAlerts }}</h3></div>
+  </div>
+
+  <!-- Fleet Management -->
+  <div class="section">
+    <h3>Fleet Management</h3>
+    <table>
+      <tr>
+        <th>Vehicle</th>
+        <th>Driver</th>
+        <th>Status</th>
+      </tr>
+      <tr *ngFor="let f of fleet">
+        <td>{{ f.vehicle }}</td>
+        <td>{{ f.driver }}</td>
+        <td [ngClass]="{
+              'available': f.status==='Available',
+              'booked': f.status==='Booked',
+              'maintenance': f.status==='Maintenance'
+            }">
+          {{ f.status }}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Driver Management -->
+  <div class="section">
+    <h3>Driver Management</h3>
+    <table>
+      <tr>
+        <th>Driver</th>
+        <th>License</th>
+        <th>Vehicle</th>
+      </tr>
+      <tr *ngFor="let d of drivers">
+        <td>{{ d.name }}</td>
+        <td>{{ d.license }}</td>
+        <td>{{ d.vehicle }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Vehicle Bookings -->
+  <div class="section">
+    <h3>Vehicle Bookings</h3>
+    <table>
+      <tr>
+        <th>Booking ID</th>
+        <th>Customer</th>
+        <th>Date</th>
+        <th>Payment</th>
+      </tr>
+      <tr *ngFor="let b of bookings">
+        <td>{{ b.id }}</td>
+        <td>{{ b.customer }}</td>
+        <td>{{ b.date }}</td>
+        <td>{{ b.payment }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Maintenance -->
+  <div class="section">
+    <h3>Maintenance</h3>
+    <table>
+      <tr>
+        <th>Vehicle</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+      <tr *ngFor="let m of maintenance">
+        <td>{{ m.vehicle }}</td>
+        <td>{{ m.date }}</td>
+        <td>{{ m.action }}</td>
+      </tr>
+    </table>
+  </div>
+</div>
