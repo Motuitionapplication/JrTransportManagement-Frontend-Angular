@@ -4,7 +4,9 @@
   left: 0;
   width: 100%;
   height: 100vh;
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  /* Blue gradient background */
+  background-color: #1a73e8;
+  background: linear-gradient(135deg, #1a73e8 0%, #2a5298 50%, #0f172a 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -126,11 +128,18 @@
 }
 
 .app-subtitle {
-  font-size: 1.2rem;
-  font-weight: 300;
+  font-size: 1.15rem;
+  font-weight: 600; /* stronger weight for visibility */
   margin-bottom: 3rem;
-  opacity: 0.9;
+  opacity: 1; /* full opacity for contrast against gradient */
+  color: #ffffff; /* ensure white text on blue background */
+  text-shadow: 1px 2px 6px rgba(0, 0, 0, 0.45);
   animation: slideInFromRight 1s ease-out 0.6s both;
+
+  strong {
+    font-weight: 700;
+    display: inline-block;
+  }
 }
 
 .loading-container {
