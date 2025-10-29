@@ -14,7 +14,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 // Components
 import { OwnerComponent } from './owner.component';
 import { Dashboard1Component } from './components/dashboard1/dashboard1.component';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { VehiclesComponent } from './components/vehicles/vehicles.component';
 import { DriversComponent } from './components/drivers/drivers.component';
 // import { BookingsComponent } from './components/bookings/bookings.component';
@@ -36,7 +35,6 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
   declarations: [
     OwnerComponent,
     Dashboard1Component,
-    SidebarComponent,
     VehiclesComponent,
     DriversComponent,
     EarningsComponent,

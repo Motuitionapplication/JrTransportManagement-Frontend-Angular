@@ -8,7 +8,9 @@
     <ul class="menu-list">
       <li *ngFor="let item of menuItems" routerLinkActive="active">
         <a [routerLink]="item.route">
-          <span class="icon">{{ item.icon }}</span>
+          <span class="icon"
+            ><span class='material-symbols-outlined'> {{item.name}} </span></span
+          >
           <span *ngIf="!sidebarCollapsed">{{ item.label }}</span>
         </a>
       </li>
@@ -17,11 +19,9 @@
 
   <!-- Main content -->
   <div class="owner-content">
-
     <!-- Top Navbar -->
     <nav class="top-navbar">
       <div class="navbar-content">
-
         <!-- Logo + Sidebar toggle -->
         <div class="logo-section">
           <button class="menu-toggle" (click)="toggleSidebar()">
@@ -36,9 +36,19 @@
         <div class="navbar-actions">
           <!-- Search bar -->
           <div class="search-bar">
-            <input type="text" placeholder="Search bookings, vehicles..." class="search-input">
+            <input
+              type="text"
+              placeholder="Search bookings, vehicles..."
+              class="search-input"
+            />
             <button class="search-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
               </svg>
@@ -48,25 +58,41 @@
           <!-- Notifications -->
           <div class="notifications">
             <button class="notification-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
               </svg>
-              <span class="notification-badge">{{ documentAlerts.length }}</span>
+              <span class="notification-badge">{{
+                documentAlerts.length
+              }}</span>
             </button>
           </div>
 
           <!-- User profile -->
           <div class="user-profile" (click)="toggleDropdown($event)">
             <div class="user-avatar">
-              <span>{{ getUserInitials() || 'JD' }}</span>
+              <span>{{ getUserInitials() || "JD" }}</span>
             </div>
             <div class="user-info" *ngIf="!sidebarCollapsed">
-              <span class="user-name">{{ user?.firstName }} {{ user?.lastName }}</span>
+              <span class="user-name"
+                >{{ user?.firstName }} {{ user?.lastName }}</span
+              >
               <span class="user-role">Owner</span>
             </div>
             <button class="dropdown-toggle">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>

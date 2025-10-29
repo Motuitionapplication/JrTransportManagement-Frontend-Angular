@@ -222,7 +222,7 @@ export class VehiclesComponent implements OnInit {
     this.vehicleForm = this.fb.group({
       // Step 1: Basic Vehicle Information
       basicInfo: this.fb.group({
-        vehicleNumber: ['', [Validators.required, Validators.pattern('^[A-Z]{2}[ -][0-9]{1,2}(?: [A-Z])?(?: [A-Z]*)? [0-9]{4}$')]],
+        vehicleNumber: ['', [Validators.required, Validators.pattern('^[A-Z0-9\\s-]{5,15}$')]],
         vehicleType: ['', Validators.required],
         manufacturer: ['', Validators.required],
         model: ['', Validators.required],

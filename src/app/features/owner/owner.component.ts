@@ -41,15 +41,15 @@ export class OwnerComponent implements OnInit {
   // Menu items configuration
 
   menuItems = [
-    { label: 'Dashboard', route: 'dashboard', icon: '📊' },
-    { label: 'Vehicles', route: 'vehicles', icon: '🚗' },
-    { label: 'Drivers', route: 'drivers', icon: '👨‍✈️' },
+    { label: 'Dashboard', route: 'dashboard',name:'dashboard_2'},
+    { label: 'Vehicles', route: 'vehicles',name:'local_taxi' },
+    { label: 'Drivers', route: 'drivers', name:'man' },
     // { label: 'Bookings', route: 'bookings', icon: '📅' },
-    { label: 'Earnings', route: 'earnings', icon: '💰' },
-    { label: 'Maintenance', route: 'maintenance', icon: '🛠️' },
-    { label: 'Tracking', route: 'tracking', icon: '📍' },
-    { label: 'Analytics', route: 'analytics', icon: '📈' },
-    { label: 'Notifications', route: 'notifications', icon: '🔔' },
+    { label: 'Earnings', route: 'earnings', name: 'currency_rupee_circle' },
+    { label: 'Maintenance', route: 'maintenance', name: 'build' },
+    { label: 'Tracking', route: 'tracking', name: 'location_on' },
+    { label: 'Analytics', route: 'analytics', name: 'bar_chart_4_bars' },
+    { label: 'Notifications', route: 'notifications', name: 'notifications' },
   ];
 
   constructor(
