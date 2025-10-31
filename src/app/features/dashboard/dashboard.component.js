@@ -1,4 +1,4 @@
-/ JR Transport Website JavaScript
+// JR Transport Website JavaScript
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -337,3 +337,39 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('JR Transport website loaded successfully!');
 });
+window.calculateFare = async function() {
+  const pickup = document.getElementById("pickupCity").value;
+  const delivery = document.getElementById("deliveryCity").value;
+  const truckType = document.getElementById("truckType").value;
+
+  if (!pickup.trim()) return showMessage('Please enter pickup location', 'error');
+  if (!delivery.trim()) return showMessage('Please enter delivery location', 'error');
+  if (!truckType) return showMessage('Please select truck type', 'error');
+
+  const button = document.querySelector('.btn-primary');
+  const originalText = button.innerHTML;
+  button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating Fare...';
+  button.disabled = true;
+
+  try {
+    const fromCoords = await getCoordinates(pickup);
+    const toCoords = await getCoordinates(delivery);
+    const distance = await getDistance(fromCoords, toCoords);
+
+    const rateMap = { mini: 12, medium: 15, large: 19, container: 19, trailer: 23 };
+    const baseFare = 1500;
+    const fare = baseFare + (distance * rateMap[truckType]);
+
+    document.getElementById("fareResult").innerHTML = `
+      Distance: ${distance.toFixed(2)} km<br>
+      Estimated Fare: ₹${fare.toFixed(2)}
+    `;
+
+    showMessage(`Estimated Fare: ₹${fare.toFixed(2)} (${distance.toFixed(2)} km)`, 'success');
+  } catch (err) {
+    showMessage("Error calculating fare: " + err, 'error');
+  } finally {
+    button.innerHTML = originalText;
+    button.disabled = false;
+  }
+}

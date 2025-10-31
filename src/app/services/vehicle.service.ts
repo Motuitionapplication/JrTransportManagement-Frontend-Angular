@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Vehicle, VehicleTracking, MaintenanceRecord } from '../models/vehicle.model';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +10,9 @@ import { Vehicle, VehicleTracking, MaintenanceRecord } from '../models/vehicle.m
 export class VehicleService {
   private vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
   public vehicles$ = this.vehiclesSubject.asObservable();
+  private apiUrl = 'YOUR_API_URL_HERE'; // Set your API URL here
 
-  constructor() {}
+  constructor(private http: HttpClient) {}
 
   // Vehicle CRUD operations
   getAllVehicles(): Observable<Vehicle[]> {
@@ -205,5 +207,10 @@ export class VehicleService {
       warehouses: [],
       emergencyServices: []
     });
+  }
+
+  // Add the addTruck method to support creating a new truck
+  addTruck(truck: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl, truck);
   }
 }

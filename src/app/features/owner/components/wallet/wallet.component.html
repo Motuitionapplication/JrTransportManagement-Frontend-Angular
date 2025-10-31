@@ -1,0 +1,290 @@
+<div class="wallet-container">
+  <div class="header-section">
+    <h2 class="page-title">Wallet Management</h2>
+    <div class="actions">
+      <button class="btn btn-outline-primary" (click)="downloadStatement()">
+        <i class="fas fa-download"></i>
+        Download Statement
+      </button>
+      <button class="btn btn-success" (click)="requestPayout()">
+        <i class="fas fa-money-bill-wave"></i>
+        Request Payout
+      </button>
+    </div>
+  </div>
+
+  <!-- Wallet Overview Cards -->
+  <div class="wallet-overview">
+    <div class="balance-card main-balance">
+      <div class="balance-content">
+        <div class="balance-label">Available Balance</div>
+        <div class="balance-amount">{{ formatAmount(walletBalance) }}</div>
+        <div class="balance-note">Ready for withdrawal</div>
+      </div>
+      <div class="balance-icon">
+        <i class="fas fa-wallet"></i>
+      </div>
+    </div>
+
+    <div class="balance-card pending-balance">
+      <div class="balance-content">
+        <div class="balance-label">Pending Payouts</div>
+        <div class="balance-amount">{{ formatAmount(pendingPayouts) }}</div>
+        <div class="balance-note">Processing transfers</div>
+      </div>
+      <div class="balance-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+    </div>
+
+    <div class="balance-card earnings-today">
+      <div class="balance-content">
+        <div class="balance-label">Today's Earnings</div>
+        <div class="balance-amount">{{ formatAmount(todaysEarnings) }}</div>
+        <div class="balance-note">From {{ getTodayTripsCount() }} trips</div>
+      </div>
+      <div class="balance-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Statistics -->
+  <div class="monthly-stats-card">
+    <h3 class="stats-title">This Month's Summary</h3>
+    <div class="stats-grid">
+      <div class="stat-item income">
+        <div class="stat-value">{{ formatAmount(monthlyStats.totalIncome) }}</div>
+        <div class="stat-label">
+          <i class="fas fa-arrow-up"></i>
+          Total Income
+        </div>
+      </div>
+      <div class="stat-item expenses">
+        <div class="stat-value">{{ formatAmount(monthlyStats.totalExpenses) }}</div>
+        <div class="stat-label">
+          <i class="fas fa-arrow-down"></i>
+          Total Expenses
+        </div>
+      </div>
+      <div class="stat-item net">
+        <div class="stat-value">{{ formatAmount(monthlyStats.netIncome) }}</div>
+        <div class="stat-label">
+          <i class="fas fa-calculator"></i>
+          Net Income
+        </div>
+      </div>
+      <div class="stat-item count">
+        <div class="stat-value">{{ monthlyStats.transactionCount }}</div>
+        <div class="stat-label">
+          <i class="fas fa-list"></i>
+          Transactions
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'transactions'"
+      (click)="setActiveTab('transactions')">
+      <i class="fas fa-exchange-alt"></i>
+      Transactions
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'payouts'"
+      (click)="setActiveTab('payouts')">
+      <i class="fas fa-money-bill-wave"></i>
+      Payout Requests
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'accounts'"
+      (click)="setActiveTab('accounts')">
+      <i class="fas fa-university"></i>
+      Bank Accounts
+    </button>
+  </div>
+
+  <!-- Transactions Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'transactions'">
+    <div class="transactions-list">
+      <div class="transaction-card" *ngFor="let transaction of recentTransactions">
+        <div class="transaction-icon" [style.background-color]="getTransactionColor(transaction.type)">
+          <i class="fas" [ngClass]="getTransactionIcon(transaction.type)"></i>
+        </div>
+        
+        <div class="transaction-details">
+          <div class="transaction-description">{{ transaction.description }}</div>
+          <div class="transaction-meta">
+            <span class="transaction-id">#{{ transaction.id }}</span>
+            <span class="transaction-date">{{ transaction.date | date:'MMM dd, yyyy HH:mm' }}</span>
+            <span class="transaction-method" *ngIf="transaction.paymentMethod !== 'auto-deduct'">
+              {{ transaction.paymentMethod }}
+            </span>
+          </div>
+          <div class="customer-name" *ngIf="transaction.customerName">
+            <i class="fas fa-user"></i>
+            {{ transaction.customerName }}
+          </div>
+        </div>
+
+        <div class="transaction-amount">
+          <div class="amount" [style.color]="getTransactionColor(transaction.type)">
+            {{ transaction.type === 'credit' ? '+' : '-' }}{{ formatAmount(transaction.amount) }}
+          </div>
+          <div class="status">
+            <span 
+              class="status-badge" 
+              [style.background-color]="getStatusColor(transaction.status)">
+              {{ transaction.status | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <div class="transaction-actions">
+          <button 
+            class="action-btn" 
+            (click)="viewTransactionDetails(transaction.id)"
+            title="View Details">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="no-transactions" *ngIf="recentTransactions.length === 0">
+        <i class="fas fa-receipt"></i>
+        <h3>No transactions found</h3>
+        <p>Your transaction history will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payout Requests Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'payouts'">
+    <div class="payouts-list">
+      <div class="payout-card" *ngFor="let payout of payoutRequests">
+        <div class="payout-header">
+          <div class="payout-id">#{{ payout.id }}</div>
+          <div class="payout-status">
+            <span 
+              class="status-badge" 
+              [style.background-color]="getStatusColor(payout.status)">
+              {{ payout.status | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <div class="payout-body">
+          <div class="payout-amount">{{ formatAmount(payout.amount) }}</div>
+          <div class="payout-details">
+            <div class="detail-row">
+              <span class="label">Bank Account:</span>
+              <span class="value">{{ payout.bankAccount }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Processing Fee:</span>
+              <span class="value">{{ formatAmount(payout.processingFee) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Request Date:</span>
+              <span class="value">{{ payout.requestDate | date:'MMM dd, yyyy HH:mm' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="payout.expectedDate && payout.status === 'pending'">
+              <span class="label">Expected Date:</span>
+              <span class="value">{{ payout.expectedDate | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="payout.completedDate && payout.status === 'completed'">
+              <span class="label">Completed Date:</span>
+              <span class="value">{{ payout.completedDate | date:'MMM dd, yyyy HH:mm' }}</span>
+            </div>
+            <div class="detail-row failure-reason" *ngIf="payout.failureReason && payout.status === 'failed'">
+              <span class="label">Failure Reason:</span>
+              <span class="value error">{{ payout.failureReason }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="net-amount">
+          <span class="net-label">Net Amount:</span>
+          <span class="net-value">{{ formatAmount(payout.amount - payout.processingFee) }}</span>
+        </div>
+      </div>
+
+      <div class="no-payouts" *ngIf="payoutRequests.length === 0">
+        <i class="fas fa-money-bill-wave"></i>
+        <h3>No payout requests</h3>
+        <p>Your payout requests will appear here.</p>
+        <button class="btn btn-primary" (click)="requestPayout()">
+          <i class="fas fa-plus"></i>
+          Request First Payout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Accounts Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'accounts'">
+    <div class="accounts-header">
+      <button class="btn btn-primary" (click)="addBankAccount()">
+        <i class="fas fa-plus"></i>
+        Add Bank Account
+      </button>
+    </div>
+
+    <div class="accounts-list">
+      <div class="account-card" *ngFor="let account of bankAccounts">
+        <div class="account-header">
+          <div class="bank-info">
+            <div class="bank-name">{{ account.bankName }}</div>
+            <div class="account-number">{{ account.accountNumber }}</div>
+          </div>
+          <div class="account-badges">
+            <span class="badge primary" *ngIf="account.isPrimary">Primary</span>
+            <span class="badge verified" *ngIf="account.isVerified">Verified</span>
+            <span class="badge unverified" *ngIf="!account.isVerified">Unverified</span>
+          </div>
+        </div>
+
+        <div class="account-details">
+          <div class="detail-row">
+            <span class="label">Account Holder:</span>
+            <span class="value">{{ account.holderName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">IFSC Code:</span>
+            <span class="value">{{ account.ifscCode }}</span>
+          </div>
+        </div>
+
+        <div class="account-actions">
+          <button 
+            class="btn btn-outline-primary btn-sm" 
+            (click)="setPrimaryAccount(account.id)"
+            *ngIf="!account.isPrimary && account.isVerified">
+            Set as Primary
+          </button>
+          <button 
+            class="btn btn-warning btn-sm" 
+            (click)="verifyAccount(account.id)"
+            *ngIf="!account.isVerified">
+            Verify Account
+          </button>
+        </div>
+      </div>
+
+      <div class="no-accounts" *ngIf="bankAccounts.length === 0">
+        <i class="fas fa-university"></i>
+        <h3>No bank accounts added</h3>
+        <p>Add a bank account to receive payouts.</p>
+        <button class="btn btn-primary" (click)="addBankAccount()">
+          <i class="fas fa-plus"></i>
+          Add Bank Account
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

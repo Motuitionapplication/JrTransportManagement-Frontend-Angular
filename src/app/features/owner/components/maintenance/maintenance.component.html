@@ -1,0 +1,557 @@
+<div class="maintenance-container">
+  <!-- Alert Messages -->
+  <div 
+    *ngIf="showMessage" 
+    class="alert alert-dismissible fade show"
+    [class.alert-success]="!isErrorMessage"
+    [class.alert-danger]="isErrorMessage"
+    role="alert">
+    <i class="fas" [class.fa-check-circle]="!isErrorMessage" [class.fa-exclamation-triangle]="isErrorMessage"></i>
+    {{ alertMessage }}
+    <button type="button" class="btn-close" (click)="hideMessage()"></button>
+  </div>
+
+  <!-- Header Section -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 mb-1">
+        <i class="fas fa-tools text-primary me-2"></i>
+        Vehicle Maintenance
+      </h2>
+      <p class="text-muted mb-0">Manage and track vehicle maintenance records</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button 
+        class="btn btn-outline-secondary" 
+        (click)="exportMaintenanceReport()"
+        title="Export Report">
+        <i class="fas fa-download me-1"></i>
+        Export
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="openAddMaintenanceDialog()">
+        <i class="fas fa-plus me-1"></i>
+        Schedule Maintenance
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card stats-card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h3 class="mb-0">{{ maintenanceStats.due }}</h3>
+              <p class="mb-0 opacity-75">Due for Maintenance</p>
+            </div>
+            <i class="fas fa-clock fa-2x opacity-75"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stats-card bg-danger text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h3 class="mb-0">{{ maintenanceStats.overdue }}</h3>
+              <p class="mb-0 opacity-75">Overdue</p>
+            </div>
+            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stats-card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h3 class="mb-0">{{ maintenanceStats.inProgress }}</h3>
+              <p class="mb-0 opacity-75">In Progress</p>
+            </div>
+            <i class="fas fa-wrench fa-2x opacity-75"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card stats-card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h3 class="mb-0">{{ maintenanceStats.completed }}</h3>
+              <p class="mb-0 opacity-75">Completed This Month</p>
+            </div>
+            <i class="fas fa-check-circle fa-2x opacity-75"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <button 
+        class="nav-link"
+        [class.active]="activeTab === 'upcoming'"
+        (click)="switchTab('upcoming')">
+        <i class="fas fa-calendar-alt me-1"></i>
+        Upcoming Maintenance
+      </button>
+    </li>
+    <li class="nav-item">
+      <button 
+        class="nav-link"
+        [class.active]="activeTab === 'history'"
+        (click)="switchTab('history')">
+        <i class="fas fa-history me-1"></i>
+        Maintenance History
+      </button>
+    </li>
+    <li class="nav-item">
+      <button 
+        class="nav-link"
+        [class.active]="activeTab === 'schedules'"
+        (click)="switchTab('schedules')">
+        <i class="fas fa-calendar-check me-1"></i>
+        Schedule View
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Upcoming Maintenance Tab -->
+    <div *ngIf="activeTab === 'upcoming'" class="tab-pane fade show active">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>
+            Upcoming Maintenance
+          </h5>
+          
+          <!-- Filters -->
+          <div class="d-flex gap-2 align-items-center">
+            <div class="input-group input-group-sm" style="width: 200px;">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Search..."
+                [(ngModel)]="searchValue"
+                (input)="onSearchChange()">
+            </div>
+            
+            <select 
+              class="form-select form-select-sm" 
+              style="width: auto;"
+              [(ngModel)]="selectedStatus"
+              (change)="onStatusFilterChange()">
+              <option value="">All Status</option>
+              <option value="SCHEDULED">Scheduled</option>
+              <option value="OVERDUE">Overdue</option>
+              <option value="IN_PROGRESS">In Progress</option>
+            </select>
+            
+            <button 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="clearFilters()"
+              title="Clear Filters">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          <ag-grid-angular
+            class="ag-theme-alpine"
+            style="height: 400px;"
+            [columnDefs]="upcomingColumnDefs"
+            [rowData]="upcomingMaintenanceData"
+            [defaultColDef]="defaultColDef"
+            (gridReady)="onUpcomingGridReady($event)"
+            [pagination]="true"
+            [paginationPageSize]="10">
+          </ag-grid-angular>
+        </div>
+      </div>
+    </div>
+
+    <!-- Maintenance History Tab -->
+    <div *ngIf="activeTab === 'history'" class="tab-pane fade show active">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>
+            Maintenance History
+          </h5>
+          
+          <!-- History Filters -->
+          <div class="d-flex gap-2 align-items-center">
+            <div class="input-group input-group-sm" style="width: 200px;">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Search history..."
+                [(ngModel)]="searchValue"
+                (input)="onSearchChange()">
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          <ag-grid-angular
+            class="ag-theme-alpine"
+            style="height: 400px;"
+            [columnDefs]="historyColumnDefs"
+            [rowData]="maintenanceHistoryData"
+            [defaultColDef]="defaultColDef"
+            (gridReady)="onHistoryGridReady($event)"
+            [pagination]="true"
+            [paginationPageSize]="10">
+          </ag-grid-angular>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule View Tab -->
+    <div *ngIf="activeTab === 'schedules'" class="tab-pane fade show active">
+      <div class="row">
+        <!-- Calendar Section -->
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-calendar me-2"></i>
+                Maintenance Calendar
+              </h5>
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary" (click)="previousMonth()">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="fw-bold">{{ currentMonth }} {{ currentYear }}</span>
+                <button class="btn btn-sm btn-outline-secondary" (click)="nextMonth()">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="card-body">
+              <table class="table table-borderless calendar-table">
+                <thead>
+                  <tr>
+                    <th *ngFor="let day of weekDays" class="text-center">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let week of calendarWeeks">
+                    <td 
+                      *ngFor="let day of week" 
+                      class="calendar-day text-center position-relative"
+                      [class.other-month]="!day.isCurrentMonth"
+                      [class.has-maintenance]="day.maintenanceCount > 0"
+                      (click)="selectDate(day)">
+                      <span class="day-number">{{ day.date }}</span>
+                      <span 
+                        *ngIf="day.maintenanceCount > 0" 
+                        class="badge bg-primary maintenance-badge">
+                        {{ day.maintenanceCount }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scheduled Services List -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Scheduled Services
+              </h5>
+              <button class="btn btn-sm btn-primary" (click)="quickScheduleService()">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            
+            <div class="card-body p-0">
+              <div class="list-group list-group-flush">
+                <div 
+                  *ngFor="let schedule of scheduledServices" 
+                  class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1">
+                        <i class="{{ getMaintenanceIcon(schedule.maintenanceType) }} me-1"></i>
+                        {{ schedule.maintenanceType }}
+                      </h6>
+                      <p class="mb-1 text-muted small">{{ schedule.vehicleNumber }}</p>
+                      <p class="mb-1 small">{{ schedule.description }}</p>
+                      <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ schedule.scheduledDate | date:'MMM dd, yyyy' }}
+                      </small>
+                      <br>
+                      <small class="text-muted">
+                        <i class="fas fa-rupee-sign me-1"></i>
+                        {{ schedule.estimatedCost | number }}
+                      </small>
+                    </div>
+                    <div class="dropdown">
+                      <button 
+                        class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                        type="button" 
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <button class="dropdown-item" (click)="markScheduleAsCompleted(schedule)">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Mark Complete
+                          </button>
+                        </li>
+                        <li>
+                          <button class="dropdown-item" (click)="editSchedule(schedule)">
+                            <i class="fas fa-edit text-primary me-2"></i>
+                            Edit
+                          </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                          <button class="dropdown-item text-danger" (click)="cancelSchedule(schedule)">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Modal -->
+  <div 
+    class="modal fade" 
+    [class.show]="showMaintenanceModal" 
+    [style.display]="showMaintenanceModal ? 'block' : 'none'"
+    tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-tools me-2"></i>
+            {{ isEditMode ? 'Edit Maintenance Record' : 'Schedule New Maintenance' }}
+          </h5>
+          <button 
+            type="button" 
+            class="btn-close" 
+            (click)="closeMaintenanceModal()">
+          </button>
+        </div>
+        
+        <form [formGroup]="maintenanceForm" (ngSubmit)="saveMaintenanceRecord()">
+          <div class="modal-body">
+            <div class="row">
+              <!-- Vehicle Selection -->
+              <div class="col-md-6 mb-3">
+                <label for="vehicleId" class="form-label">Vehicle *</label>
+                <select 
+                  id="vehicleId" 
+                  class="form-select" 
+                  formControlName="vehicleId"
+                  [disabled]="isLoadingVehicles">
+                  <option value="" disabled>
+                    {{ isLoadingVehicles ? 'Loading vehicles...' : 'Select Vehicle' }}
+                  </option>
+                  <option 
+                    *ngFor="let vehicle of availableVehicles" 
+                    [value]="vehicle.id">
+                    {{ vehicle.vehicleNumber }} - {{ vehicle.manufacturer }} {{ vehicle.model }}
+                  </option>
+                </select>
+                
+                <div *ngIf="isLoadingVehicles" class="d-flex align-items-center mt-2">
+                  <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <small class="text-muted">Loading vehicles...</small>
+                </div>
+                
+                <div *ngIf="!isLoadingVehicles && availableVehicles.length === 0" class="text-warning mt-2">
+                  <i class="fas fa-exclamation-triangle me-1"></i>
+                  <small>No vehicles found. 
+                    <button type="button" class="btn btn-link p-0 btn-sm" (click)="refreshVehicles()">
+                      Refresh
+                    </button>
+                  </small>
+                </div>
+                
+                <div 
+                  class="invalid-feedback d-block" 
+                  *ngIf="maintenanceForm.get('vehicleId')?.invalid && maintenanceForm.get('vehicleId')?.touched">
+                  Please select a vehicle
+                </div>
+              </div>
+
+              <!-- Maintenance Type -->
+              <div class="col-md-6 mb-3">
+                <label for="maintenanceType" class="form-label">Maintenance Type *</label>
+                <select id="maintenanceType" class="form-select" formControlName="maintenanceType">
+                  <option value="ROUTINE">Routine Service</option>
+                  <option value="REPAIR">Repair</option>
+                  <option value="INSPECTION">Inspection</option>
+                  <option value="EMERGENCY">Emergency</option>
+                </select>
+              </div>
+
+              <!-- Service Date -->
+              <div class="col-md-6 mb-3">
+                <label for="serviceDate" class="form-label">Service Date *</label>
+                <input 
+                  type="date" 
+                  id="serviceDate" 
+                  class="form-control" 
+                  formControlName="serviceDate">
+                <div 
+                  class="invalid-feedback d-block" 
+                  *ngIf="maintenanceForm.get('serviceDate')?.invalid && maintenanceForm.get('serviceDate')?.touched">
+                  Please select a service date
+                </div>
+              </div>
+
+              <!-- Priority -->
+              <div class="col-md-6 mb-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select id="priority" class="form-select" formControlName="priority">
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                </select>
+              </div>
+
+              <!-- Description -->
+              <div class="col-12 mb-3">
+                <label for="description" class="form-label">Description *</label>
+                <textarea 
+                  id="description" 
+                  class="form-control" 
+                  rows="3" 
+                  formControlName="description"
+                  placeholder="Describe the maintenance work needed...">
+                </textarea>
+                <div 
+                  class="invalid-feedback d-block" 
+                  *ngIf="maintenanceForm.get('description')?.invalid && maintenanceForm.get('description')?.touched">
+                  Please provide a description
+                </div>
+              </div>
+
+              <!-- Service Provider -->
+              <div class="col-md-6 mb-3">
+                <label for="serviceProvider" class="form-label">Service Provider</label>
+                <input 
+                  type="text" 
+                  id="serviceProvider" 
+                  class="form-control" 
+                  formControlName="serviceProvider"
+                  placeholder="Enter service provider name">
+              </div>
+
+              <!-- Estimated Cost -->
+              <div class="col-md-6 mb-3">
+                <label for="estimatedCost" class="form-label">Estimated Cost</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input 
+                    type="number" 
+                    id="estimatedCost" 
+                    class="form-control" 
+                    formControlName="estimatedCost"
+                    min="0"
+                    step="100">
+                </div>
+              </div>
+
+              <!-- Odometer Reading -->
+              <div class="col-md-6 mb-3">
+                <label for="odometerReading" class="form-label">Current Odometer (km)</label>
+                <input 
+                  type="number" 
+                  id="odometerReading" 
+                  class="form-control" 
+                  formControlName="odometerReading"
+                  min="0">
+              </div>
+
+              <!-- Next Service Date -->
+              <div class="col-md-6 mb-3">
+                <label for="nextServiceDate" class="form-label">Next Service Date</label>
+                <input 
+                  type="date" 
+                  id="nextServiceDate" 
+                  class="form-control" 
+                  formControlName="nextServiceDate">
+              </div>
+
+              <!-- Parts to Replace -->
+              <div class="col-12 mb-3">
+                <label for="partsReplaced" class="form-label">Parts to Replace</label>
+                <input 
+                  type="text" 
+                  id="partsReplaced" 
+                  class="form-control" 
+                  formControlName="partsReplaced"
+                  placeholder="List parts that need replacement...">
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              (click)="closeMaintenanceModal()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              [disabled]="!maintenanceForm.valid || isSaving">
+              <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1"></span>
+              {{ isEditMode ? 'Update' : 'Schedule' }} Maintenance
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Backdrop -->
+  <div 
+    *ngIf="showMaintenanceModal" 
+    class="modal-backdrop fade show"
+    (click)="closeMaintenanceModal()">
+  </div>
+</div>

@@ -1,0 +1,356 @@
+<div class="trucks-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1><i class="fas fa-truck"></i> Vehicle Management</h1>
+      <p class="subtitle">Manage and monitor your vehicles</p>
+    </div>
+    <div class="header-actions">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <!-- Export button without icon -->
+        <button mat-raised-button color="primary" [matMenuTriggerFor]="exportMenu">
+          Export
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item (click)="export('pdf')">PDF</button>
+          <button mat-menu-item (click)="export('excel')">Excel</button>
+        </mat-menu>
+        
+        <!-- Add New Truck button placed to the right of Export button -->
+        <button mat-raised-button color="accent" (click)="onAddTruck()">Add New Truck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleet Statistics Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon total">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ fleetStats.total }}</h3>
+            <p>Total Trucks</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon active">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ fleetStats.active }}</h3>
+            <p>Active Trucks</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon on-trip">
+            <i class="fas fa-route"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ fleetStats.onTrip }}</h3>
+            <p>On Trip</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon capacity">
+            <i class="fas fa-weight-hanging"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ fleetStats.totalCapacity }}T</h3>
+            <p>Total Capacity</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon revenue">
+            <i class="fas fa-rupee-sign"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ formatCurrency(fleetStats.monthlyRevenue) }}</h3>
+            <p>Monthly Revenue</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-content">
+          <div class="stat-icon efficiency">
+            <i class="fas fa-gas-pump"></i>
+          </div>
+          <div class="stat-details">
+            <h3>{{ fleetStats.averageEfficiency }} kmpl</h3>
+            <p>Avg. Fuel Efficiency</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-row">
+        <!-- Search Filter -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search trucks...</mat-label>
+          <input 
+            matInput 
+            [(ngModel)]="searchQuery" 
+            (keyup)="applySearchFilter()"
+            placeholder="Vehicle number, model, driver, or location">
+        </mat-form-field>
+
+        <!-- Status Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [(value)]="statusFilter" (selectionChange)="applyStatusFilter()">
+            <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Availability Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Availability</mat-label>
+          <mat-select [(value)]="availabilityFilter" (selectionChange)="applyAvailabilityFilter()">
+            <mat-option *ngFor="let option of availabilityOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Fuel Type Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Fuel Type</mat-label>
+          <mat-select [(value)]="fuelTypeFilter" (selectionChange)="applyFuelTypeFilter()">
+            <mat-option *ngFor="let option of fuelTypeOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Clear Filters -->
+        <button mat-stroked-button (click)="clearFilters()" class="clear-filters-btn">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Trucks Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="trucks-table">
+          
+          <!-- Vehicle Number Column -->
+          <ng-container matColumnDef="vehicleNumber">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Vehicle Details</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="vehicle-info">
+                <div class="vehicle-number">{{ truck.vehicleNumber }}</div>
+                <div class="vehicle-model">{{ truck.brand }} {{ truck.model }}</div>
+                <div class="vehicle-specs">
+                  <span class="year">{{ truck.year }}</span> •
+                  <span class="capacity">{{ truck.capacity }}T</span> •
+                  <span class="fuel-type">{{ truck.fuelType | titlecase }}</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Model Column -->
+          <ng-container matColumnDef="model">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Model & Specs</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="model-info">
+                <div class="model-name">{{ truck.model }}</div>
+                <div class="brand">{{ truck.brand }}</div>
+                <div class="efficiency">{{ truck.fuelEfficiency }} kmpl</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Driver Column -->
+          <ng-container matColumnDef="driver">
+            <th mat-header-cell *matHeaderCellDef>Driver</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="driver-info" *ngIf="truck.driverName; else noDriver">
+                <div class="driver-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="driver-details">
+                  <div class="driver-name">{{ truck.driverName }}</div>
+                  <div class="driver-id">ID: {{ truck.driverId }}</div>
+                </div>
+              </div>
+              <ng-template #noDriver>
+                <div class="no-driver">
+                  <i class="fas fa-user-slash"></i>
+                  <span>No Driver Assigned</span>
+                </div>
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="status-info">
+                <span class="status-badge" [class]="getStatusClass(truck.status)">
+                  {{ truck.status | titlecase }}
+                </span>
+                <span class="availability-badge" [class]="getAvailabilityClass(truck.availabilityStatus)">
+                  {{ truck.availabilityStatus | titlecase }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Location Column -->
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef>Current Location</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="location-info">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ truck.currentLocation || 'Unknown' }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Maintenance Column -->
+          <ng-container matColumnDef="maintenance">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Maintenance</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="maintenance-info">
+                <div class="maintenance-date">
+                  <span class="label">Next:</span>
+                  <span class="date" [class.due-soon]="isMaintenanceDue(truck)">
+                    {{ formatDate(truck.nextMaintenanceDate) }}
+                  </span>
+                </div>
+                <div class="documents-status" *ngIf="areDocumentsExpiring(truck)">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>Documents Expiring</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Trips Column -->
+          <ng-container matColumnDef="trips">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Performance</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="performance-info">
+                <div class="trips-count">
+                  <i class="fas fa-road"></i>
+                  <span>{{ truck.totalTrips }} trips</span>
+                </div>
+                <div class="kilometers">
+                  <i class="fas fa-tachometer-alt"></i>
+                  <span>{{ truck.totalKilometers.toLocaleString() }} km</span>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Revenue Column -->
+          <ng-container matColumnDef="revenue">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Monthly Revenue</th>
+            <td mat-cell *matCellDef="let truck">
+              <div class="revenue-info">
+                <span class="amount" [class.zero]="truck.monthlyRevenue === 0">
+                  {{ formatCurrency(truck.monthlyRevenue) }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let truck">
+              <button mat-icon-button [matMenuTriggerFor]="actionMenu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionMenu="matMenu">
+                <button mat-menu-item (click)="viewTruck(truck)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
+                </button>
+                <button mat-menu-item (click)="editTruck(truck)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit Truck</span>
+                </button>
+                <button mat-menu-item (click)="trackTruck(truck)" *ngIf="truck.availabilityStatus === 'on-trip'">
+                  <mat-icon>gps_fixed</mat-icon>
+                  <span>Track Location</span>
+                </button>
+                <button mat-menu-item (click)="assignDriver(truck)" *ngIf="!truck.driverId">
+                  <mat-icon>person_add</mat-icon>
+                  <span>Assign Driver</span>
+                </button>
+                <button mat-menu-item (click)="viewTripHistory(truck)">
+                  <mat-icon>history</mat-icon>
+                  <span>Trip History</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="scheduleMaintenance(truck)">
+                  <mat-icon>build</mat-icon>
+                  <span>Schedule Maintenance</span>
+                </button>
+                <button mat-menu-item (click)="deleteTruck(truck)" class="danger-action">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete Truck</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- No Data State -->
+        <div class="no-data" *ngIf="dataSource.data.length === 0">
+          <i class="fas fa-truck"></i>
+          <h3>No trucks found</h3>
+          <p>Try adjusting your search filters or add a new truck to the fleet.</p>
+        </div>
+      </div>
+
+      <!-- Paginator -->
+      <mat-paginator 
+        [pageSizeOptions]="[10, 25, 50, 100]" 
+        [pageSize]="25"
+        showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

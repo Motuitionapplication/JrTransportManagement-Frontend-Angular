@@ -1,0 +1,234 @@
+<div class="dashboard-root">
+  <div class="dashboard-header">
+    <div class="header-text">
+      <h2 class="mb-1">Driver Dashboard</h2>
+      <p class="subtitle mb-1">Stay up to date with your day at a glance.</p>
+      <p class="text-muted small mb-0" *ngIf="lastUpdated">
+        Updated {{ lastUpdated | date : "shortTime" }}
+      </p>
+      <p class="text-danger small mb-0" *ngIf="error">{{ error }}</p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-outline-primary"
+      (click)="refresh()"
+      [disabled]="loading"
+    >
+      <i class="fas fa-sync-alt me-1" [class.fa-spin]="loading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total earnings</div>
+      <div class="stat-value" *ngIf="!loading; else statSkeleton">
+        {{ formatCurrency(dashboardStats?.totalEarnings) }}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today earnings</div>
+      <div class="stat-value" *ngIf="!loading; else statSkeleton">
+        {{ formatCurrency(dashboardStats?.todayEarnings) }}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Trips today</div>
+      <div class="stat-value" *ngIf="!loading; else statSkeleton">
+        {{ dashboardStats?.tripsToday ?? "—" }}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active bookings</div>
+      <div class="stat-value" *ngIf="!loading; else statSkeleton">
+        {{ dashboardStats?.activeBookings ?? "—" }}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 content-row">
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">Performance overview</h5>
+          <small class="text-muted" *ngIf="chartData?.labels?.length"
+            >Last {{ chartData?.labels?.length }} intervals</small
+          >
+        </div>
+        <div class="card-body">
+          <ng-container *ngIf="!loading; else chartLoading">
+            <ng-container *ngIf="chartBars.length > 0; else chartEmpty">
+              <div
+                class="chart-placeholder"
+                role="img"
+                aria-label="Driver performance chart"
+              >
+                <svg viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet">
+                  <line x1="4" y1="55" x2="96" y2="55" class="chart-axis" />
+                  <ng-container *ngFor="let bar of chartBars; let i = index">
+                    <rect
+                      [attr.x]="6 + i * (88 / math.max(1, chartBars.length))"
+                      [attr.y]="55 - bar.heightPercent * 0.5"
+                      [attr.width]="88 / math.max(1, chartBars.length) - 4"
+                      [attr.height]="bar.heightPercent * 0.5"
+                      class="chart-bar"
+                    ></rect>
+                    <text
+                      [attr.x]="
+                        6 +
+                        i * (88 / math.max(1, chartBars.length)) +
+                        (88 / math.max(1, chartBars.length) - 4) / 2
+                      "
+                      y="58"
+                      class="chart-label"
+                    >
+                      {{ bar.label }}
+                    </text>
+                  </ng-container>
+                </svg>
+              </div>
+            </ng-container>
+          </ng-container>
+          <ng-template #chartLoading>
+            <div class="skeleton-block chart-skeleton"></div>
+          </ng-template>
+          <ng-template #chartEmpty>
+            <p class="text-muted small mb-0">No chart data available.</p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">Recent trips</h5>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            (click)="navigateToTrips()"
+          >
+            View all
+          </button>
+        </div>
+        <div class="card-body">
+          <ng-container *ngIf="!loading; else listLoading">
+            <ng-container *ngIf="recentTrips.length > 0; else tripsEmpty">
+              <ul class="list-unstyled mb-0">
+                <li
+                  *ngFor="let trip of recentTrips; trackBy: trackById"
+                  class="list-item"
+                >
+                  <div class="list-title">
+                    {{ trip.pickupLocation || "Trip" }} →
+                    {{ trip.dropLocation || "Destination" }}
+                  </div>
+                  <div class="list-meta">
+                    {{ formatDateTime(trip.scheduledAt) }} ·
+                    {{ trip.status || "Pending" }}
+                  </div>
+                </li>
+              </ul>
+            </ng-container>
+          </ng-container>
+          <ng-template #tripsEmpty>
+            <p class="text-muted small mb-0">No trips yet.</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="card">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <h5 class="mb-0">Active bookings</h5>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            (click)="navigateToBookings()"
+          >
+            Manage
+          </button>
+        </div>
+        <div class="card-body">
+          <ng-container *ngIf="!loading; else listLoading">
+            <ng-container *ngIf="activeBookings.length > 0; else bookingsEmpty">
+              <ul class="list-unstyled mb-0">
+                <li
+                  *ngFor="let booking of activeBookings; trackBy: trackById"
+                  class="list-item"
+                >
+                  <div class="list-title">
+                    {{ booking.customerName || "Booking" }}
+                  </div>
+                  <div class="list-meta">
+                    {{ formatDateTime(booking.pickupTime) }} ·
+                    {{ booking.status || "Scheduled" }}
+                  </div>
+                </li>
+              </ul>
+            </ng-container>
+          </ng-container>
+          <ng-template #bookingsEmpty>
+            <p class="text-muted small mb-0">No active bookings.</p>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Messages</h5>
+      <button
+        class="btn btn-sm btn-outline-primary"
+        (click)="navigateToMessages()"
+      >
+        Go to messages
+      </button>
+    </div>
+    <div class="card-body">
+      <ng-container *ngIf="!loading; else messageLoading">
+        <ng-container *ngIf="messageSummary.length > 0; else messagesEmpty">
+          <div
+            class="message-summary"
+            *ngFor="let message of messageSummary; trackBy: trackById"
+          >
+            <div class="message-title">
+              {{ message.subject || "Conversation" }}
+            </div>
+            <div class="message-meta">
+              <span
+                class="badge rounded-pill bg-danger"
+                *ngIf="message.unreadCount > 0"
+                >{{ message.unreadCount }} unread</span
+              >
+              <span class="text-muted small">{{
+                formatDateTime(message.lastMessageAt)
+              }}</span>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #messagesEmpty>
+        <p class="text-muted small mb-0">No unread conversations.</p>
+      </ng-template>
+    </div>
+  </div>
+
+  <ng-template #statSkeleton>
+    <div class="skeleton-block"></div>
+  </ng-template>
+
+  <ng-template #listLoading>
+    <div class="skeleton-block mb-2"></div>
+    <div class="skeleton-block mb-2"></div>
+    <div class="skeleton-block"></div>
+  </ng-template>
+
+  <ng-template #messageLoading>
+    <div class="skeleton-block mb-2"></div>
+    <div class="skeleton-block"></div>
+  </ng-template>
+</div>

@@ -1,0 +1,201 @@
+<div class="customer-dashboard">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p class="loading-text">Loading your dashboard...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="error-container">
+    <mat-icon color="warn" class="error-icon">error_outline</mat-icon>
+    <h3>Oops! Something went wrong</h3>
+    <p class="error-message">{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="refreshDashboard()" class="retry-btn">
+      <mat-icon>refresh</mat-icon>
+      Try Again
+    </button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading && !errorMessage" class="dashboard-content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="dashboard-title">
+            <span class="greeting">{{ getGreeting() }}</span>
+            <!-- Use the real customer name -->
+            <span *ngIf="customer?.profile?.firstName" class="customer-name">{{ customer?.profile?.firstName }}!</span>
+            <span *ngIf="!customer?.profile?.firstName" class="default-greeting">Welcome Back!</span>
+          </h1>
+          <p class="dashboard-subtitle">Your JR Transport Management Portal</p>
+          <div class="last-updated" *ngIf="lastUpdated">
+            <mat-icon>schedule</mat-icon>
+            <!-- Use formatDateTime for a more precise timestamp -->
+            <span>Last updated: {{ formatDateTime(lastUpdated) }}</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button mat-icon-button [disabled]="isRefreshing" (click)="refreshDashboard()" matTooltip="Refresh Dashboard"
+            class="refresh-btn">
+            <mat-icon [class.rotating]="isRefreshing">refresh</mat-icon>
+          </button>
+          <!-- This can be made dynamic later if notifications are fetched -->
+          <button mat-icon-button [disabled]="isRefreshing" (click)="notifications()" matTooltip="Notifications">
+            <mat-icon>notifications</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid (This section should work as is with real data) -->
+    <div class="stats-section">
+      <h2 class="section-title">Dashboard Overview</h2>
+      <div class="stats-grid">
+        <div class="stat-card" *ngFor="let stat of statsData; trackBy: trackStats" [class.clickable]="stat.clickable"
+          (click)="onStatCardClick(stat)">
+          <div class="stat-icon" [ngStyle]="{'background-color': getColor(stat.color || '')}">
+            <mat-icon fontSet="material-symbols-outlined" class="material-symbols-outlined">
+              {{ stat.icon }}
+            </mat-icon>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">{{ stat.value }}</h3>
+            <p class="stat-title">{{ stat.title }}</p>
+            <span class="stat-change" [ngClass]="stat.changeType">
+              {{ stat.change }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Row -->
+    <div class="dashboard-row">
+      <!-- Quick Actions Card (Simplified to one main action) -->
+      <mat-card class="actions-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>flash_on</mat-icon>
+            Quick Actions
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="actions-grid">
+            <button mat-stroked-button class="quick-action-btn" (click)="navigateToBooking('')"
+              matTooltip="Schedule a new trip">
+              <div class="action-content">
+                <mat-icon>add</mat-icon>
+                <span class="action-title">Book Transport</span>
+              </div>
+            </button>
+            <button mat-stroked-button class="quick-action-btn" (click)="viewAllBookings()"
+              matTooltip="View all your bookings">
+              <div class="action-content">
+                <mat-icon>list_alt</mat-icon>
+                <span class="action-title">My Bookings</span>
+              </div>
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Recent Activity Card -->
+      <mat-card class="activity-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>history</mat-icon>
+            Recent Activity
+          </mat-card-title>
+          <div class="header-actions">
+            <button mat-icon-button (click)="viewAllBookings()" matTooltip="View All Bookings">
+              <mat-icon>open_in_new</mat-icon>
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngIf="recentActivities.length === 0" class="empty-state">
+            <mat-icon>inbox</mat-icon>
+            <p>No recent activity</p>
+          </div>
+          <div class="activity-list" *ngIf="recentActivities.length > 0">
+            <!-- Iterate over the real recentActivities array -->
+            <div class="activity-item" *ngFor="let activity of recentActivities; trackBy: trackActivity"
+              (click)="navigateToBooking(activity.id)">
+              <div class="activity-icon" [ngClass]="'activity-' + activity.type">
+                <mat-icon>info</mat-icon>
+              </div>
+              <div class="activity-details">
+                <h4 class="activity-title">{{ activity.title }}</h4>
+                <p class="activity-description">{{ activity.subtitle }}</p>
+                <div class="activity-meta">
+                  <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
+                </div>
+              </div>
+              <div class="activity-actions">
+                <mat-icon class="activity-arrow">chevron_right</mat-icon>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Upcoming Bookings Section -->
+    <mat-card class="bookings-card" *ngIf="upcomingBookings.length > 0">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>event</mat-icon>
+          Upcoming Bookings
+          <span class="booking-count">({{ upcomingBookings.length }})</span>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="bookings-list">
+          <!-- Iterate over the real upcomingBookings array -->
+          <div class="booking-item" *ngFor="let booking of upcomingBookings; trackBy: trackBooking"
+            (click)="navigateToBooking(booking.id)">
+            <div class="booking-icon" [ngClass]="getStatusBadgeClass(booking.status)">
+              <mat-icon>schedule</mat-icon>
+            </div>
+            <div class="booking-details">
+              <!-- Use the real properties from the Booking model -->
+              <h4 class="booking-title">{{ booking.pickup.address.city }} → {{ booking.delivery.address.city }}</h4>
+              <p class="booking-date">
+                <mat-icon>schedule</mat-icon>
+                Departure: {{ formatDateTime(booking.pickup.scheduledDate) }}
+              </p>
+              <div class="booking-meta">
+                <span class="booking-status" [ngClass]="getStatusBadgeClass(booking.status)">
+                  <mat-icon>hourglass_empty</mat-icon>
+                  {{ booking.status | titlecase }}
+                </span>
+              </div>
+            </div>
+            <div class="booking-time">
+              <small>Booking #</small>
+              <strong>{{ booking.bookingNumber }}</strong>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Empty State for No Upcoming Bookings -->
+    <mat-card class="empty-bookings-card" *ngIf="upcomingBookings.length === 0 && !isLoading">
+      <mat-card-content class="empty-state-content">
+        <div class="empty-state">
+          <mat-icon class="large-icon">event_available</mat-icon>
+          <h3>No Upcoming Bookings</h3>
+          <p>You don't have any scheduled trips at the moment.</p>
+          <button mat-raised-button color="primary" (click)="navigateToBooking('')" class="cta-button">
+            <mat-icon>add</mat-icon>
+            Book Your Next Trip
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+</div>

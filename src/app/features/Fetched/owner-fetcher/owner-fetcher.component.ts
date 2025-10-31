@@ -544,7 +544,7 @@ export class OwnerFetcherComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.ownerService.createowner(result).subscribe({
+        this.ownerService.createOwner(result).subscribe({
           next: () => {
             this.showMessage('Owner added successfully!', false);
             this.fetchOwners();

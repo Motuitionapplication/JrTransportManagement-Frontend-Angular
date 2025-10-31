@@ -1,0 +1,345 @@
+<div
+  class="profile-shell profile-container profile-wrapper"
+  [class.loading]="loading"
+>
+  <form class="profile-card" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <header class="profile-header">
+      <!-- TODO: mobile polish: ensure buttons stack full-width and centered on ≤600px -->
+      <h1>My Profile</h1>
+      <div class="header-actions button-row">
+        <button
+          type="button"
+          class="ghost"
+          (click)="refresh()"
+          [disabled]="loading || saving || isCreatingProfile || editMode"
+        >
+          Refresh
+        </button>
+        <button
+          type="button"
+          class="ghost"
+          (click)="enterEdit()"
+          [disabled]="
+            loading || saving || isCreatingProfile || editMode || !driver
+          "
+        >
+          Edit
+        </button>
+        <button
+          type="submit"
+          class="primary"
+          [disabled]="
+            loading || saving || isCreatingProfile || !editMode || form.invalid
+          "
+        >
+          <span *ngIf="!saving">Save</span>
+          <span *ngIf="saving">Saving...</span>
+        </button>
+        <button
+          type="button"
+          class="ghost"
+          *ngIf="editMode"
+          (click)="cancelEdit()"
+          [disabled]="saving"
+        >
+          Cancel
+        </button>
+      </div>
+    </header>
+
+    <section *ngIf="serverError" class="alert error">{{ serverError }}</section>
+    <section *ngIf="successMessage" class="alert success">
+      {{ successMessage }}
+    </section>
+    <section *ngIf="profileAutoCreated" class="alert success">
+      We automatically created a minimal profile — please edit and save your
+      details.
+      <button type="button" class="ghost inline" (click)="focusFirstField()">
+        Edit Profile
+      </button>
+    </section>
+    <section *ngIf="uploadErrors.length" class="alert warning">
+      <div *ngFor="let message of uploadErrors">{{ message }}</div>
+    </section>
+
+    <ng-container *ngIf="driver; else noProfile">
+      <div class="profile-layout" [class.skeleton]="loading">
+        <aside class="profile-sidebar">
+          <div class="profile-avatar">
+            <div class="avatar avatar-wrapper" [class.skeleton-box]="loading">
+              <img
+                *ngIf="profilePhotoUrl"
+                [src]="profilePhotoUrl"
+                alt="Driver avatar"
+                class="avatar-image"
+              />
+              <span *ngIf="!profilePhotoUrl" class="avatar-circle"
+                >{{ form.value.firstName?.[0] || '?'
+                }}{{
+                  form.value.lastName?.[0] || ''
+                }}</span
+              >
+              <div class="avatar-spinner" *ngIf="uploadingAvatar"></div>
+            </div>
+            <label class="upload-btn">
+              <input
+                type="file"
+                accept="image/png, image/jpeg"
+                (change)="onAvatarFileSelected($event)"
+                [disabled]="uploadingAvatar || saving || loading"
+              />
+              Upload Avatar
+            </label>
+          </div>
+
+          <div class="info-group">
+            <h2>Contact</h2>
+            <div class="field">
+              <label for="firstName">First name</label>
+              <input
+                id="firstName"
+                type="text"
+                formControlName="firstName"
+                placeholder="First name"
+                name="given-name"
+                autocomplete="given-name"
+                autocapitalize="words"
+              />
+              <small *ngIf="hasError('firstName', 'required')"
+                >First name is required.</small
+              >
+              <small *ngIf="hasError('firstName', 'minlength')"
+                >Minimum 2 characters.</small
+              >
+            </div>
+            <div class="field">
+              <label for="lastName">Last name</label>
+              <input
+                id="lastName"
+                type="text"
+                formControlName="lastName"
+                placeholder="Last name"
+                name="family-name"
+                autocomplete="family-name"
+                autocapitalize="words"
+              />
+              <small *ngIf="hasError('lastName', 'required')"
+                >Last name is required.</small
+              >
+              <small *ngIf="hasError('lastName', 'minlength')"
+                >Minimum 2 characters.</small
+              >
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="Email address"
+                name="email"
+                autocomplete="email"
+                inputmode="email"
+              />
+              <small *ngIf="hasError('email', 'required')"
+                >Email is required.</small
+              >
+              <small *ngIf="hasError('email', 'email')"
+                >Enter a valid email address.</small
+              >
+            </div>
+            <div class="field">
+              <label for="phone">Phone number</label>
+              <input
+                id="phone"
+                type="tel"
+                formControlName="phoneNumber"
+                placeholder="Phone number"
+                name="tel"
+                autocomplete="tel"
+                inputmode="tel"
+              />
+              <small *ngIf="hasError('phoneNumber', 'required')"
+                >Phone number is required.</small
+              >
+              <small *ngIf="hasError('phoneNumber', 'pattern')"
+                >Use digits and optional + only.</small
+              >
+            </div>
+          </div>
+
+          <div class="info-group">
+            <h2>Documents</h2>
+            <label class="upload-btn secondary">
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                capture="environment"
+                (change)="onFileSelected($event, 'license')"
+              />
+              Upload License
+            </label>
+            <label class="upload-btn secondary">
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                (change)="onFileSelected($event, 'document')"
+              />
+              Upload Document
+            </label>
+          </div>
+        </aside>
+
+        <section class="profile-main">
+          <div class="card">
+            <h2>Address</h2>
+            <div class="grid">
+              <div class="field">
+                <label for="addressLine">Address</label>
+                <input
+                  id="addressLine"
+                  type="text"
+                  formControlName="addressLine"
+                  placeholder="Street and number"
+                  name="street-address"
+                  autocomplete="street-address"
+                  autocapitalize="words"
+                />
+              </div>
+              <div class="field">
+                <label for="city">City</label>
+                <input
+                  id="city"
+                  type="text"
+                  formControlName="city"
+                  placeholder="City"
+                  name="address-level2"
+                  autocomplete="address-level2"
+                  autocapitalize="words"
+                />
+              </div>
+              <div class="field">
+                <label for="postalCode">Postal code</label>
+                <input
+                  id="postalCode"
+                  type="text"
+                  formControlName="postalCode"
+                  placeholder="Postal code"
+                  name="postal-code"
+                  autocomplete="postal-code"
+                  inputmode="numeric"
+                />
+                <small *ngIf="hasError('postalCode', 'minLength')"
+                  >Minimum 4 characters.</small
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>License</h2>
+            <div class="grid">
+              <div class="field">
+                <label for="licenseNumber">License number</label>
+                <input
+                  id="licenseNumber"
+                  type="text"
+                  formControlName="licenseNumber"
+                  placeholder="License number"
+                />
+                <small *ngIf="hasError('licenseNumber', 'minLength')"
+                  >Minimum 4 characters when provided.</small
+                >
+              </div>
+              <div class="field">
+                <label for="licenseExpiry">License expiry</label>
+                <input
+                  id="licenseExpiry"
+                  type="date"
+                  formControlName="licenseExpiry"
+                />
+                <small *ngIf="hasError('licenseExpiry', 'invalidDate')"
+                  >Enter a valid date.</small
+                >
+                <small *ngIf="hasError('licenseExpiry', 'pastDate')"
+                  >Expiry date must be in the future.</small
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="card attachments">
+            <header>
+              <h2>Attachments</h2>
+              <label class="upload-btn inline">
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  (change)="onFileSelected($event, 'document')"
+                />
+                Add File
+              </label>
+            </header>
+
+            <p class="empty" *ngIf="!attachments.length">
+              No files uploaded yet.
+            </p>
+            <ul *ngIf="attachments.length">
+              <li
+                *ngFor="
+                  let attachment of attachments.controls;
+                  let i = index;
+                  trackBy: trackAttachment
+                "
+              >
+                <div>
+                  <p class="name">
+                    {{ attachment.value.name || "Untitled document" }}
+                  </p>
+                  <a
+                    *ngIf="attachment.value.url"
+                    [href]="attachment.value.url"
+                    target="_blank"
+                    rel="noopener"
+                    >View</a
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="ghost small"
+                  (click)="removeAttachment(i)"
+                >
+                  Remove
+                </button>
+              </li>
+            </ul>
+            <small class="hint"
+              >Accepted formats: JPG, PNG, WEBP, PDF up to 5MB.</small
+            >
+          </div>
+        </section>
+      </div>
+    </ng-container>
+
+    <ng-template #noProfile>
+      <div class="empty-state">
+        <h2 *ngIf="!isCreatingProfile">No profile found</h2>
+        <h2 *ngIf="isCreatingProfile">Creating your profile...</h2>
+        <p *ngIf="isCreatingProfile">
+          Please wait while we prepare your driver profile automatically.
+        </p>
+        <p *ngIf="!isCreatingProfile">
+          We could not find your profile record yet. Refresh to try again.
+        </p>
+        <button
+          type="button"
+          class="primary"
+          (click)="refresh()"
+          [disabled]="isCreatingProfile"
+        >
+          Try Again
+        </button>
+      </div>
+    </ng-template>
+  </form>
+</div>

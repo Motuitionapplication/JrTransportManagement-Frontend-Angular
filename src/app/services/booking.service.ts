@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, catchError, tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { EnvironmentService } from 'src/app/core/services/environment.service';
 import { Booking, BookingDemand, VehicleAvailability, StatusUpdate } from '../models/booking.model';
 
 @Injectable({
@@ -17,6 +19,23 @@ export class BookingService {
   public availability$ = this.availabilitySubject.asObservable();
 
   constructor() {}
+
+  // Optional HTTP API base - used when backend is available
+  private apiUrl?: string;
+
+  // allow injecting HttpClient + EnvironmentService without breaking existing usage
+  // (Angular will inject when available)
+  setHttp(http: HttpClient | null, env?: EnvironmentService | null) {
+    if (http && env) {
+      this.apiUrl = `${env.getApiUrl()}/transport/bookings`;
+      // store the http client for remote calls
+      (this as any)._http = http;
+    }
+  }
+
+  private get http(): HttpClient | null {
+    return (this as any)._http || null;
+  }
 
   // Booking CRUD operations
   createBooking(bookingData: Omit<Booking, 'id' | 'bookingNumber' | 'createdAt' | 'updatedAt'>): Observable<Booking> {
@@ -37,6 +56,34 @@ export class BookingService {
   getBookingById(bookingId: string): Observable<Booking | null> {
     const booking = this.bookingsSubject.value.find(b => b.id === bookingId);
     return of(booking || null);
+  }
+
+  /**
+   * Try to fetch bookings from backend with simple pagination and filters.
+   * Falls back to local in-memory store if HTTP is unavailable.
+   */
+  fetchBookings(options?: { page?: number; size?: number; status?: string; q?: string; startDate?: Date | null; endDate?: Date | null; }): Observable<{ items: Booking[]; total: number }> {
+    if (!this.http || !this.apiUrl) {
+      const items = this.bookingsSubject.value;
+      return of({ items, total: items.length });
+    }
+
+    let params = new HttpParams();
+    if (options?.page != null) params = params.set('page', String(options.page));
+    if (options?.size != null) params = params.set('size', String(options.size));
+    if (options?.status) params = params.set('status', options.status);
+    if (options?.q) params = params.set('q', options.q);
+    if (options?.startDate) params = params.set('startDate', new Date(options.startDate).toISOString());
+    if (options?.endDate) params = params.set('endDate', new Date(options.endDate).toISOString());
+
+    return this.http.get<{ items: Booking[]; total: number }>(this.apiUrl, { params }).pipe(
+      catchError(() => of({ items: this.bookingsSubject.value, total: this.bookingsSubject.value.length }))
+    );
+  }
+
+  getBookingByIdRemote(bookingId: string): Observable<Booking | null> {
+    if (!this.http || !this.apiUrl) return this.getBookingById(bookingId);
+    return this.http.get<Booking>(`${this.apiUrl}/${bookingId}`).pipe(catchError(() => of(null)));
   }
 
   getBookingsByCustomer(customerId: string): Observable<Booking[]> {
@@ -106,6 +153,23 @@ export class BookingService {
     return of(true);
   }
 
+  assignVehicleToBookingRemote(bookingId: string, vehicleId: string, ownerId: string, driverId?: string): Observable<boolean> {
+    if (!this.http || !this.apiUrl) return this.assignVehicleToBooking(bookingId, vehicleId, ownerId, driverId);
+    const body = { vehicleId, ownerId, driverId };
+    return this.http.patch<any>(`${this.apiUrl}/${bookingId}/assign`, body).pipe(
+      tap((updated: any) => {
+        // update local cache if returned
+        if (updated && updated.id) {
+          const current = this.bookingsSubject.value;
+          const idx = current.findIndex(b => b.id === updated.id);
+          if (idx > -1) { current[idx] = { ...current[idx], ...updated }; this.bookingsSubject.next([...current]); }
+        }
+      }),
+      map(() => true),
+      catchError(() => of(false))
+    );
+  }
+
   // Payment processing
   processPayment(bookingId: string, paymentData: {
     method: string;
@@ -166,32 +230,48 @@ export class BookingService {
 
   // Cancellation
   cancelBooking(bookingId: string, reason: string, cancelledBy: string): Observable<boolean> {
-    const booking = this.bookingsSubject.value.find(b => b.id === bookingId);
-    if (!booking) return of(false);
+    // Keep existing local behavior, but prefer remote API when available
+    if (!this.http || !this.apiUrl) {
+      const booking = this.bookingsSubject.value.find(b => b.id === bookingId);
+      if (!booking) return of(false);
 
-    // Calculate cancellation fee and refund amount
-    const cancellationFee = this.calculateCancellationFee(booking);
-    const refundAmount = booking.payment.paidAmount - cancellationFee;
+      // Calculate cancellation fee and refund amount
+      const cancellationFee = this.calculateCancellationFee(booking);
+      const refundAmount = booking.payment.paidAmount - cancellationFee;
 
-    const updatedBooking = {
-      ...booking,
-      status: 'cancelled' as Booking['status'],
-      cancellation: {
-        reason,
-        cancelledBy: cancelledBy as any,
-        cancellationFee,
-        refundAmount,
-        cancelledAt: new Date()
-      },
-      updatedAt: new Date()
-    };
+      const updatedBooking = {
+        ...booking,
+        status: 'cancelled' as Booking['status'],
+        cancellation: {
+          reason,
+          cancelledBy: cancelledBy as any,
+          cancellationFee,
+          refundAmount,
+          cancelledAt: new Date()
+        },
+        updatedAt: new Date()
+      };
 
-    const currentBookings = this.bookingsSubject.value;
-    const bookingIndex = currentBookings.findIndex(b => b.id === bookingId);
-    currentBookings[bookingIndex] = updatedBooking;
-    this.bookingsSubject.next([...currentBookings]);
+      const currentBookings = this.bookingsSubject.value;
+      const bookingIndex = currentBookings.findIndex(b => b.id === bookingId);
+      currentBookings[bookingIndex] = updatedBooking;
+      this.bookingsSubject.next([...currentBookings]);
 
-    return of(true);
+      return of(true);
+    }
+
+    // Remote cancel
+    return this.http.patch<any>(`${this.apiUrl}/${bookingId}/cancel`, { reason, cancelledBy }).pipe(
+      tap((updated) => {
+        if (updated && updated.id) {
+          const current = this.bookingsSubject.value;
+          const idx = current.findIndex(b => b.id === updated.id);
+          if (idx > -1) { current[idx] = { ...current[idx], ...updated }; this.bookingsSubject.next([...current]); }
+        }
+      }),
+      map(() => true),
+      catchError((_) => of(false))
+    );
   }
 
   // Demand and availability matching

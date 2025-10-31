@@ -1,0 +1,529 @@
+<div class="notifications-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="page-title">
+          <i class="fas fa-bell me-2"></i>
+          Notifications
+        </h2>
+        <p class="page-subtitle">Stay updated with your booking and account activities</p>
+      </div>
+      <div class="col-md-4 text-end">
+        <div class="header-actions">
+          <button class="btn btn-outline-light me-2" (click)="refreshNotifications()" [disabled]="isLoading">
+            <i class="fas fa-sync-alt me-2" [class.fa-spin]="isLoading"></i>
+            Refresh
+          </button>
+          <button class="btn btn-outline-light me-2" (click)="exportNotifications()" [disabled]="notifications.length === 0">
+            <i class="fas fa-download me-2"></i>
+            Export
+          </button>
+          <button class="btn btn-outline-light me-2" (click)="markAllAsRead()" [disabled]="unreadCount === 0 || isBulkUpdating">
+            <span *ngIf="!isBulkUpdating">
+              <i class="fas fa-check-double me-2"></i>
+              Mark All Read
+            </span>
+            <span *ngIf="isBulkUpdating">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Processing...
+            </span>
+          </button>
+          <button class="btn btn-outline-light" (click)="openNotificationSettings()">
+            <i class="fas fa-cog me-2"></i>
+            Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Stats -->
+  <div class="notification-stats">
+    <div class="row">
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-primary">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ totalNotifications }}</h4>
+            <p>Total Notifications</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-warning">
+            <i class="fas fa-envelope-open"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ unreadCount }}</h4>
+            <p>Unread</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-info">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ todayCount }}</h4>
+            <p>Today</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-icon bg-success">
+            <i class="fas fa-calendar-week"></i>
+          </div>
+          <div class="stat-content">
+            <h4>{{ weekCount }}</h4>
+            <p>This Week</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Display -->
+  <div class="alert alert-danger" *ngIf="error" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="error = null"></button>
+  </div>
+
+  <!-- Filters and Actions -->
+  <div class="notification-filters">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="filter-controls">
+          <!-- Search Input -->
+          <div class="filter-group search-group">
+            <label class="filter-label">Search:</label>
+            <div class="input-group">
+              <input 
+                type="text" 
+                class="form-control" 
+                placeholder="Search notifications..." 
+                [(ngModel)]="searchQuery"
+                (input)="applyFilters()"
+              >
+              <button class="btn btn-outline-secondary" type="button" (click)="searchQuery = ''; applyFilters()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Status:</label>
+            <select class="form-select" [(ngModel)]="statusFilter" (change)="applyFilters()">
+              <option value="all">All Notifications</option>
+              <option value="unread">Unread Only</option>
+              <option value="read">Read Only</option>
+              <option value="important">Important</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Category:</label>
+            <select class="form-select" [(ngModel)]="categoryFilter" (change)="applyFilters()">
+              <option value="all">All Categories</option>
+              <option value="booking">Booking Updates</option>
+              <option value="payment">Payment Alerts</option>
+              <option value="system">System Messages</option>
+              <option value="promotion">Promotions</option>
+              <option value="support">Support</option>
+              <option value="security">Security</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Priority:</label>
+            <select class="form-select" [(ngModel)]="selectedPriority" (change)="applyFilters()">
+              <option value="all">All Priorities</option>
+              <option value="high">High Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="low">Low Priority</option>
+              <option value="normal">Normal</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-end">
+        <div class="bulk-actions" *ngIf="selectedNotifications.length > 0">
+          <span class="selected-count">{{ selectedNotifications.length }} selected</span>
+          <div class="btn-group ms-2">
+            <button class="btn btn-sm btn-outline-primary" (click)="markSelectedAsRead()" [disabled]="isBulkUpdating">
+              <span *ngIf="!isBulkUpdating">
+                <i class="fas fa-check me-1"></i>Mark Read
+              </span>
+              <span *ngIf="isBulkUpdating">
+                <span class="spinner-border spinner-border-sm me-1"></span>Processing...
+              </span>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteSelected()" [disabled]="isBulkUpdating">
+              <i class="fas fa-trash me-1"></i>Delete
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="selectedNotifications = []">
+              <i class="fas fa-times me-1"></i>Clear Selection
+            </button>
+          </div>
+        </div>
+        <div class="view-toggle" *ngIf="selectedNotifications.length === 0">
+          <div class="btn-group">
+            <button 
+              class="btn btn-outline-secondary btn-sm" 
+              [class.active]="viewMode === 'list'"
+              (click)="setViewMode('list')"
+            >
+              <i class="fas fa-list"></i>
+            </button>
+            <button 
+              class="btn btn-outline-secondary btn-sm" 
+              [class.active]="viewMode === 'grid'"
+              (click)="setViewMode('grid')"
+            >
+              <i class="fas fa-th"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications List -->
+  <div class="notifications-content">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading && notifications.length === 0">
+      <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="mt-3">Loading notifications...</h5>
+        <p class="text-muted">Please wait while we fetch your latest notifications.</p>
+      </div>
+    </div>
+
+    <div class="notifications-list" [class.grid-view]="viewMode === 'grid'" *ngIf="!isLoading && filteredNotifications.length > 0; else noNotifications">
+      <div class="notification-item" 
+           *ngFor="let notification of filteredNotifications; trackBy: trackByNotificationId"
+           [class.unread]="!notification.isRead"
+           [class.selected]="isSelected(notification.id)"
+           (click)="toggleSelection(notification.id, $event)">
+        
+        <div class="notification-checkbox" *ngIf="bulkSelectionMode">
+          <input 
+            type="checkbox" 
+            [checked]="isSelected(notification.id)"
+            (change)="toggleSelection(notification.id, $event)"
+            (click)="$event.stopPropagation()"
+          >
+        </div>
+
+        <div class="notification-icon">
+          <div class="icon-wrapper" [ngClass]="getNotificationTypeClass(notification.type)">
+            <i [class]="getNotificationIcon(notification.type)"></i>
+          </div>
+          <div class="priority-indicator" [ngClass]="getPriorityClass(notification.priority)"></div>
+        </div>
+
+        <div class="notification-content">
+          <div class="notification-header">
+            <h6 class="notification-title">{{ notification.title }}</h6>
+            <div class="notification-meta">
+              <span class="notification-time">{{ getTimeAgo(notification.createdAt) }}</span>
+              <span class="notification-type-badge" [ngClass]="getTypeClass(notification.type)">
+                {{ notification.type | titlecase }}
+              </span>
+            </div>
+          </div>
+          <p class="notification-message">{{ notification.message }}</p>
+          <div class="notification-details" *ngIf="notification.details">
+            <div class="detail-item" *ngFor="let detail of notification.details">
+              <strong>{{ detail.label }}:</strong> {{ detail.value }}
+            </div>
+          </div>
+          <div class="notification-actions" *ngIf="notification.actions?.length">
+            <button 
+              class="btn btn-sm" 
+              *ngFor="let action of notification.actions"
+              [ngClass]="getActionButtonClass(action.type)"
+              (click)="handleNotificationAction(notification, action); $event.stopPropagation()"
+            >
+              <i [class]="action.icon" *ngIf="action.icon"></i>
+              {{ action.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="notification-controls">
+          <div class="control-buttons">
+            <button 
+              class="btn btn-sm btn-link" 
+              (click)="toggleRead(notification); $event.stopPropagation()"
+              [title]="notification.isRead ? 'Mark as unread' : 'Mark as read'"
+            >
+              <i [class]="notification.isRead ? 'fas fa-envelope' : 'fas fa-envelope-open'"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-link text-danger" 
+              (click)="deleteNotification(notification.id); $event.stopPropagation()"
+              title="Delete notification"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+            <button 
+              class="btn btn-sm btn-link" 
+              (click)="toggleExpanded(notification.id); $event.stopPropagation()"
+              *ngIf="notification.hasDetails"
+            >
+              <i [class]="isExpanded(notification.id) ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="read-indicator" *ngIf="!notification.isRead"></div>
+        </div>
+
+        <!-- Expanded Details -->
+        <div class="notification-expanded" *ngIf="isExpanded(notification.id) && notification.expandedContent">
+          <div class="expanded-content">
+            <div [innerHTML]="notification.expandedContent"></div>
+            <div class="expanded-actions" *ngIf="notification.relatedLinks?.length">
+              <h6>Related Links:</h6>
+              <div class="related-links">
+                <a 
+                  *ngFor="let link of notification.relatedLinks"
+                  [href]="link.url"
+                  class="btn btn-sm btn-outline-primary me-2 mb-2"
+                  target="_blank"
+                >
+                  <i [class]="link.icon" *ngIf="link.icon"></i>
+                  {{ link.label }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Notifications State -->
+    <ng-template #noNotifications>
+      <div class="empty-state" *ngIf="!isLoading">
+        <div class="empty-icon">
+          <i class="fas fa-bell-slash"></i>
+        </div>
+        <h4>No notifications found</h4>
+        <p *ngIf="statusFilter === 'all' && categoryFilter === 'all' && !searchQuery">You have no notifications yet.</p>
+        <p *ngIf="statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery">No notifications match your current filters.</p>
+        <div class="empty-actions" *ngIf="statusFilter !== 'all' || categoryFilter !== 'all' || searchQuery">
+          <button class="btn btn-outline-primary" (click)="clearFilters()">
+            <i class="fas fa-times me-2"></i>Clear Filters
+          </button>
+        </div>
+        <div class="empty-actions" *ngIf="statusFilter === 'all' && categoryFilter === 'all' && !searchQuery">
+          <button class="btn btn-outline-primary" (click)="refreshNotifications()">
+            <i class="fas fa-sync-alt me-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Load More -->
+    <div class="load-more" *ngIf="hasMoreNotifications && filteredNotifications.length > 0">
+      <button class="btn btn-outline-primary" (click)="loadMoreNotifications()" [disabled]="isLoadingMore">
+        <span *ngIf="!isLoadingMore">
+          <i class="fas fa-plus me-2"></i>Load More Notifications
+        </span>
+        <span *ngIf="isLoadingMore">
+          <span class="spinner-border spinner-border-sm me-2"></span>Loading...
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Settings Modal -->
+  <div class="modal fade" [class.show]="showSettingsModal" [style.display]="showSettingsModal ? 'block' : 'none'">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Notification Settings</h5>
+          <button type="button" class="btn-close" (click)="closeSettingsModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="notificationSettingsForm" (ngSubmit)="saveNotificationSettings()">
+            <div class="settings-section">
+              <h6>Email Notifications</h6>
+              <div class="notification-options">
+                <div class="form-check" *ngFor="let option of emailNotificationOptions">
+                  <input 
+                    type="checkbox" 
+                    [id]="'email-' + option.key"
+                    class="form-check-input" 
+                    [formControlName]="'email_' + option.key"
+                  >
+                  <label class="form-check-label" [for]="'email-' + option.key">
+                    <div class="option-content">
+                      <strong>{{ option.label }}</strong>
+                      <small class="d-block text-muted">{{ option.description }}</small>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h6>Push Notifications</h6>
+              <div class="notification-options">
+                <div class="form-check" *ngFor="let option of pushNotificationOptions">
+                  <input 
+                    type="checkbox" 
+                    [id]="'push-' + option.key"
+                    class="form-check-input" 
+                    [formControlName]="'push_' + option.key"
+                  >
+                  <label class="form-check-label" [for]="'push-' + option.key">
+                    <div class="option-content">
+                      <strong>{{ option.label }}</strong>
+                      <small class="d-block text-muted">{{ option.description }}</small>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h6>SMS Notifications</h6>
+              <div class="notification-options">
+                <div class="form-check" *ngFor="let option of smsNotificationOptions">
+                  <input 
+                    type="checkbox" 
+                    [id]="'sms-' + option.key"
+                    class="form-check-input" 
+                    [formControlName]="'sms_' + option.key"
+                  >
+                  <label class="form-check-label" [for]="'sms-' + option.key">
+                    <div class="option-content">
+                      <strong>{{ option.label }}</strong>
+                      <small class="d-block text-muted">{{ option.description }}</small>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h6>Frequency Settings</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="digestFrequency" class="form-label">Digest Frequency</label>
+                    <select id="digestFrequency" class="form-select" formControlName="digestFrequency">
+                      <option value="immediate">Immediate</option>
+                      <option value="hourly">Hourly</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="never">Never</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="quietHours" class="form-label">Quiet Hours</label>
+                    <select id="quietHours" class="form-select" formControlName="quietHours">
+                      <option value="none">None</option>
+                      <option value="evening">Evening (6 PM - 9 AM)</option>
+                      <option value="night">Night (10 PM - 7 AM)</option>
+                      <option value="weekend">Weekends</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h6>Auto-Delete Settings</h6>
+              <div class="form-group">
+                <label for="autoDeleteAfter" class="form-label">Auto-delete read notifications after:</label>
+                <select id="autoDeleteAfter" class="form-select" formControlName="autoDeleteAfter">
+                  <option value="never">Never</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="60">60 days</option>
+                  <option value="90">90 days</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeSettingsModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="saveNotificationSettings()" [disabled]="isSaving">
+            <span *ngIf="!isSaving">
+              <i class="fas fa-save me-2"></i>Save Settings
+            </span>
+            <span *ngIf="isSaving">
+              <span class="spinner-border spinner-border-sm me-2"></span>Saving...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions Modal -->
+  <div class="modal fade" [class.show]="showBulkActionModal" [style.display]="showBulkActionModal ? 'block' : 'none'">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Bulk Action</h5>
+          <button type="button" class="btn-close" (click)="closeBulkActionModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="bulk-action-content">
+            <div class="action-icon">
+              <i [class]="bulkActionConfig.icon"></i>
+            </div>
+            <h6>{{ bulkActionConfig.title }}</h6>
+            <p>{{ bulkActionConfig.message }}</p>
+            <div class="selected-items">
+              <strong>Selected notifications: {{ selectedNotifications.length }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeBulkActionModal()">Cancel</button>
+          <button 
+            type="button" 
+            class="btn" 
+            [ngClass]="bulkActionConfig.buttonClass"
+            (click)="confirmBulkAction()" 
+            [disabled]="isPerformingBulkAction"
+          >
+            <span *ngIf="!isPerformingBulkAction">
+              <i [class]="bulkActionConfig.icon + ' me-2'"></i>{{ bulkActionConfig.confirmText }}
+            </span>
+            <span *ngIf="isPerformingBulkAction">
+              <span class="spinner-border spinner-border-sm me-2"></span>Processing...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="showSettingsModal || showBulkActionModal" *ngIf="showSettingsModal || showBulkActionModal"></div>
+
+  <!-- Floating Action Button -->
+  <div class="floating-actions" *ngIf="selectedNotifications.length === 0">
+    <button 
+      class="fab-button" 
+      (click)="toggleBulkSelectionMode()"
+      [class.active]="bulkSelectionMode"
+      title="Select multiple notifications"
+    >
+      <i [class]="bulkSelectionMode ? 'fas fa-times' : 'fas fa-check-square'"></i>
+    </button>
+  </div>
+</div>

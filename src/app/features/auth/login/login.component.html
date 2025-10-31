@@ -1,158 +1,148 @@
 <div class="d-flex justify-content-center align-items-center vh-100">
-  <div class="container-fluid">
-    <!-- your card content -->
-  <!-- </div>
-</div> -->
-
-
-<!-- Beautiful Bootstrap Modal Login Dialog -->
-<!-- <div class="container-fluid">
-  <div class="row justify-content-center"> -->
-    <div class="col-12">
-      <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-        <!-- Header Section with Bootstrap -->
-        <div class="card-header bg-gradient text-white text-center position-relative p-2" style="background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;">
-          <button type="button" 
-                  class="btn-close btn-close-white position-absolute top-0 end-0 m-2" 
-                  (click)="onCancel()" 
-                  aria-label="Close"></button>
-          
-          <div class="d-flex flex-column align-items-center">
-            <div class="mb-1">
-              <i class="fas fa-truck fa-lg text-white"></i>
-            </div>
-            <h5 class="fw-bold mb-0">Welcome Back</h5>
-            <p class="mb-0 opacity-75" style="font-size: 0.75rem;">Sign in to JR Transport Management</p>
+  <div class="col-12" style="max-width: 400px;">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+      <!-- Header Section with Bootstrap -->
+      <div class="card-header bg-gradient text-white text-center position-relative p-2" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 50%, #0d47a1 100%) !important;">
+        <button type="button" 
+                class="btn-close btn-close-white position-absolute top-0 end-0 m-2" 
+                (click)="onCancel()" 
+                aria-label="Close"></button>
+        
+        <div class="d-flex flex-column align-items-center">
+          <div class="mb-1">
+            <i class="fas fa-truck fa-lg text-white"></i>
           </div>
+          <h5 class="fw-bold mb-0">Welcome Back</h5>
+          <p class="mb-0 opacity-75" style="font-size: 0.75rem;">Sign in to JR Transport Management</p>
         </div>
+      </div>
 
-        <!-- Form Section with Bootstrap -->
-        <div class="card-body p-3">
-          <form id="loginForm" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
-            
-            <!-- Error Alert -->
-            <div class="alert alert-danger d-flex align-items-center" 
-                 *ngIf="errorMessage" 
-                 role="alert">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              <div>{{ errorMessage }}</div>
+      <!-- Form Section with Bootstrap -->
+      <div class="card-body p-3">
+        <form id="loginForm" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+          
+          <!-- Error Alert -->
+          <div class="alert alert-danger d-flex align-items-center" 
+               *ngIf="errorMessage" 
+               role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>{{ errorMessage }}</div>
+          </div>
+
+          <!-- Username Field with Bootstrap -->
+          <div class="mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-user text-muted"></i>
+              </span>
+              <input type="text" 
+                     class="form-control border-start-0 ps-0"
+                     id="username"
+                     formControlName="username"
+                     placeholder="Username"
+                     autocomplete="username"
+                     [class.is-invalid]="isFieldInvalid('username')"
+                     [class.is-valid]="loginForm.get('username')?.valid && loginForm.get('username')?.touched">
             </div>
-
-            <!-- Username Field with Bootstrap -->
-            <div class="mb-2">
-              <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="fas fa-user text-muted"></i>
-                </span>
-                <input type="text" 
-                       class="form-control border-start-0 ps-0"
-                       id="username"
-                       formControlName="username"
-                       placeholder="Username"
-                       autocomplete="username"
-                       [class.is-invalid]="isFieldInvalid('username')"
-                       [class.is-valid]="loginForm.get('username')?.valid && loginForm.get('username')?.touched">
-              </div>
-              <div class="invalid-feedback" *ngIf="isFieldInvalid('username')">
-                {{ getFieldError('username') }}
-              </div>
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('username')">
+              {{ getFieldError('username') }}
             </div>
+          </div>
 
-            <!-- Password Field with Bootstrap -->
-            <div class="mb-2">
-              <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="fas fa-lock text-muted"></i>
-                </span>
-                <input [type]="hidePassword ? 'password' : 'text'"
-                       class="form-control border-start-0 border-end-0 ps-0"
-                       id="password"
-                       formControlName="password"
-                       placeholder="Password"
-                       autocomplete="current-password"
-                       [class.is-invalid]="isFieldInvalid('password')"
-                       [class.is-valid]="loginForm.get('password')?.valid && loginForm.get('password')?.touched">
-                <button class="btn btn-outline-secondary border-start-0" 
-                        type="button" 
-                        (click)="hidePassword = !hidePassword">
-                  <i class="fas" [class.fa-eye]="hidePassword" [class.fa-eye-slash]="!hidePassword"></i>
-                </button>
-              </div>
-              <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
-                {{ getFieldError('password') }}
-              </div>
-            </div>
-
-            <!-- Remember Me & Forgot Password -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="rememberMe">
-                <label class="form-check-label" for="rememberMe">
-                  Remember me
-                </label>
-              </div>
-              <button type="button" class="btn btn-link text-decoration-none p-0">
-                Forgot Password?
+          <!-- Password Field with Bootstrap -->
+          <div class="mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0">
+                <i class="fas fa-lock text-muted"></i>
+              </span>
+              <input [type]="hidePassword ? 'password' : 'text'"
+                     class="form-control border-start-0 border-end-0 ps-0"
+                     id="password"
+                     formControlName="password"
+                     placeholder="Password"
+                     autocomplete="current-password"
+                     [class.is-invalid]="isFieldInvalid('password')"
+                     [class.is-valid]="loginForm.get('password')?.valid && loginForm.get('password')?.touched">
+              <button class="btn btn-outline-secondary border-start-0" 
+                      type="button" 
+                      (click)="hidePassword = !hidePassword">
+                <i class="fas" [class.fa-eye]="hidePassword" [class.fa-eye-slash]="!hidePassword"></i>
               </button>
             </div>
-
-            <!-- Submit Button with Bootstrap - Moved from middle to footer -->
-            <!-- <button moved to footer> -->
-
-            <!-- Divider -->
-            <div class="d-flex align-items-center my-3">
-              <hr class="flex-grow-1">
-              <span class="px-3 text-muted small">Need help?</span>
-              <hr class="flex-grow-1">
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
+              {{ getFieldError('password') }}
             </div>
+          </div>
 
-            <!-- Quick Actions for Development -->
-            <div *ngIf="errorMessage && errorMessage.includes('admin account')" 
-                 class="card bg-light border-0 p-3">
-              <h6 class="card-title d-flex align-items-center mb-3">
-                <i class="fas fa-tools me-2 text-warning"></i>
-                Development Setup
-              </h6>
-              <div class="d-grid gap-2">
-                <button type="button" 
-                        class="btn btn-outline-warning btn-sm"
-                        (click)="createAdminAccount()" 
-                        [disabled]="isLoading">
-                  <i class="fas fa-user-shield me-2"></i>Create Admin Account
-                </button>
-                <button type="button" 
-                        class="btn btn-outline-info btn-sm"
-                        (click)="loginAsAdmin()" 
-                        [disabled]="isLoading">
-                  <i class="fas fa-bolt me-2"></i>Quick Demo Login
-                </button>
-              </div>
+          <!-- Remember Me & Forgot Password -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">
+                Remember me
+              </label>
             </div>
-
-          </form>
-        </div>
-
-        <!-- Footer Section with Bootstrap - Now contains Sign In button -->
-        <div class="card-footer bg-light text-center border-0 py-3">
-          <button type="submit" 
-                  form="loginForm"
-                  class="btn btn-primary btn-lg px-5 py-2 rounded-pill fw-semibold"
-                  [disabled]="!loginForm.valid || isLoading">
-            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
-            {{ isLoading ? 'Signing In...' : 'Sign In' }}
-          </button>
-          
-          <!-- Switch to Signup link -->
-          <div class="mt-3 pt-3 border-top">
-            <p class="text-muted mb-2">Don't have an account?</p>
-            <button type="button" 
-                    class="btn btn-outline-primary btn-sm"
-                    (click)="switchToSignup()">
-              <i class="fas fa-user-plus me-2"></i>
-              Create Account
+            <button type="button" class="btn btn-link text-decoration-none p-0">
+              Forgot Password?
             </button>
           </div>
+
+          <!-- Submit Button with Bootstrap - Moved from middle to footer -->
+          <!-- <button moved to footer> -->
+
+          <!-- Divider -->
+          <div class="d-flex align-items-center my-3">
+            <hr class="flex-grow-1">
+            <span class="px-3 text-muted small">Need help?</span>
+            <hr class="flex-grow-1">
+          </div>
+
+          <!-- Quick Actions for Development -->
+          <div *ngIf="errorMessage && errorMessage.includes('admin account')" 
+               class="card bg-light border-0 p-3">
+            <h6 class="card-title d-flex align-items-center mb-3">
+              <i class="fas fa-tools me-2 text-warning"></i>
+              Development Setup
+            </h6>
+            <div class="d-grid gap-2">
+              <button type="button" 
+                      class="btn btn-outline-warning btn-sm"
+                      (click)="createAdminAccount()" 
+                      [disabled]="isLoading">
+                <i class="fas fa-user-shield me-2"></i>Create Admin Account
+              </button>
+              <button type="button" 
+                      class="btn btn-outline-info btn-sm"
+                      (click)="loginAsAdmin()" 
+                      [disabled]="isLoading">
+                <i class="fas fa-bolt me-2"></i>Quick Demo Login
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Footer Section with Bootstrap - Now contains Sign In button -->
+      <div class="card-footer bg-light text-center border-0 py-3">
+        <button type="submit" 
+                form="loginForm"
+                class="btn btn-primary btn-lg px-5 py-2 rounded-pill fw-semibold"
+                [disabled]="!loginForm.valid || isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          <i *ngIf="!isLoading" class="fas fa-sign-in-alt me-2"></i>
+          {{ isLoading ? 'Signing In...' : 'Sign In' }}
+        </button>
+        
+        <!-- Switch to Signup link -->
+        <div class="mt-3 pt-3 border-top">
+          <p class="text-muted mb-2">Don't have an account?</p>
+          <button type="button" 
+                  class="btn btn-outline-primary btn-sm"
+                  (click)="switchToSignup()">
+            <i class="fas fa-user-plus me-2"></i>
+            Create Account
+          </button>
         </div>
       </div>
     </div>

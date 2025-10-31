@@ -1,0 +1,246 @@
+<div class="bookings-container">
+  <div class="header-section">
+    <h2 class="page-title">Booking Management</h2>
+    <div class="actions">
+      <button class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        New Booking
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ bookingStats.total }}</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+      <div class="stat-icon total">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ bookingStats.confirmed }}</div>
+        <div class="stat-label">Confirmed</div>
+      </div>
+      <div class="stat-icon confirmed">
+        <i class="fas fa-check-circle"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">{{ bookingStats.inProgress }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-icon progress">
+        <i class="fas fa-truck"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">₹{{ bookingStats.totalRevenue | number:'1.0-0' }}</div>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+      <div class="stat-icon revenue">
+        <i class="fas fa-rupee-sign"></i>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-number">₹{{ bookingStats.pendingPayments | number:'1.0-0' }}</div>
+        <div class="stat-label">Pending Payments</div>
+      </div>
+      <div class="stat-icon pending">
+        <i class="fas fa-clock"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <div class="filter-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'all'"
+      (click)="setActiveTab('all')">
+      All Bookings ({{ bookingStats.total }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'pending'"
+      (click)="setActiveTab('pending')">
+      Pending ({{ bookingStats.pending }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'confirmed'"
+      (click)="setActiveTab('confirmed')">
+      Confirmed ({{ bookingStats.confirmed }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'in-progress'"
+      (click)="setActiveTab('in-progress')">
+      In Progress ({{ bookingStats.inProgress }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'completed'"
+      (click)="setActiveTab('completed')">
+      Completed ({{ bookingStats.completed }})
+    </button>
+  </div>
+
+  <!-- Bookings List -->
+  <div class="bookings-list">
+    <div class="booking-card" *ngFor="let booking of filteredBookings">
+      <div class="booking-header">
+        <div class="booking-id">#{{ booking.id }}</div>
+        <div class="booking-status">
+          <span 
+            class="status-badge" 
+            [style.background-color]="getStatusColor(booking.status)"
+            [style.color]="'white'">
+            {{ booking.status | titlecase }}
+          </span>
+        </div>
+      </div>
+
+      <div class="booking-body">
+        <div class="customer-info">
+          <div class="customer-name">
+            <i class="fas fa-user"></i>
+            {{ booking.customerName }}
+          </div>
+          <div class="customer-phone">
+            <i class="fas fa-phone"></i>
+            {{ booking.customerPhone }}
+          </div>
+        </div>
+
+        <div class="route-info">
+          <div class="route-line">
+            <i class="fas fa-map-marker-alt pickup-icon"></i>
+            <span class="location">{{ booking.pickupLocation }}</span>
+          </div>
+          <div class="route-divider"></div>
+          <div class="route-line">
+            <i class="fas fa-flag destination-icon"></i>
+            <span class="location">{{ booking.dropoffLocation }}</span>
+          </div>
+        </div>
+
+        <div class="booking-details">
+          <div class="detail-item">
+            <i class="fas fa-calendar"></i>
+            {{ booking.bookingDate | date:'MMM dd, yyyy' }}
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-clock"></i>
+            {{ booking.pickupTime }}
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-route"></i>
+            {{ booking.distance }}
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-hourglass-half"></i>
+            {{ booking.estimatedDuration }}
+          </div>
+        </div>
+
+        <div class="vehicle-driver-info">
+          <div class="vehicle-info">
+            <i class="fas fa-car"></i>
+            {{ booking.vehiclePlate }}
+          </div>
+          <div class="driver-info">
+            <i class="fas fa-user-tie"></i>
+            {{ booking.driverName }}
+          </div>
+        </div>
+
+        <div class="payment-info">
+          <div class="amount">₹{{ booking.amount | number:'1.0-0' }}</div>
+          <div class="payment-status">
+            <span 
+              class="payment-badge" 
+              [style.background-color]="getPaymentStatusColor(booking.paymentStatus)"
+              [style.color]="'white'">
+              {{ booking.paymentStatus | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <div class="notes" *ngIf="booking.notes">
+          <i class="fas fa-sticky-note"></i>
+          {{ booking.notes }}
+        </div>
+      </div>
+
+      <div class="booking-actions">
+        <button 
+          class="action-btn view-btn" 
+          (click)="viewBookingDetails(booking.id)"
+          title="View Details">
+          <i class="fas fa-eye"></i>
+        </button>
+        
+        <button 
+          class="action-btn track-btn" 
+          (click)="trackBooking(booking.id)"
+          title="Track Booking"
+          *ngIf="booking.status === 'in-progress' || booking.status === 'confirmed'">
+          <i class="fas fa-map-marked-alt"></i>
+        </button>
+
+        <button 
+          class="action-btn contact-btn" 
+          (click)="contactCustomer(booking.customerPhone)"
+          title="Contact Customer">
+          <i class="fas fa-phone-alt"></i>
+        </button>
+
+        <button 
+          class="action-btn assign-btn" 
+          (click)="assignVehicle(booking.id)"
+          title="Assign Vehicle"
+          *ngIf="booking.status === 'pending'">
+          <i class="fas fa-car"></i>
+        </button>
+
+        <button 
+          class="action-btn invoice-btn" 
+          (click)="generateInvoice(booking.id)"
+          title="Generate Invoice"
+          *ngIf="booking.status === 'completed'">
+          <i class="fas fa-file-invoice"></i>
+        </button>
+
+        <div class="dropdown" *ngIf="booking.status !== 'completed' && booking.status !== 'cancelled'">
+          <button class="action-btn status-btn dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fas fa-edit"></i>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" (click)="updateBookingStatus(booking.id, 'confirmed')">Confirm</a></li>
+            <li><a class="dropdown-item" (click)="updateBookingStatus(booking.id, 'in-progress')">Start Trip</a></li>
+            <li><a class="dropdown-item" (click)="updateBookingStatus(booking.id, 'completed')">Complete</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" (click)="cancelBooking(booking.id)">Cancel</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="no-bookings" *ngIf="filteredBookings.length === 0">
+      <i class="fas fa-calendar-times"></i>
+      <h3>No bookings found</h3>
+      <p>No bookings match the current filter criteria.</p>
+    </div>
+  </div>
+</div>

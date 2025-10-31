@@ -12,7 +12,7 @@
             Easy Booking
           </button>
         </div>
-        <div class="card-header bg-gradient text-white text-center position-relative p-2 flex-shrink-0" style="background: linear-gradient(135deg, #ff9800 0%, #ff6b35 50%, #f44336 100%) !important;">
+        <div class="card-header bg-gradient text-white text-center position-relative p-2 flex-shrink-0" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 50%, #0d47a1 100%) !important;">
           <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" (click)="onCancel()" aria-label="Close"></button>
           <div class="d-flex flex-column align-items-center">
             <i class="fas fa-truck fa-lg text-white mb-1"></i>
@@ -26,20 +26,20 @@
           <form id="signupForm" [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
             <!-- Select Role Dropdown at Top -->
             <div class="mb-3">
-              <label for="role" class="form-label fw-semibold" style="color: #ff6b35; font-size: 1.1rem; letter-spacing: 1px;">
-                <i class="fas fa-user-tag me-2" style="color: #ff9800;"></i>
+              <label for="role" class="form-label fw-semibold" style="color: #1976d2; font-size: 1.1rem; letter-spacing: 1px;">
+                <i class="fas fa-user-tag me-2" style="color: #2196f3;"></i>
                 Select Role
               </label>
               <div style="position: relative;">
                 <select class="form-select stylish-role-select" id="role" formControlName="role"
-                  style="background: linear-gradient(90deg, #fffbe6 0%, #ffe0b2 100%); border: 2px solid #ff9800; border-radius: 1.5rem; box-shadow: 0 2px 8px rgba(255,107,53,0.15); font-weight: 600; color: #d84315; padding-left: 2.5rem; font-size: 1.05rem;">
+                  style="background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #1976d2; border-radius: 1.5rem; box-shadow: 0 2px 8px rgba(33,150,243,0.15); font-weight: 600; color: #0d47a1; padding-left: 2.5rem; font-size: 1.05rem;">
                   <option value="admin">🛡️ Admin</option>
                   <option value="super_admin">👑 Super Admin</option>
                   <option value="owner">🏢 Owner</option>
                   <option value="driver">🚚 Driver</option>
                   <option value="customer">🧑‍💼 Customer</option>
                 </select>
-                <i class="fas fa-chevron-down" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #ff9800; pointer-events: none;"></i>
+                <i class="fas fa-chevron-down" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #1976d2; pointer-events: none;"></i>
               </div>
             </div>
 
@@ -330,8 +330,8 @@
             <div class="form-check mb-3">
               <input class="form-check-input" type="checkbox" id="agreeTerms" formControlName="agreeTerms"
                 (keydown)="onLastFieldEnterKey($event)" (focus)="onFieldFocus('agreeTerms')"
-                style="border-color: #dc3545; border-width: 2px; background-color: transparent;">
-              <label class="form-check-label fw-semibold" for="agreeTerms" style="color: #8b4513;">
+                style="border-color: #1976d2; border-width: 2px; background-color: transparent;">
+              <label class="form-check-label fw-semibold" for="agreeTerms" style="color: #1565c0;">
                 I agree to the Terms and Conditions
               </label>
               <br />

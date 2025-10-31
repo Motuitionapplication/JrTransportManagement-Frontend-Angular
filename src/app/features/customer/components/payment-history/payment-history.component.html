@@ -1,0 +1,366 @@
+<div class="payment-history-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h2 class="page-title">
+          <i class="fas fa-credit-card me-2"></i>
+          Payment History
+        </h2>
+        <p class="page-subtitle">Track all your payment transactions and receipts</p>
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-outline-primary" (click)="exportPaymentHistory()">
+          <i class="fas fa-download me-2"></i>
+          Export History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Summary -->
+  <div class="row mb-4" *ngIf="paymentSummary">
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-primary">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ formatCurrency(paymentSummary.totalSpent) }}</h4>
+          <p>Total Spent</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-info">
+          <i class="fas fa-receipt"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ paymentSummary.totalTransactions }}</h4>
+          <p>Total Transactions</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-warning">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ formatCurrency(paymentSummary.pendingAmount) }}</h4>
+          <p>Pending</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="summary-card">
+        <div class="card-icon bg-success">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="card-content">
+          <h4>{{ formatCurrency(paymentSummary.thisMonth) }}</h4>
+          <p>This Month</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="row">
+      <div class="col-md-3 mb-3">
+        <div class="form-group">
+          <label for="searchQuery" class="form-label">Search</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input
+              type="text"
+              id="searchQuery"
+              class="form-control"
+              placeholder="Search transactions..."
+              [(ngModel)]="searchQuery"
+              (input)="filterPayments()"
+            >
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="statusFilter" class="form-label">Status</label>
+          <select
+            id="statusFilter"
+            class="form-select"
+            [(ngModel)]="statusFilter"
+            (change)="filterPayments()"
+          >
+            <option value="all">All Status</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="methodFilter" class="form-label">Method</label>
+          <select
+            id="methodFilter"
+            class="form-select"
+            [(ngModel)]="methodFilter"
+            (change)="filterPayments()"
+          >
+            <option value="all">All Methods</option>
+            <option value="credit-card">Credit Card</option>
+            <option value="debit-card">Debit Card</option>
+            <option value="wallet">Digital Wallet</option>
+            <option value="bank-transfer">Bank Transfer</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-2 mb-3">
+        <div class="form-group">
+          <label for="dateFilter" class="form-label">Date Range</label>
+          <select
+            id="dateFilter"
+            class="form-select"
+            [(ngModel)]="dateFilter"
+            (change)="filterPayments()"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="3months">Last 3 Months</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payments List -->
+  <div class="payments-list">
+    <div class="payment-card" *ngFor="let payment of filteredPayments">
+      <div class="card-header">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="payment-info">
+              <h5 class="transaction-id">{{ payment.transactionId }}</h5>
+              <span class="badge" [ngClass]="getStatusClass(payment.status)">
+                {{ payment.status | titlecase }}
+              </span>
+              <div class="payment-method">
+                <i [class]="getPaymentMethodIcon(payment.method)"></i>
+                {{ getPaymentMethodName(payment.method) }}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            <div class="payment-amount">
+              <span class="amount">{{ formatCurrency(payment.amount) }}</span>
+              <small class="date">{{ formatDate(payment.paymentDate) }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <div class="payment-details">
+              <p class="description">{{ payment.description }}</p>
+              <div class="booking-reference">
+                <strong>Booking:</strong> {{ payment.bookingNumber }}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="payment-actions">
+              <button
+                class="btn btn-sm btn-outline-info me-2"
+                (click)="viewPaymentDetails(payment)"
+              >
+                <i class="fas fa-eye me-1"></i>
+                Details
+              </button>
+              <button
+                *ngIf="canDownloadReceipt(payment)"
+                class="btn btn-sm btn-outline-success me-2"
+                (click)="downloadReceipt(payment)"
+              >
+                <i class="fas fa-download me-1"></i>
+                Receipt
+              </button>
+              <button
+                *ngIf="canRetryPayment(payment)"
+                class="btn btn-sm btn-outline-warning me-2"
+                (click)="retryPayment(payment)"
+              >
+                <i class="fas fa-redo me-1"></i>
+                Retry
+              </button>
+              <button
+                *ngIf="canRequestRefund(payment)"
+                class="btn btn-sm btn-outline-danger"
+                (click)="requestRefund(payment)"
+              >
+                <i class="fas fa-undo me-1"></i>
+                Refund
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Refund Info -->
+        <div class="refund-info" *ngIf="payment.refundAmount">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Refund:</strong> {{ formatCurrency(payment.refundAmount) }} 
+            processed on {{ formatDate(payment.refundDate!) }}
+            <span *ngIf="payment.refundReason">
+              <br><small>Reason: {{ payment.refundReason }}</small>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredPayments.length === 0">
+      <div class="text-center">
+        <i class="fas fa-credit-card empty-icon"></i>
+        <h4>No payment records found</h4>
+        <p>You haven't made any payments yet or no payments match your filters.</p>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <nav aria-label="Payments pagination">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="goToPage(1)" aria-label="First">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="goToPage(currentPage - 1)" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <li
+            class="page-item"
+            *ngFor="let page of getPaginationPages()"
+            [class.active]="page === currentPage"
+          >
+            <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="goToPage(currentPage + 1)" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="goToPage(totalPages)" aria-label="Last">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Payment Details Modal -->
+  <div class="modal fade" [class.show]="showPaymentModal" [style.display]="showPaymentModal ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content" *ngIf="selectedPayment">
+        <div class="modal-header">
+          <h5 class="modal-title">Payment Details - {{ selectedPayment.transactionId }}</h5>
+          <button type="button" class="btn-close" (click)="closePaymentModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Transaction Information</h6>
+              <div class="info-group">
+                <div class="info-row">
+                  <span>Transaction ID:</span>
+                  <span>{{ selectedPayment.transactionId }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Booking Number:</span>
+                  <span>{{ selectedPayment.bookingNumber }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Amount:</span>
+                  <span class="fw-bold">{{ formatCurrency(selectedPayment.amount) }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Status:</span>
+                  <span class="badge" [ngClass]="getStatusClass(selectedPayment.status)">
+                    {{ selectedPayment.status | titlecase }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span>Payment Method:</span>
+                  <span>
+                    <i [class]="getPaymentMethodIcon(selectedPayment.method)"></i>
+                    {{ getPaymentMethodName(selectedPayment.method) }}
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span>Date:</span>
+                  <span>{{ formatDate(selectedPayment.paymentDate) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <h6>Service Details</h6>
+              <div class="info-group">
+                <div class="description">
+                  <p>{{ selectedPayment.description }}</p>
+                </div>
+              </div>
+
+              <div *ngIf="selectedPayment.refundAmount" class="mt-3">
+                <h6>Refund Information</h6>
+                <div class="info-group">
+                  <div class="info-row">
+                    <span>Refund Amount:</span>
+                    <span class="fw-bold">{{ formatCurrency(selectedPayment.refundAmount) }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span>Refund Date:</span>
+                    <span>{{ formatDate(selectedPayment.refundDate!) }}</span>
+                  </div>
+                  <div class="info-row" *ngIf="selectedPayment.refundReason">
+                    <span>Reason:</span>
+                    <span>{{ selectedPayment.refundReason }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closePaymentModal()">Close</button>
+          <button
+            *ngIf="canDownloadReceipt(selectedPayment)"
+            type="button"
+            class="btn btn-success"
+            (click)="downloadReceipt(selectedPayment)"
+          >
+            <i class="fas fa-download me-1"></i>
+            Download Receipt
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="showPaymentModal" *ngIf="showPaymentModal"></div>
+</div>

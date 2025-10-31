@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { AgGridModule } from 'ag-grid-angular';
 // Angular Material imports
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -10,44 +10,44 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-
+import { MatCheckboxModule } from '@angular/material/checkbox';
 // Components
 import { OwnerComponent } from './owner.component';
-import { OwnerDashboardComponent } from './components/dashboard/owner-dashboard.component';
-
-const routes: Routes = [
-  {
-    path: '',
-    component: OwnerComponent,
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: OwnerDashboardComponent },
-      { path: 'vehicles', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'drivers', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'bookings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'payments', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'wallet', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'earnings', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'service-center', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'documents', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'notifications', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'profile', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'support', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reviews', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'reports', component: OwnerDashboardComponent }, // Temporary placeholder
-      { path: 'business', component: OwnerDashboardComponent } // Temporary placeholder
-    ]
-  }
-];
-
+import { Dashboard1Component } from './components/dashboard1/dashboard1.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { VehiclesComponent } from './components/vehicles/vehicles.component';
+import { DriversComponent } from './components/drivers/drivers.component';
+// import { BookingsComponent } from './components/bookings/bookings.component';
+import { EarningsComponent } from './components/earnings/earnings.component';
+import { TrackingComponent } from './components/tracking/tracking.component';
+import { AnalyticsComponent } from './components/analytics/analytics.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
+import { DriverComponent } from '../driver/driver.component';
+import { OwnerRoutingModule } from './owner-routing.module';
+import { MaintenanceComponent } from './components/maintenance/maintenance.component';
+import { VehicleFormComponent } from '../form/vehicle-form/vehicle-form.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 @NgModule({
   declarations: [
     OwnerComponent,
-    OwnerDashboardComponent
+    Dashboard1Component,
+    SidebarComponent,
+    VehiclesComponent,
+    DriversComponent,
+    EarningsComponent,
+    TrackingComponent,
+    AnalyticsComponent,
+    NotificationsComponent,
+    MaintenanceComponent,
+    VehicleFormComponent
   ],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes),
     FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
@@ -55,7 +55,16 @@ const routes: Routes = [
     MatIconModule,
     MatToolbarModule,
     MatSidenavModule,
-    MatListModule
-  ]
+    MatListModule,
+    OwnerRoutingModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDialogModule,
+    MatTableModule,
+    MatCheckboxModule,
+    AgGridModule,
+    MatProgressSpinnerModule
+]
 })
 export class OwnerModule {}

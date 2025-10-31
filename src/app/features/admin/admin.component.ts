@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from 'src/app/services/auth.service';
+import { User } from 'src/app/models/auth.model';
 
 @Component({
   selector: 'app-admin',
@@ -6,19 +9,50 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  ownerName: string = 'Owner Name';
   
   // Sidebar state
   sidebarCollapsed: boolean = false;
   
   // Active section state
   activeSection: string = 'dashboard';
+  
+  // User dropdown state
+  showUserDropdown: boolean = false;
+  // Displayed user info
+  userName: string = 'Admin';
+  userRole: string = 'Admin';
+  userAvatarUrl: string = 'https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=AD';
+  userInitials: string = 'AD';
+  private currentUser: User | null = null;
 
-  constructor() { }
+  constructor(private router: Router, private authService: AuthService) { }
 
   ngOnInit(): void {
     console.log('Admin component initialized');
-    // Set default active section
-    this.activeSection = 'dashboard';
+    // Redirect to dashboard by default if at root admin path
+    if (this.router.url === '/admin' || this.router.url === '/admin/') {
+      this.router.navigate(['/admin/dashboard']);
+    }
+
+    // Initialize displayed user from AuthService (if already stored)
+    try {
+      const stored = this.authService.getCurrentUser();
+      if (stored) this.setUser(stored);
+    } catch (e) { /* ignore */ }
+
+    // Subscribe to auth state updates to reflect login/logout
+    this.authService.authState$.subscribe(state => {
+      if (state && state.user) {
+        this.setUser(state.user);
+      } else {
+        // reset to defaults
+        this.userName = 'Admin';
+        this.userRole = 'Admin';
+        this.userAvatarUrl = 'https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=AD';
+        this.currentUser = null;
+      }
+    });
   }
 
   /**
@@ -28,23 +62,7 @@ export class AdminComponent implements OnInit {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  /**
-   * Set the active section for navigation
-   * @param section - The section to activate
-   */
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-    console.log('Active section changed to:', section);
-  }
 
-  /**
-   * Check if a section is currently active
-   * @param section - The section to check
-   * @returns boolean indicating if section is active
-   */
-  isActiveSection(section: string): boolean {
-    return this.activeSection === section;
-  }
 
   /**
    * Handle mobile menu toggle
@@ -163,40 +181,34 @@ export class AdminComponent implements OnInit {
    * Navigate to specific section with additional logic if needed
    */
   navigateToSection(section: string, additionalData?: any): void {
-    this.setActiveSection(section);
+    // Navigate to the section using Angular router
+    this.router.navigate([`/admin/${section}`]);
     
     // Add any section-specific logic here
     switch (section) {
       case 'bookings':
-        // Load booking data
-        console.log('Loading bookings data...');
+        console.log('Navigating to bookings...');
         break;
       case 'drivers':
-        // Load drivers data
-        console.log('Loading drivers data...');
+        console.log('Navigating to drivers...');
         break;
       case 'customers':
-        // Load customers data
-        console.log('Loading customers data...');
+        console.log('Navigating to customers...');
         break;
       case 'trucks':
-        // Load trucks data
-        console.log('Loading trucks data...');
+        console.log('Navigating to trucks...');
         break;
       case 'payments':
-        // Load payments data
-        console.log('Loading payments data...');
+        console.log('Navigating to payments...');
         break;
       case 'reports':
-        // Load reports data
-        console.log('Loading reports data...');
+        console.log('Navigating to reports...');
         break;
       case 'settings':
-        // Load settings data
-        console.log('Loading settings data...');
+        console.log('Navigating to settings...');
         break;
       default:
-        console.log('Loading dashboard data...');
+        console.log('Navigating to dashboard...');
     }
   }
 
@@ -223,5 +235,49 @@ export class AdminComponent implements OnInit {
   handleProfileDropdown(): void {
     console.log('Profile dropdown clicked');
     // Show user menu dropdown
+  }
+
+  /**
+   * Toggle user dropdown menu
+   */
+  toggleUserDropdown(): void {
+    this.showUserDropdown = !this.showUserDropdown;
+  }
+
+  /**
+   * Close dropdown when clicking outside
+   */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const userProfile = document.querySelector('.user-profile');
+    
+    if (!userProfile?.contains(target)) {
+      this.showUserDropdown = false;
+    }
+  }
+
+  /**
+   * Handle user logout - redirect to dashboard
+   */
+  logout(): void {
+    console.log('User logging out...');
+    this.showUserDropdown = false;
+    // Use AuthService to clear stored auth
+    try { this.authService.logout(); } catch (e) { console.warn('logout failed', e); }
+    try { localStorage.removeItem('authToken'); } catch {}
+    try { sessionStorage.removeItem('userSession'); } catch {}
+    // Navigate to login page
+    this.router.navigate(['/auth/login']);
+  }
+
+  private setUser(user: User): void {
+    this.currentUser = user;
+    const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Admin';
+    this.userName = name;
+    this.userRole = (user.roles && user.roles.length > 0) ? (user.roles.includes('ROLE_ADMIN') ? 'Admin' : user.roles[0]) : 'User';
+    const initials = (((user.firstName && user.firstName[0]) || (user.username && user.username[0]) || 'A') + ((user.lastName && user.lastName[0]) || '')).toUpperCase();
+    this.userInitials = initials;
+    this.userAvatarUrl = `https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=${initials}`;
   }
 }

@@ -1,0 +1,237 @@
+<div class="bookings-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <h1 class="page-title">My Bookings</h1>
+    <p class="page-subtitle">Manage your transport bookings and deliveries</p>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-row">
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label for="statusFilter">Status</label>
+        <select 
+          id="statusFilter" 
+          [(ngModel)]="filter.status" 
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="filter-group">
+        <label for="dateFilter">Date Range</label>
+        <select 
+          id="dateFilter" 
+          [(ngModel)]="filter.dateRange" 
+          (change)="applyFilters()"
+          class="filter-select">
+          <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Search Filter -->
+      <div class="filter-group search-group">
+        <label for="searchFilter">Search</label>
+        <input 
+          id="searchFilter"
+          type="text" 
+          [(ngModel)]="filter.searchTerm" 
+          (input)="applyFilters()"
+          placeholder="Search by booking number, customer, location..."
+          class="search-input">
+      </div>
+
+      <!-- Clear Filters Button -->
+      <div class="filter-actions">
+        <button 
+          type="button" 
+          (click)="clearFilters()" 
+          class="clear-btn">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading your bookings...</p>
+  </div>
+
+  <!-- Bookings List -->
+  <div *ngIf="!isLoading" class="bookings-list">
+    <!-- No Bookings Message -->
+    <div *ngIf="filteredBookings.length === 0" class="no-bookings">
+      <div class="no-bookings-icon">📦</div>
+      <h3>No Bookings Found</h3>
+      <p *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all'">
+        Try adjusting your filters to see more bookings.
+      </p>
+      <p *ngIf="!filter.searchTerm && filter.status === 'all' && filter.dateRange === 'all'">
+        You don't have any bookings yet. New bookings will appear here.
+      </p>
+    </div>
+
+    <!-- Bookings Grid -->
+    <div *ngIf="filteredBookings.length > 0" class="bookings-grid">
+      <div 
+        *ngFor="let booking of filteredBookings" 
+        class="booking-card"
+        [class]="getStatusColor(booking.status)">
+        
+        <!-- Card Header -->
+        <div class="booking-header">
+          <div class="booking-number">
+            <strong>{{ booking.bookingNumber }}</strong>
+          </div>
+          <div class="booking-status">
+            <span class="status-badge" [class]="getStatusColor(booking.status)">
+              {{ getStatusText(booking.status) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="customer-info">
+          <h3 class="customer-name">{{ booking.customerName }}</h3>
+          <div class="customer-contact">
+            <span class="phone">📞 {{ booking.customerPhone }}</span>
+          </div>
+        </div>
+
+        <!-- Trip Details -->
+        <div class="trip-details">
+          <div class="location-info">
+            <div class="pickup">
+              <span class="location-label">Pickup:</span>
+              <span class="location-value">{{ booking.pickupLocation }}</span>
+            </div>
+            <div class="drop">
+              <span class="location-label">Drop:</span>
+              <span class="location-value">{{ booking.dropLocation }}</span>
+            </div>
+          </div>
+          
+          <div class="trip-meta">
+            <div class="meta-item">
+              <span class="meta-label">Date:</span>
+              <span class="meta-value">{{ booking.pickupDate | date:'medium' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Vehicle:</span>
+              <span class="meta-value">{{ booking.vehicleType }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Distance:</span>
+              <span class="meta-value">{{ booking.distance }} km</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Cargo:</span>
+              <span class="meta-value">{{ booking.cargoType }} ({{ booking.weight }}kg)</span>
+            </div>
+            <div class="meta-item earnings">
+              <span class="meta-label">Earnings:</span>
+              <span class="meta-value">₹{{ booking.estimatedEarnings | number }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div *ngIf="booking.specialInstructions" class="special-instructions">
+          <div class="instructions-label">Special Instructions:</div>
+          <div class="instructions-text">{{ booking.specialInstructions }}</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="booking-actions">
+          <!-- Pending Status Actions -->
+          <div *ngIf="canAccept(booking)" class="action-group">
+            <button 
+              type="button"
+              (click)="acceptBooking(booking)"
+              class="action-btn accept-btn">
+              Accept Booking
+            </button>
+            <button 
+              type="button"
+              (click)="cancelBooking(booking)"
+              class="action-btn cancel-btn">
+              Decline
+            </button>
+          </div>
+
+          <!-- Accepted Status Actions -->
+          <div *ngIf="canStartTrip(booking)" class="action-group">
+            <button 
+              type="button"
+              (click)="startTrip(booking)"
+              class="action-btn start-btn">
+              Start Trip
+            </button>
+            <button 
+              type="button"
+              (click)="cancelBooking(booking)"
+              class="action-btn cancel-btn">
+              Cancel
+            </button>
+          </div>
+
+          <!-- In Transit Status Actions -->
+          <div *ngIf="canCompleteDelivery(booking)" class="action-group">
+            <button 
+              type="button"
+              (click)="completeDelivery(booking)"
+              class="action-btn complete-btn">
+              Complete Delivery
+            </button>
+          </div>
+
+          <!-- Common Actions -->
+          <div class="common-actions">
+            <button 
+              type="button"
+              (click)="callCustomer(booking)"
+              class="action-btn call-btn"
+              title="Call Customer">
+              📞
+            </button>
+            <button 
+              type="button"
+              (click)="getDirections(booking)"
+              class="action-btn directions-btn"
+              title="Get Directions">
+              🗺️
+            </button>
+            <button 
+              type="button"
+              (click)="viewDetails(booking)"
+              class="action-btn details-btn"
+              title="View Details">
+              👁️
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div *ngIf="!isLoading && filteredBookings.length > 0" class="bookings-summary">
+    <div class="summary-item">
+      <span class="summary-label">Total Bookings:</span>
+      <span class="summary-value">{{ filteredBookings.length }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total Earnings:</span>
+      <span class="summary-value">₹{{ getTotalEarnings() | number }}</span>
+    </div>
+  </div>
+</div>

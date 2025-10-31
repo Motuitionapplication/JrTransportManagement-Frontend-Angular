@@ -1,0 +1,649 @@
+<div class="my-trips-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">My Trips</h1>
+      <p class="page-subtitle">Track and manage all your transportation bookings</p>
+    </div>
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn btn-outline-primary me-2" 
+        (click)="refreshTrips()"
+        [disabled]="isLoading">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-outline-secondary"
+        (click)="exportTrips()">
+        <i class="fas fa-download"></i> Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-section">
+    <div class="summary-cards row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="summary-card total-trips">
+          <div class="card-icon">
+            <i class="fas fa-route"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ tripSummary.total }}</h3>
+            <p class="card-label">Total Trips</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="summary-card active-trips">
+          <div class="card-icon">
+            <i class="fas fa-shipping-fast"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ tripSummary.active }}</h3>
+            <p class="card-label">Active Trips</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="summary-card completed-trips">
+          <div class="card-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ tripSummary.completed }}</h3>
+            <p class="card-label">Completed</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="summary-card total-earnings">
+          <div class="card-icon">
+            <i class="fas fa-rupee-sign"></i>
+          </div>
+          <div class="card-content">
+            <h3 class="card-value">{{ formatCurrency(getTotalEarnings()) }}</h3>
+            <p class="card-label">Total Spent</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="searchInput" class="form-label">Search Trips</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input 
+                type="text" 
+                id="searchInput"
+                class="form-control" 
+                placeholder="Search by trip number, location..."
+                [(ngModel)]="filter.searchTerm"
+                (input)="applyFilters()">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label for="statusFilter" class="form-label">Status</label>
+            <select 
+              id="statusFilter"
+              class="form-select" 
+              [(ngModel)]="filter.status"
+              (change)="applyFilters()">
+              <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="dateFilter" class="form-label">Date Range</label>
+            <select 
+              id="dateFilter"
+              class="form-select" 
+              [(ngModel)]="filter.dateRange"
+              (change)="applyFilters()">
+              <option *ngFor="let option of dateRangeOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary w-100"
+              (click)="clearFilters()">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading your trips...</p>
+    </div>
+  </div>
+
+  <!-- Trips List -->
+  <div *ngIf="!isLoading" class="trips-section">
+    <!-- No Trips Message -->
+    <div *ngIf="filteredTrips.length === 0" class="no-trips">
+      <div class="text-center py-5">
+        <div class="no-trips-icon">
+          <i class="fas fa-route fa-4x text-muted"></i>
+        </div>
+        <h3 class="mt-3">No Trips Found</h3>
+        <p class="text-muted" *ngIf="filter.searchTerm || filter.status !== 'all' || filter.dateRange !== 'all'">
+          Try adjusting your filters to see more trips.
+        </p>
+        <p class="text-muted" *ngIf="!filter.searchTerm && filter.status === 'all' && filter.dateRange === 'all'">
+          You haven't made any trips yet. <a routerLink="/customer/book-transport" class="text-primary">Book your first trip!</a>
+        </p>
+        <button 
+          type="button" 
+          class="btn btn-primary mt-3" 
+          routerLink="/customer/book-transport">
+          <i class="fas fa-plus"></i> Book New Trip
+        </button>
+      </div>
+    </div>
+
+    <!-- Trips Grid -->
+    <div *ngIf="filteredTrips.length > 0" class="trips-grid">
+      <div 
+        *ngFor="let trip of filteredTrips" 
+        class="trip-card"
+        [class]="getStatusClass(trip.status)">
+        
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="trip-info">
+            <h5 class="trip-number mb-1">{{ trip.tripNumber }}</h5>
+            <small class="booking-number text-muted">{{ trip.bookingNumber }}</small>
+          </div>
+          <div class="trip-status">
+            <span class="status-badge" [class]="getStatusClass(trip.status)">
+              {{ getStatusText(trip.status) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Progress Bar (for active trips) -->
+        <div *ngIf="trip.status === 'in-transit' && trip.trackingInfo" class="progress-section">
+          <div class="progress-label">
+            <span>Trip Progress</span>
+            <span>{{ trip.trackingInfo.progress }}%</span>
+          </div>
+          <div class="progress mb-2">
+            <div 
+              class="progress-bar" 
+              [style.width.%]="trip.trackingInfo.progress"
+              role="progressbar">
+            </div>
+          </div>
+          <small class="text-muted">
+            <i class="fas fa-map-marker-alt"></i>
+            {{ trip.trackingInfo.currentLocation }}
+          </small>
+        </div>
+
+        <!-- Trip Details -->
+        <div class="trip-details">
+          <div class="route-info">
+            <div class="location pickup">
+              <div class="location-marker pickup-marker">
+                <i class="fas fa-circle"></i>
+              </div>
+              <div class="location-details">
+                <h6 class="location-name">{{ trip.pickupLocation }}</h6>
+                <small class="location-address">{{ trip.pickupAddress || trip.pickupLocation }}</small>
+                <small class="location-time">
+                  <i class="far fa-clock"></i>
+                  {{ formatDateTime(trip.pickupDateTime) }}
+                </small>
+              </div>
+            </div>
+
+            <div class="route-line">
+              <div class="route-connector"></div>
+              <div class="route-info-mid">
+                <span class="vehicle-type">{{ getVehicleTypeIcon(trip.vehicleType) }}</span>
+                <small class="distance">{{ formatDistance(trip.distance) }}</small>
+              </div>
+            </div>
+
+            <div class="location dropoff">
+              <div class="location-marker dropoff-marker">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="location-details">
+                <h6 class="location-name">{{ trip.dropLocation }}</h6>
+                <small class="location-address">{{ trip.dropAddress || trip.dropLocation }}</small>
+                <small class="location-time" *ngIf="trip.dropDateTime">
+                  <i class="far fa-clock"></i>
+                  {{ formatDateTime(trip.dropDateTime) }}
+                </small>
+                <small class="location-time" *ngIf="!trip.dropDateTime && trip.trackingInfo?.estimatedArrival">
+                  <i class="far fa-clock"></i>
+                  ETA: {{ formatDateTime(trip.trackingInfo?.estimatedArrival ?? null) }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver & Vehicle Info -->
+        <div *ngIf="trip.driver && trip.vehicle" class="driver-vehicle-info">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="driver-info">
+                <img 
+                  [src]="trip.driver.profileImage || 'https://via.placeholder.com/40x40/6c757d/ffffff?text=D'" 
+                  [alt]="trip.driver.name"
+                  class="driver-avatar">
+                <div class="driver-details">
+                  <small class="driver-name">{{ trip.driver.name }}</small>
+                  <div class="driver-rating">
+                    <i class="fas fa-star"></i>
+                    <span>{{ trip.driver.rating }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="vehicle-info">
+                <div class="vehicle-details">
+                  <small class="vehicle-number">{{ trip.vehicle.registrationNumber }}</small>
+                  <small class="vehicle-type">{{ trip.vehicle.make }} {{ trip.vehicle.model }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trip Cost & Payment -->
+        <div class="trip-cost">
+          <div class="cost-info">
+            <span class="cost-label">Trip Cost:</span>
+            <span class="cost-value">
+              {{ formatCurrency(trip.actualCost || trip.estimatedCost) }}
+            </span>
+          </div>
+          <div class="payment-status">
+            <span class="payment-badge" [class]="getPaymentStatusClass(trip.paymentStatus)">
+              {{ getFormattedVehicleType(trip.paymentStatus) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="trip-actions">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline-primary me-2"
+            (click)="openTripDetails(trip)">
+            <i class="fas fa-eye"></i> Details
+          </button>
+
+          <button 
+            *ngIf="canTrack(trip)" 
+            type="button" 
+            class="btn btn-sm btn-primary me-2"
+            (click)="trackTrip(trip)">
+            <i class="fas fa-map-marker-alt"></i> Track
+          </button>
+
+          <button 
+            *ngIf="canCallDriver(trip)" 
+            type="button" 
+            class="btn btn-sm btn-success me-2"
+            (click)="callDriver(trip)">
+            <i class="fas fa-phone"></i>
+          </button>
+
+          <div class="dropdown d-inline-block">
+            <button 
+              class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+              type="button" 
+              data-bs-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" (click)="getDirections(trip)">
+                  <i class="fas fa-route me-2"></i> Directions
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" (click)="shareTrip(trip)">
+                  <i class="fas fa-share me-2"></i> Share
+                </button>
+              </li>
+              <li *ngIf="canDownloadInvoice(trip)">
+                <button class="dropdown-item" (click)="downloadInvoice(trip)">
+                  <i class="fas fa-download me-2"></i> Invoice
+                </button>
+              </li>
+              <li *ngIf="trip.status === 'completed'">
+                <button class="dropdown-item" (click)="rebookTrip(trip)">
+                  <i class="fas fa-redo me-2"></i> Rebook
+                </button>
+              </li>
+              <li *ngIf="canCancel(trip)"><hr class="dropdown-divider"></li>
+              <li *ngIf="canCancel(trip)">
+                <button class="dropdown-item text-danger" (click)="cancelTrip(trip)">
+                  <i class="fas fa-times me-2"></i> Cancel
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trip Details Modal -->
+<div class="modal fade" 
+     [class.show]="showTripModal" 
+     [style.display]="showTripModal ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="selectedTrip">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Trip Details - {{ selectedTrip.tripNumber }}</h5>
+        <button type="button" class="btn-close" (click)="closeTripModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Trip Status & Progress -->
+        <div class="trip-status-section mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="status-badge large" [class]="getStatusClass(selectedTrip.status)">
+              {{ getStatusText(selectedTrip.status) }}
+            </span>
+            <span class="trip-date">{{ formatDate(selectedTrip.createdAt) }}</span>
+          </div>
+          
+          <div *ngIf="selectedTrip.trackingInfo && selectedTrip.status === 'in-transit'" class="progress-section mt-3">
+            <div class="progress mb-2">
+              <div 
+                class="progress-bar" 
+                [style.width.%]="selectedTrip.trackingInfo.progress"
+                role="progressbar">
+                {{ selectedTrip.trackingInfo.progress }}%
+              </div>
+            </div>
+            <small class="text-muted">
+              Last updated: {{ getTimeAgo(selectedTrip.trackingInfo.lastUpdate) }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Route Information -->
+        <div class="route-section mb-4">
+          <h6 class="section-title">Route Information</h6>
+          <div class="route-details">
+            <div class="location-row">
+              <div class="location-icon pickup">
+                <i class="fas fa-circle"></i>
+              </div>
+              <div class="location-content">
+                <strong>Pickup Location</strong>
+                <p class="mb-1">{{ selectedTrip.pickupLocation }}</p>
+                <small class="text-muted">{{ selectedTrip.pickupAddress }}</small>
+                <br>
+                <small class="text-muted">
+                  <i class="far fa-clock"></i>
+                  {{ formatDateTime(selectedTrip.pickupDateTime) }}
+                </small>
+              </div>
+            </div>
+            
+            <div class="location-row">
+              <div class="location-icon dropoff">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="location-content">
+                <strong>Drop Location</strong>
+                <p class="mb-1">{{ selectedTrip.dropLocation }}</p>
+                <small class="text-muted">{{ selectedTrip.dropAddress }}</small>
+                <br>
+                <small class="text-muted" *ngIf="selectedTrip.dropDateTime">
+                  <i class="far fa-clock"></i>
+                  {{ formatDateTime(selectedTrip.dropDateTime) }}
+                </small>
+                <small class="text-muted" *ngIf="!selectedTrip.dropDateTime && selectedTrip.trackingInfo?.estimatedArrival">
+                  <i class="far fa-clock"></i>
+                  ETA: {{ formatDateTime(selectedTrip.trackingInfo?.estimatedArrival || null) }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trip Details -->
+        <div class="details-grid">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Distance</label>
+                <span>{{ selectedTrip ? formatDistance(selectedTrip.distance) : '-' }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Duration</label>
+                <span>{{ selectedTrip ? formatDuration(selectedTrip.actualDuration || selectedTrip.estimatedDuration) : '-' }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Vehicle Type</label>
+                <span>{{ selectedTrip ? getVehicleTypeIcon(selectedTrip.vehicleType) + ' ' + getFormattedVehicleType(selectedTrip.vehicleType) : '-' }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Trip Cost</label>
+                <span>{{ selectedTrip ? formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) : '-' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver & Vehicle Info -->
+        <div *ngIf="selectedTrip.driver && selectedTrip.vehicle" class="driver-vehicle-section mt-4">
+          <h6 class="section-title">Driver & Vehicle Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="driver-card">
+                <div class="d-flex align-items-center">
+                  <img 
+                    [src]="selectedTrip.driver.profileImage || 'https://via.placeholder.com/50x50/6c757d/ffffff?text=D'"
+                    [alt]="selectedTrip.driver.name"
+                    class="driver-avatar-large me-3">
+                  <div>
+                    <h6 class="mb-1">{{ selectedTrip.driver.name }}</h6>
+                    <div class="driver-rating mb-1">
+                      <i class="fas fa-star text-warning"></i>
+                      <span>{{ selectedTrip.driver.rating }}</span>
+                    </div>
+                    <small class="text-muted">{{ selectedTrip.driver.phone }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="vehicle-card">
+                <h6>{{ selectedTrip.vehicle.make || 'Vehicle' }} {{ selectedTrip.vehicle.model || '' }}</h6>
+                <p class="mb-1">
+                  <strong>{{ selectedTrip.vehicle.registrationNumber || 'N/A' }}</strong>
+                </p>
+                <small class="text-muted">{{ selectedTrip.vehicle.type || 'N/A' }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div *ngIf="selectedTrip.specialInstructions" class="instructions-section mt-4">
+          <h6 class="section-title">Special Instructions</h6>
+          <p class="instruction-text">{{ selectedTrip.specialInstructions || 'No special instructions' }}</p>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="payment-section mt-4">
+          <h6 class="section-title">Payment Information</h6>
+          <div class="payment-details">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <label>Payment Status</label>
+                  <span class="payment-badge" [class]="selectedTrip ? getPaymentStatusClass(selectedTrip.paymentStatus) : 'bg-secondary'">
+                    {{ selectedTrip.paymentStatus ? getFormattedVehicleType(selectedTrip.paymentStatus) : 'N/A' }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <label>Total Amount</label>
+                  <span class="amount-large">{{ formatCurrency(selectedTrip.actualCost || selectedTrip.estimatedCost) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTripModal()">Close</button>
+        <button 
+          *ngIf="canTrack(selectedTrip)" 
+          type="button" 
+          class="btn btn-primary"
+          (click)="trackTrip(selectedTrip); closeTripModal()">
+          <i class="fas fa-map-marker-alt"></i> Track Trip
+        </button>
+        <button 
+          *ngIf="canCallDriver(selectedTrip)" 
+          type="button" 
+          class="btn btn-success"
+          (click)="callDriver(selectedTrip)">
+          <i class="fas fa-phone"></i> Call Driver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div 
+  class="modal-backdrop fade"
+  [class.show]="showTripModal || showTrackingModal"
+  *ngIf="showTripModal || showTrackingModal"
+  (click)="closeTripModal(); closeTrackingModal()">
+</div>
+
+<!-- Tracking Modal -->
+<div class="modal fade" 
+     [class.show]="showTrackingModal" 
+     [style.display]="showTrackingModal ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="selectedTrip && showTrackingModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Track Trip - {{ selectedTrip.tripNumber }}</h5>
+        <button type="button" class="btn-close" (click)="closeTrackingModal()"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Current Status -->
+        <div class="tracking-status mb-4">
+          <div class="status-card">
+            <h6>Current Status</h6>
+            <p class="status-text">
+              <span class="status-badge" [class]="getStatusClass(selectedTrip.status)">
+                {{ getStatusText(selectedTrip.status) }}
+              </span>
+            </p>
+            <small class="text-muted" *ngIf="selectedTrip.trackingInfo && selectedTrip.trackingInfo.lastUpdate">
+              Last updated: {{ getTimeAgo(selectedTrip.trackingInfo.lastUpdate) }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Current Location -->
+        <div *ngIf="selectedTrip.trackingInfo?.currentLocation" class="location-section mb-4">
+          <h6>Current Location</h6>
+          <p class="location-text">
+            <i class="fas fa-map-marker-alt text-primary"></i>
+            {{ selectedTrip.trackingInfo?.currentLocation || 'Location not available' }}
+          </p>
+        </div>
+
+        <!-- Progress -->
+        <div *ngIf="selectedTrip.trackingInfo" class="progress-section mb-4">
+          <h6>Trip Progress</h6>
+          <div class="progress mb-2">
+            <div 
+              class="progress-bar progress-bar-striped progress-bar-animated" 
+              [style.width.%]="selectedTrip.trackingInfo.progress"
+              role="progressbar">
+              {{ selectedTrip.trackingInfo.progress }}%
+            </div>
+          </div>
+        </div>
+
+        <!-- ETA -->
+        <div *ngIf="selectedTrip.trackingInfo?.estimatedArrival" class="eta-section mb-4">
+          <h6>Estimated Arrival</h6>
+          <p class="eta-text">
+            <i class="far fa-clock text-info"></i>
+            {{ formatDateTime(selectedTrip.trackingInfo?.estimatedArrival || null) }}
+          </p>
+        </div>
+
+        <!-- Map Placeholder -->
+        <div class="map-section">
+          <div class="map-placeholder">
+            <div class="text-center py-4">
+              <i class="fas fa-map fa-3x text-muted mb-3"></i>
+              <p class="text-muted">Interactive map will be integrated here</p>
+              <button 
+                type="button" 
+                class="btn btn-outline-primary"
+                (click)="selectedTrip && getDirections(selectedTrip)">
+                <i class="fas fa-directions"></i> Get Directions
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTrackingModal()">Close</button>
+        <button 
+          *ngIf="canCallDriver(selectedTrip)" 
+          type="button" 
+          class="btn btn-success"
+          (click)="callDriver(selectedTrip)">
+          <i class="fas fa-phone"></i> Call Driver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
