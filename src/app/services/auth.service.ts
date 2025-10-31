@@ -1,22 +1,40 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap, catchError, throwError, map } from 'rxjs';
-import { LoginRequest, SignupRequest, JwtResponse, MessageResponse, User, AuthState } from '../models/auth.model';
+import {
+  Observable,
+  BehaviorSubject,
+  tap,
+  catchError,
+  throwError,
+  map,
+  of,
+} from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import {
+  LoginRequest,
+  SignupRequest,
+  JwtResponse,
+  MessageResponse,
+  User,
+  AuthState,
+  DriverProfileSummary,
+} from '../models/auth.model';
 import { EnvironmentService } from '../core/services/environment.service';
 import { GeolocationService } from '../services/geolocation.service';
 import { DriverService } from '../features/driver/driver.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private authStateSubject = new BehaviorSubject<AuthState>({
     isLoggedIn: false,
     user: null,
-    token: null
+    token: null,
   });
 
-  public authState$ = this.authStateSubject.asObservable();
+  public readonly authState$ = this.authStateSubject.asObservable();
+  public readonly user$ = this.authState$.pipe(map((state) => state.user));
   private readonly TOKEN_KEY = 'auth-token';
   private readonly USER_KEY = 'auth-user';
 
@@ -36,7 +54,7 @@ export class AuthService {
 
   private getHttpOptions(skipAuth: boolean = false): { headers: HttpHeaders } {
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     });
 
     // Skip authentication for specific endpoints like test endpoints
@@ -70,7 +88,7 @@ export class AuthService {
         this.authStateSubject.next({
           isLoggedIn: true,
           user,
-          token
+          token,
         });
         console.log('🔐 Auth: Loaded stored authentication state');
       } else if (token || storedUserRaw) {
@@ -87,15 +105,15 @@ export class AuthService {
   testAuthEndpoint(): Observable<MessageResponse> {
     const url = `${this.getApiEndpoint()}/test-signin`;
     console.log('🔐 Auth: Testing endpoint:', url);
-    
+
     // Use skipAuth for test endpoint in local environment
     const httpOptions = this.getHttpOptions(this.envService.isLocal());
-    
+
     return this.http.post<MessageResponse>(url, {}, httpOptions).pipe(
-      tap(response => {
+      tap((response) => {
         console.log('🔐 Auth: Test endpoint success:', response);
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('🔐 Auth: Test endpoint error:', error);
         return throwError(() => error);
       })
@@ -106,95 +124,100 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<JwtResponse> {
     const url = `${this.getApiEndpoint()}/signin`;
     console.log('🔐 Auth: Attempting login for user:', credentials.username);
-    
-    return this.http.post<JwtResponse>(url, credentials, this.getHttpOptions(true)).pipe(
-      tap(response => {
-        console.log('🔐 Auth: Login successful:', response);
-        this.storeAuthData(response);
-        
-        const user: User = {
-          id: response.id,
-          username: response.username,
-          email: response.email,
-          firstName: response.firstName,
-          lastName: response.lastName,
-          roles: response.roles
-        };
 
-        this.authStateSubject.next({
-          isLoggedIn: true,
-          user,
-          token: response.token
-        });
+    return this.http
+      .post<JwtResponse>(url, credentials, this.getHttpOptions(true))
+      .pipe(
+        tap((response) => {
+          console.log('🔐 Auth: Login successful:', response);
+          const user = this.storeAuthData(response);
+          this.authStateSubject.next({
+            isLoggedIn: true,
+            user,
+            token: response.token,
+          });
 
-        // Best-effort geolocation update for driver users
-        this.attemptDriverLocationSync(response);
-      }),
-      catchError(error => {
-        console.error('🔐 Auth: Login error:', error);
-        return this.handleAuthError(error, 'Login');
-      })
-    );
+          // Best-effort geolocation update for driver users
+          this.attemptDriverLocationSync(response);
+        }),
+        catchError((error) => {
+          console.error('🔐 Auth: Login error:', error);
+          return this.handleAuthError(error, 'Login');
+        })
+      );
   }
 
   // Register new user
   signup(signupData: SignupRequest): Observable<MessageResponse> {
     const url = `${this.getApiEndpoint()}/signup`;
     console.log('🔐 Auth: Attempting signup for user:', signupData.username);
-    
-    return this.http.post<MessageResponse>(url, signupData, this.getHttpOptions(true)).pipe(
-      tap(response => {
-        console.log('🔐 Auth: Signup successful:', response);
-      }),
-      catchError(error => {
-        console.error('🔐 Auth: Signup error:', error);
-        return this.handleAuthError(error, 'Signup');
-      })
-    );
+
+    return this.http
+      .post<MessageResponse>(url, signupData, this.getHttpOptions(true))
+      .pipe(
+        tap((response) => {
+          console.log('🔐 Auth: Signup successful:', response);
+        }),
+        catchError((error) => {
+          console.error('🔐 Auth: Signup error:', error);
+          return this.handleAuthError(error, 'Signup');
+        })
+      );
   }
 
   // Create admin user (for testing)
   createAdmin(): Observable<MessageResponse> {
     const url = `${this.getApiEndpoint()}/create-admin`;
     console.log('🔐 Auth: Creating admin user');
-    
-    return this.http.post<MessageResponse>(url, {}, this.getHttpOptions(true)).pipe(
-      tap(response => {
-        console.log('🔐 Auth: Admin creation:', response);
-      }),
-      catchError(error => {
-        console.error('🔐 Auth: Admin creation error:', error);
-        return this.handleAuthError(error, 'Create Admin');
-      })
-    );
+
+    return this.http
+      .post<MessageResponse>(url, {}, this.getHttpOptions(true))
+      .pipe(
+        tap((response) => {
+          console.log('🔐 Auth: Admin creation:', response);
+        }),
+        catchError((error) => {
+          console.error('🔐 Auth: Admin creation error:', error);
+          return this.handleAuthError(error, 'Create Admin');
+        })
+      );
   }
 
   // Logout user
   logout(): void {
     console.log('🔐 Auth: Logging out user');
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    
+    this.persistUser(null);
+
     this.authStateSubject.next({
       isLoggedIn: false,
       user: null,
-      token: null
+      token: null,
     });
   }
 
   // Store authentication data
-  private storeAuthData(authResponse: JwtResponse): void {
+  private storeAuthData(authResponse: JwtResponse): User {
     localStorage.setItem(this.TOKEN_KEY, authResponse.token);
-    
+
     const user: User = {
       id: authResponse.id,
       username: authResponse.username,
       email: authResponse.email,
       firstName: authResponse.firstName,
       lastName: authResponse.lastName,
-      roles: authResponse.roles
+      roles: authResponse.roles,
     };
-    
+
+    this.persistUser(user);
+    return user;
+  }
+
+  private persistUser(user: User | null): void {
+    if (!user) {
+      localStorage.removeItem(this.USER_KEY);
+      return;
+    }
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
@@ -217,7 +240,7 @@ export class AuthService {
       this.authStateSubject.next({
         isLoggedIn: !!storedToken,
         user: recoveredUser,
-        token: storedToken
+        token: storedToken,
       });
       return recoveredUser;
     }
@@ -225,11 +248,113 @@ export class AuthService {
     return null;
   }
 
+  get snapshot(): User | null {
+    return this.authStateSubject.value.user;
+  }
+
+  setUser(partial: Partial<User>): void {
+    if (!partial) {
+      return;
+    }
+
+    const currentState = this.authStateSubject.value;
+    const existing = currentState.user;
+    const baseUser: User = existing ?? {
+      id:
+        partial.id !== undefined && partial.id !== null
+          ? Number(partial.id)
+          : 0,
+      username: partial.username ?? '',
+      email: partial.email ?? '',
+      firstName: partial.firstName ?? '',
+      lastName: partial.lastName ?? '',
+      phoneNumber: partial.phoneNumber,
+      roles: partial.roles ?? [],
+    };
+
+    const mergedRole = partial.role ?? baseUser.role;
+    const baseRoles = partial.roles ?? [...(baseUser.roles ?? [])];
+    const roles =
+      mergedRole && !baseRoles.includes(mergedRole)
+        ? [...baseRoles, mergedRole]
+        : baseRoles;
+
+    const merged: User = {
+      ...baseUser,
+      ...partial,
+      id:
+        partial.id !== undefined && partial.id !== null
+          ? Number(partial.id)
+          : baseUser.id,
+      roles,
+      role: mergedRole,
+      avatarUrl: partial.avatarUrl ?? baseUser.avatarUrl,
+      driverId: partial.driverId ?? baseUser.driverId,
+      phoneNumber: partial.phoneNumber ?? baseUser.phoneNumber,
+    };
+
+    this.persistUser(merged);
+    this.authStateSubject.next({
+      token: currentState.token,
+      isLoggedIn: currentState.isLoggedIn || !!currentState.token,
+      user: merged,
+    });
+  }
+
+  updateAvatar(avatarUrl?: string | null): void {
+    if (!avatarUrl) {
+      return;
+    }
+    this.setUser({ avatarUrl });
+  }
+
+  refreshMe(): Observable<DriverProfileSummary | null> {
+    if (!this.getToken()) {
+      return of(null);
+    }
+
+    const url = `${this.envService.getApiUrl()}/transport/drivers/me`;
+    return this.http.get<DriverProfileSummary>(url, this.getHttpOptions()).pipe(
+      tap((summary) => {
+        if (!summary) {
+          return;
+        }
+
+        this.setUser({
+          id: summary.userId ? Number(summary.userId) : undefined,
+          firstName: summary.firstName,
+          lastName: summary.lastName,
+          email: summary.email,
+          avatarUrl: summary.avatarUrl,
+          role: summary.role,
+          driverId: summary.id,
+        });
+      }),
+      catchError((error) => {
+        console.warn('🔐 Auth: refreshMe error', error);
+        if (error.status === 401 || error.status === 403) {
+          this.logout();
+        }
+        return of(null);
+      })
+    );
+  }
+
+  async bootstrapSession(): Promise<void> {
+    if (!this.getToken()) {
+      return;
+    }
+
+    try {
+      await firstValueFrom(this.refreshMe());
+    } catch (error) {
+      console.warn('🔐 Auth: bootstrapSession failed', error);
+    }
+  }
+
   // Check if user is logged in
   isLoggedIn(): Observable<boolean> {
-    return this.authState$.pipe(
-      map((state: AuthState) => state.isLoggedIn)
-    );
+    return this.authState$.pipe(map((state: AuthState) => state.isLoggedIn));
   }
 
   // Check if user is logged in (synchronous for template usage)
@@ -261,7 +386,7 @@ export class AuthService {
   // Enhanced error handler for CORS and connectivity issues
   private handleAuthError(error: any, operation: string): Observable<never> {
     let errorMessage = '';
-    
+
     if (error.status === 0) {
       // CORS or network error
       if (error.error instanceof ProgressEvent) {
@@ -269,13 +394,12 @@ export class AuthService {
       } else {
         errorMessage = `🌐 Network Error: Cannot connect to authentication server.`;
       }
-      
+
       console.error(`🚨 CORS/Network Error in ${operation}:`, {
         frontend: window.location.origin,
         backend: this.envService.getApiUrl(),
-        error: error
+        error: error,
       });
-      
     } else if (error.status >= 500) {
       errorMessage = `🔧 Server Error: The backend server is experiencing issues. Please try again later.`;
     } else if (error.status === 401) {
@@ -283,12 +407,13 @@ export class AuthService {
     } else if (error.status === 403) {
       errorMessage = `🚫 Access Denied: You don't have permission to access this resource.`;
     } else {
-      errorMessage = error.error?.message || `❌ ${operation} failed. Please try again.`;
+      errorMessage =
+        error.error?.message || `❌ ${operation} failed. Please try again.`;
     }
 
     return throwError(() => ({
       ...error,
-      userMessage: errorMessage
+      userMessage: errorMessage,
     }));
   }
 
@@ -314,12 +439,20 @@ export class AuthService {
         firstName: parsed.firstName ?? '',
         lastName: parsed.lastName ?? '',
         phoneNumber: parsed.phoneNumber ?? undefined,
-        roles: Array.isArray(parsed.roles) ? parsed.roles : []
+        roles: Array.isArray(parsed.roles) ? parsed.roles : [],
+        role: typeof parsed.role === 'string' ? parsed.role : undefined,
+        avatarUrl:
+          typeof parsed.avatarUrl === 'string' ? parsed.avatarUrl : undefined,
+        driverId:
+          typeof parsed.driverId === 'string' ? parsed.driverId : undefined,
       };
 
       return user;
     } catch (error) {
-      console.error('🔐 Auth: Failed to parse stored user from localStorage', error);
+      console.error(
+        '🔐 Auth: Failed to parse stored user from localStorage',
+        error
+      );
       return null;
     }
   }
@@ -330,7 +463,9 @@ export class AuthService {
    */
   private attemptDriverLocationSync(response: JwtResponse): void {
     const roles = response.roles || [];
-    const isDriver = roles.some(role => role?.toLowerCase().includes('driver'));
+    const isDriver = roles.some((role) =>
+      role?.toLowerCase().includes('driver')
+    );
     if (!isDriver || !this.geolocationService.isSupported()) {
       return;
     }
@@ -340,17 +475,21 @@ export class AuthService {
         const permission = await this.geolocationService.requestPermission();
 
         if (permission === 'denied' || permission === 'unsupported') {
-          console.info('Geolocation permission denied or unsupported for driver.');
+          console.info(
+            'Geolocation permission denied or unsupported for driver.'
+          );
           // TODO: surface UI prompt via dedicated location component if desired.
           return;
         }
 
         // For 'prompt', a permission dialog will appear when we call getCurrentPosition
         const coords = await this.geolocationService.getCurrentPosition(10000);
-        this.driverService.updateDriverLocation(response.id.toString(), coords).subscribe({
-          next: () => console.log('Driver location synced with backend.'),
-          error: err => console.warn('Driver location sync failed:', err)
-        });
+        this.driverService
+          .updateDriverLocation(response.id.toString(), coords)
+          .subscribe({
+            next: () => console.log('Driver location synced with backend.'),
+            error: (err) => console.warn('Driver location sync failed:', err),
+          });
       } catch (error) {
         console.warn('Geolocation attempt failed:', error);
       }

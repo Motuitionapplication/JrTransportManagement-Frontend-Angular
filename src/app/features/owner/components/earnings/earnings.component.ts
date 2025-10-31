@@ -250,7 +250,7 @@ export class EarningsComponent implements OnInit, AfterViewInit {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: (value) => '₹' + (Number(value) / 1000) + 'K'
+              callback: (value: number | string) => this.formatChartTick(value)
             }
           }
         }
@@ -340,7 +340,7 @@ export class EarningsComponent implements OnInit, AfterViewInit {
           y: {
             beginAtZero: true,
             ticks: {
-              callback: (value) => '₹' + (Number(value) / 1000) + 'K'
+              callback: (value: number | string) => this.formatChartTick(value)
             }
           }
         }
@@ -475,4 +475,9 @@ export class EarningsComponent implements OnInit, AfterViewInit {
 
   // Make Math available in template
   Math = Math;
+
+  private formatChartTick(value: number | string): string {
+    const numericValue = typeof value === 'string' ? Number(value) : value;
+    return `₹${numericValue / 1000}K`;
+  }
 }

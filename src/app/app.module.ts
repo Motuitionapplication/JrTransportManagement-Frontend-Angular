@@ -1,4 +1,4 @@
-import { NgModule, isDevMode } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './core/auth.interceptor';
 import { TokenInterceptor } from './core/token.interceptor';
@@ -15,7 +15,6 @@ import { SplashScreenComponent } from './shared/splash-screen/splash-screen.comp
 import { IosInstallPromptComponent } from './shared/ios-install-prompt/ios-install-prompt.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 
-
 // Feature Modules
 import { StudentsModule } from './features/students/students.module';
 import { AuthModule } from './features/auth/auth.module';
@@ -31,9 +30,9 @@ import { AppAdminWalletComponent } from './features/wallet-managements/app-admin
 import { DriverFormComponent } from './features/form/driver-form/driver-form.component';
 import { VehicleFormComponent } from './features/form/vehicle-form/vehicle-form.component';
 
-import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { FormsModule,ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
@@ -48,9 +47,14 @@ import { VehicleDialogComponent } from './features/Fetched/vehicle-dialog/vehicl
 import { MatIconModule } from '@angular/material/icon';
 import { AssignVehicleComponent } from './features/form/assign-vehicle/assign-vehicle.component';
 import { HistoryDialogComponent } from './features/Fetched/history-dialog/history-dialog.component';
+import { AuthService } from './services/auth.service';
 // import { VehiclesComponent } from './vehicles/vehicles.component';
 
-
+export function authInitializerFactory(
+  authService: AuthService
+): () => Promise<void> {
+  return () => authService.bootstrapSession();
+}
 
 @NgModule({
   declarations: [
@@ -87,8 +91,8 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     AdminModule,
     SuperAdminModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
-        enabled: environment.production,
-        registrationStrategy: 'registerWhenStable:30000'
+      enabled: environment.production,
+      registrationStrategy: 'registerWhenStable:30000',
     }),
     MatFormFieldModule,
     MatDatepickerModule,
@@ -98,20 +102,26 @@ import { HistoryDialogComponent } from './features/Fetched/history-dialog/histor
     MatInputModule,
     MatIconModule,
     MatButtonModule,
-    FormsModule
-],
+    FormsModule,
+  ],
   providers: [
+    {
+      provide: APP_INITIALIZER,
+      useFactory: authInitializerFactory,
+      deps: [AuthService],
+      multi: true,
+    },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
+      multi: true,
     },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: TokenInterceptor,
-      multi: true
-    }
+      multi: true,
+    },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

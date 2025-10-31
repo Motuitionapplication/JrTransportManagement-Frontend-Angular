@@ -42,6 +42,19 @@ export interface User {
   lastName: string;
   phoneNumber?: string;
   roles: string[];
+  role?: string;
+  avatarUrl?: string;
+  driverId?: string;
+}
+
+export interface DriverProfileSummary {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  email: string;
+  avatarUrl?: string;
 }
 
 export interface AuthState {
