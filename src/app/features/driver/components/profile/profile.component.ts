@@ -488,13 +488,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .uploadProfilePhoto(this.driver.id, file)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (url: any) => {
-          // backend returns plain text URL
-          const newUrl = typeof url === 'string' ? url : url?.url ?? '';
+        next: (response) => {
+          const newUrl = response?.avatarUrl ?? '';
           this.profilePhotoUrl = newUrl || tempUrl;
           this.form.patchValue({ avatarUrl: this.profilePhotoUrl });
+          this.authService.updateAvatar(this.profilePhotoUrl);
           this.successMessage = 'Profile photo updated!';
           this.uploadingAvatar = false;
+          URL.revokeObjectURL(tempUrl);
           this.cdr.markForCheck();
         },
         error: () => {
@@ -502,6 +503,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.profilePhotoUrl = prevUrl;
           this.uploadingAvatar = false;
           this.showToast('Failed to update profile photo', true);
+          URL.revokeObjectURL(tempUrl);
           this.cdr.markForCheck();
         },
       });

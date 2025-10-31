@@ -289,13 +289,16 @@ export class DriverService {
     );
   }
 
-  /** Upload dedicated profile photo and receive URL (string) */
-  uploadProfilePhoto(driverId: string, file: File): Observable<string> {
+  /** Upload dedicated profile photo and receive structured avatar response */
+  uploadProfilePhoto(
+    driverId: string,
+    file: File
+  ): Observable<{ avatarUrl: string }> {
     const url = `${this.apiUrl}/${encodeURIComponent(driverId)}/upload-photo`;
     const formData = new FormData();
     formData.append('file', file);
     this.logRequest('POST', url, { fileName: file.name, size: file.size });
-    return this.http.post(url, formData, { responseType: 'text' }).pipe(
+    return this.http.post<{ avatarUrl: string }>(url, formData).pipe(
       tap({
         next: (data) => this.logResponse('uploadProfilePhoto', data),
         error: (error) => this.logError('uploadProfilePhoto', error),
