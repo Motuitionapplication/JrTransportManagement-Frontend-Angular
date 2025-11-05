@@ -20,25 +20,10 @@ export const environment = {
   isLocal: isLocalEnvironment(),
   apiTimeout: isLocalEnvironment() ? 10000 : 20000,
   cacheTimeout: 300000, // 5 minutes
-  
-  // Database Configuration (for development)
-  database: {
-    host: 'localhost', // Use localhost for development
-    port: 5432,
-    database: 'jr_transport_dev',
-    username: 'postgres',
-    password: 'password',
-    ssl: false, // No SSL for local development
-    connectionString: 'postgresql://postgres:password@localhost:5432/jr_transport_dev'
-  },
-  
+
   features: {
     offlineMode: !isLocalEnvironment(),
     pwaInstall: !isLocalEnvironment(),
-    pushNotifications: !isLocalEnvironment()
+    pushNotifications: !isLocalEnvironment(),
   },
-  auth: {
-    username: 'admin',
-    password: 'password'
-  }
 };
