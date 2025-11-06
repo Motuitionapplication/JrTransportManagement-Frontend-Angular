@@ -1,17 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '@environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SettingsService {
-  private apiUrl = 'http://localhost:8080/api/settings'; // Replace with your actual API URL
+  private readonly apiUrl = `${environment.apiUrl}/settings`;
 
   constructor(private http: HttpClient) {}
 
   saveSettings(settings: any): Observable<any> {
-    console.log("Sending settings payload: ", settings); // Debugging log
+    console.log('Sending settings payload: ', settings); // Debugging log
     return this.http.post<any>(this.apiUrl, settings);
   }
 
@@ -32,6 +33,9 @@ export class SettingsService {
   }
 
   restoreBackup(backupId: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/backup-history/${backupId}/restore`, {});
+    return this.http.post<any>(
+      `${this.apiUrl}/backup-history/${backupId}/restore`,
+      {}
+    );
   }
 }
